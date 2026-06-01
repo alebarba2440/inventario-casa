@@ -212,14 +212,13 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
   }
-  .item-left {
+  .item-info {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 12px;
     flex: 1;
-    flex-wrap: wrap;
     min-width: 0;
   }
   .item-name {
@@ -229,7 +228,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 160px;
+    max-width: 150px;
   }
   .item-quantity {
     font-size: 20px;
@@ -280,8 +279,9 @@
     display: flex;
     background: var(--surface);
     border-top: 0.5px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom, 12px);
-    margin-bottom: 15px;
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+    padding-top: 6px;
+    margin-bottom: 0px;
     flex-shrink: 0;
     position: relative;
     overflow: visible;
@@ -291,18 +291,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 3px;
+    gap: 2px;
     background: none;
     border: none;
     cursor: pointer;
     font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--text2);
-    padding: 10px 0 4px;
+    padding: 6px 0 4px;
     transition: color 0.15s;
   }
-  .nav-btn i { font-size: 30px; }
+  .nav-btn i { font-size: 26px; }
   .nav-btn.active { color: var(--accent); }
   .toast {
     position: fixed;
@@ -552,7 +552,7 @@
   .alerts-empty { font-size: 13px; color: var(--text2); text-align: center; padding: 10px 0 4px; }
   .camera-fab {
     position: fixed;
-    bottom: 120px;
+    bottom: 100px;
     right: 20px;
     width: 56px;
     height: 56px;
@@ -648,7 +648,11 @@
   <div class="content" id="mainContent">
     <div class="panel active" id="panelCargar">
       <div class="card"><div class="action-grid"><button class="action-btn sel-add" id="btnAdd" onclick="setAction('add')"><i class="ti ti-arrow-up"></i> Agregar</button><button class="action-btn" id="btnRem" onclick="setAction('remove')"><i class="ti ti-arrow-down" style="color:var(--danger)"></i> Consumí</button></div></div>
-      <div class="card"><div><div class="input-label">📦 Código de barras</div><input type="text" id="barcodeInput" placeholder="Escanea o escribe el código" autocomplete="off" onchange="onBarcodeManual()" oninput="onBarcodeManual()"></div><div><div class="input-label">🏷️ Nombre del producto</div><div class="autocomplete-wrap"><input type="text" id="prodName" placeholder="ej: Leche, Arroz..." autocomplete="off" oninput="onNameInput()" onkeydown="onNameKey(event)" onblur="hideSugg()"><div class="autocomplete-suggestion" id="suggBox" style="display:none" onmousedown="acceptSugg()"><span class="sugg-name" id="suggText"></span><span class="sugg-hint">↵ aceptar</span></div></div></div><div><div class="input-label">🔢 Cantidad</div><input type="number" id="prodQty" value="1" min="1" step="1" inputmode="numeric" pattern="[0-9]*"></div></div>
+      <div class="card">
+        <div><div class="input-label">Código de barras</div><input type="text" id="barcodeInput" placeholder="Escanea o escribe el código" autocomplete="off" onchange="onBarcodeManual()" oninput="onBarcodeManual()"></div>
+        <div><div class="input-label">Nombre del producto</div><div class="autocomplete-wrap"><input type="text" id="prodName" placeholder="ej: Leche, Arroz..." autocomplete="off" oninput="onNameInput()" onkeydown="onNameKey(event)" onblur="hideSugg()"><div class="autocomplete-suggestion" id="suggBox" style="display:none" onmousedown="acceptSugg()"><span class="sugg-name" id="suggText"></span><span class="sugg-hint">↵ aceptar</span></div></div></div>
+        <div><div class="input-label">Cantidad</div><input type="number" id="prodQty" value="1" min="1" step="1" inputmode="numeric" pattern="[0-9]*"></div>
+      </div>
       <button class="submit-btn" id="submitBtn" onclick="askConfirm()"><i class="ti ti-check"></i><span id="submitLbl">Agregar al inventario</span></button>
       <div class="alerts-section" id="alertsSection"><div class="alerts-header" onclick="toggleAlerts()"><div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Alertas de stock <span class="alerts-badge" id="alertsBadge">0</span></div><i class="ti ti-chevron-down alerts-chevron"></i></div><div class="alerts-body"><div class="alerts-inner" id="alertsInner"></div></div></div>
     </div>
@@ -659,8 +663,8 @@
 </div>
 <button class="camera-fab" id="cameraFab" onclick="abrirScanner()"><i class="ti ti-camera"></i></button>
 <div class="toast" id="toast"></div>
-<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-container" style="position:relative"><div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div></div><button class="close-btn" onclick="cerrarScanner()">Cancelar</button></div></div>
-<div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">✏️ Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
+<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Escanear código</div><div id="scanner-container" style="position:relative"><div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div></div><button class="close-btn" onclick="cerrarScanner()">Cancelar</button></div></div>
+<div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
 <div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
@@ -689,7 +693,7 @@
   function confirmOk() { document.getElementById('confirmModal').classList.remove('open'); submit(); }
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
   function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); render(); }
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><div class="item-left"><span class="item-name">${item.n}</span><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span></div><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
+  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><div class="item-info"><span class="item-name">${item.n}</span><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span></div><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
   let pendingDelId = null;
   function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
