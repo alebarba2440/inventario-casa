@@ -6,8 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Inventario">
-<link rel="apple-touch-icon" href="logo3.png">
-<link rel="icon" type="image/png" href="logo3.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="icon" type="image/png" href="logo.png">
 <title>Inventario</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -757,17 +757,30 @@
       </div>
     </div>
 
-    <div class="card">
-      <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Sincronización Firebase</div>
-      <textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
-      <button class="submit-btn" onclick="connectFb()">
+  <div class="card" id="firebaseSection">
+    
+  <div class="alerts-header" onclick="toggleFirebase()" style="padding: 0 0 8px 0;">
+    <div class="alerts-header-left">
+      <i class="ti ti-database"></i>
+      Sincronización Firebase
+          </div>
+    
+    <i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i>
+  </div>
+  <span id="syncLabel">Sin sincronización — solo local</span>
+  <div class="alerts-body" id="fbBody" style="max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);">
+    <div class="alerts-inner" style="padding: 8px 0 0 0;">
+      <textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}' style="margin-bottom: 12px;"></textarea>
+      <button class="submit-btn" onclick="connectFb()" style="margin-bottom: 12px;">
         <i class="ti ti-cloud-upload"></i> Conectar Firebase
       </button>
       <div class="sync-status">
         <div class="sync-dot" id="syncDot"></div>
-        <span id="syncLabel">Sin sincronización — solo local</span>
+        
       </div>
     </div>
+  </div>
+</div>
 
     <div class="card">
       <button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()">
@@ -806,6 +819,19 @@
     document.getElementById('navC').classList.toggle('active', t === 'cargar');
     document.getElementById('navI').classList.toggle('active', t === 'inventario');
   }
+  function toggleFirebase() {
+  const body = document.getElementById('fbBody');
+  const chevron = document.getElementById('fbChevron');
+  const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+  
+  if (isOpen) {
+    body.style.maxHeight = '0';
+    chevron.style.transform = 'rotate(0deg)';
+  } else {
+    body.style.maxHeight = '300px';
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
 
   function setAction(a) {
     action = a;
