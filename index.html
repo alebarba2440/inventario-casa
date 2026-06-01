@@ -54,6 +54,22 @@
     background: var(--bg);
   }
 
+  /* LOGO */
+  .logo-bar {
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) 20px 12px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo-bar img {
+    height: 44px;
+    width: auto;
+    object-fit: contain;
+  }
+
   /* TABS */
   .tabs {
     display: flex;
@@ -361,23 +377,6 @@
   .swatch.sel { border-color: var(--text); transform: scale(1.15); }
 
   /* FIREBASE INFO */
-  .fb-info {
-    background: #E6F1FB;
-    border: 0.5px solid #B5D4F4;
-    border-radius: var(--radius);
-    padding: 13px;
-    font-size: 13px;
-    color: #0C447C;
-    line-height: 1.7;
-  }
-  .fb-info code {
-    background: rgba(24,95,165,0.12);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 12px;
-    font-family: monospace;
-  }
-
   textarea {
     background: var(--surface2);
     border: 0.5px solid var(--border2);
@@ -428,6 +427,7 @@
 <body>
 
 <div class="app">
+  <div class="logo-bar"><img src="logo.png" alt="Logo" onerror="this.style.display='none'"></div>
   <div class="tabs">
     <button class="tab active" id="tabC" onclick="switchTab('cargar')">
       <i class="ti ti-stack-2"></i> Cargar
@@ -513,12 +513,6 @@
 
     <div class="card">
       <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Sincronización Firebase</div>
-      <div class="fb-info">
-        Para sincronizar 2 celulares:<br>
-        1. Creá un proyecto en <strong>firebase.google.com</strong><br>
-        2. Activá <strong>Firestore Database</strong> (modo test)<br>
-        3. Copiá tu <code>firebaseConfig</code> y pegala abajo
-      </div>
       <textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea>
       <button class="submit-btn" onclick="connectFb()">
         <i class="ti ti-cloud-upload"></i> Conectar Firebase
