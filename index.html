@@ -8,10 +8,10 @@
 <meta name="apple-mobile-web-app-title" content="Inventario">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="icon" type="image/png" href="logo.png">
-<title>Inventario - Lector UltraRápido</title>
+<title>Inventario - Lector de Códigos</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- ZXing con soporte mejorado -->
+<!-- ZXing Library -->
 <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <style>
   :root {
@@ -69,7 +69,6 @@
     z-index: 1;
 }
 
-  /* TABS */
   .tabs {
     display: flex;
     background: var(--surface);
@@ -97,7 +96,6 @@
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
   .tab i { font-size: 20px; }
 
-  /* CONTENT */
   .content {
     flex: 1;
     overflow-y: auto;
@@ -110,7 +108,6 @@
   .panel { display: none; flex-direction: column; gap: 12px; }
   .panel.active { display: flex; }
 
-  /* CARDS */
   .card {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -121,7 +118,6 @@
     gap: 12px;
   }
 
-  /* ACTION BUTTONS */
   .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .action-btn {
     padding: 14px 10px;
@@ -143,7 +139,6 @@
   .action-btn.sel-add { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); }
   .action-btn.sel-rem { border-color: var(--danger); background: #FCEBEB; color: var(--danger); }
 
-  /* INPUTS */
   .input-label {
     font-size: 12px;
     color: var(--text2);
@@ -166,7 +161,6 @@
   }
   input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
 
-  /* SUBMIT */
   .submit-btn {
     width: 100%;
     padding: 15px;
@@ -188,7 +182,6 @@
   .submit-btn.danger { background: var(--danger); }
   .submit-btn i { font-size: 20px; }
 
-  /* SEARCH */
   .search-wrap {
     display: flex;
     align-items: center;
@@ -210,7 +203,6 @@
     width: 100%;
   }
 
-  /* INVENTORY LIST */
   .inv-list { display: flex; flex-direction: column; gap: 8px; }
   .inv-item {
     background: var(--surface);
@@ -269,7 +261,6 @@
   .del-btn:active { color: var(--danger); }
   .del-btn i { font-size: 18px; }
 
-  /* EMPTY */
   .empty {
     text-align: center;
     padding: 60px 20px;
@@ -278,7 +269,6 @@
   .empty i { font-size: 52px; display: block; margin-bottom: 12px; opacity: 0.2; }
   .empty p { font-size: 15px; }
 
-  /* NAV BAR */
   .nav-bar {
     display: flex;
     background: var(--surface);
@@ -308,7 +298,6 @@
   .nav-btn i { font-size: 30px; }
   .nav-btn.active { color: var(--accent); }
 
-  /* TOAST */
   .toast {
     position: fixed;
     bottom: 100px;
@@ -330,7 +319,6 @@
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* MODAL */
   .modal-overlay {
     position: fixed;
     inset: 0;
@@ -366,7 +354,6 @@
   }
   .modal-title { font-size: 18px; font-weight: 700; color: var(--text); }
 
-  /* SWATCHES */
   .color-row { display: flex; gap: 10px; flex-wrap: wrap; }
   .swatch {
     width: 38px; height: 38px;
@@ -378,7 +365,6 @@
   }
   .swatch.sel { border-color: var(--text); transform: scale(1.15); }
 
-  /* FIREBASE */
   textarea {
     background: var(--surface2);
     border: 0.5px solid var(--border2);
@@ -425,7 +411,6 @@
   .sync-dot.on { background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  /* AUTOCOMPLETE */
   .autocomplete-wrap { position: relative; }
   .autocomplete-suggestion {
     position: absolute;
@@ -449,7 +434,6 @@
   .autocomplete-suggestion .sugg-hint { font-size: 12px; color: var(--text2); }
   .autocomplete-suggestion:active { background: var(--accent-light); }
 
-  /* CONFIRM MODAL */
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -520,7 +504,6 @@
     cursor: pointer;
   }
 
-  /* ALERTAS */
   .alerts-section {
     background: var(--surface);
     border-radius: var(--radius-lg);
@@ -570,9 +553,7 @@
   .alert-item-name { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
   .alert-item-tag { font-size: 11px; font-weight: 700; color: var(--danger); background: rgba(226,75,74,0.12); border-radius: 6px; padding: 2px 7px; }
   .alerts-empty { font-size: 13px; color: var(--text2); text-align: center; padding: 10px 0 4px; }
-  @media (prefers-color-scheme: dark) { .alert-item { background: rgba(226,75,74,0.15); } }
 
-  /* BOTÓN FLOTANTE CÁMARA */
   .camera-fab {
     position: fixed;
     bottom: 90px;
@@ -594,7 +575,6 @@
   .camera-fab:active { transform: scale(0.94); }
   .camera-fab i { font-size: 28px; }
 
-  /* SCANNER MEJORADO */
   #scanner-preview {
     width: 100%;
     height: 300px;
@@ -613,11 +593,11 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    height: 40%;
-    border: 2px solid rgba(255,255,255,0.6);
+    width: 85%;
+    height: 35%;
+    border: 2px solid rgba(255,255,255,0.8);
     border-radius: 12px;
-    box-shadow: 0 0 0 2000px rgba(0,0,0,0.3);
+    box-shadow: 0 0 0 2000px rgba(0,0,0,0.4);
     pointer-events: none;
   }
   .scanner-text {
@@ -631,6 +611,16 @@
     padding: 8px;
     font-size: 12px;
     z-index: 10;
+  }
+  .btn-reintentar {
+    background: var(--accent);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    color: white;
+    font-weight: 600;
+    margin-top: 12px;
+    cursor: pointer;
   }
 </style>
 </head>
@@ -653,7 +643,7 @@
 
       <div class="card">
         <div>
-          <div class="input-label">📷 Código de barras (opcional)</div>
+          <div class="input-label">📦 Código de barras (opcional)</div>
           <input type="text" id="barcodeInput" placeholder="Ej: 7891234567890" autocomplete="off" onchange="onBarcodeManual()" oninput="onBarcodeManual()">
         </div>
         <div>
@@ -705,7 +695,7 @@
 <!-- MODALES -->
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
-<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-preview" style="position:relative"><div class="scanner-guide"></div><div class="scanner-text">Apunta al código de barras</div></div><button class="close-btn" onclick="closeScanner()">Cancelar</button></div></div>
+<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-preview" style="position:relative"></div><button class="close-btn" onclick="closeScanner()">Cancelar</button></div></div>
 <div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
 
 <script>
@@ -749,7 +739,7 @@
     } else { 
       document.getElementById('prodName').value = ''; 
       document.getElementById('prodName').focus(); 
-      toast('🔍 Nuevo producto, ingresá el nombre y cantidad');
+      toast('🔍 Producto nuevo, ingresá nombre y cantidad');
     } 
   }
   function onBarcodeManual() { const code = document.getElementById('barcodeInput').value.trim(); if (code) processBarcode(code); }
@@ -761,18 +751,12 @@
     container.innerHTML = '<div style="color:white;text-align:center;padding-top:130px">📷 Solicitando permiso de cámara...</div><div class="scanner-text">Esperando permiso</div>';
     
     try {
-      // Primero pedir permisos explícitamente
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      stream.getTracks().forEach(track => track.stop()); // Solo para permisos
-      
       const codeReader = new ZXing.BrowserMultiFormatReader();
       currentScanner = codeReader;
       
-      // Obtener dispositivos
       const videoInputDevices = await codeReader.listVideoInputDevices();
       let selectedDeviceId = null;
       
-      // Buscar cámara trasera
       for (const device of videoInputDevices) {
         if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear') || device.label.toLowerCase().includes('environment')) {
           selectedDeviceId = device.deviceId;
@@ -780,9 +764,8 @@
         }
       }
       if (!selectedDeviceId && videoInputDevices.length > 0) selectedDeviceId = videoInputDevices[0].deviceId;
-      if (!selectedDeviceId) throw new Error("No se encontró ninguna cámara");
+      if (!selectedDeviceId) throw new Error("No se encontró cámara");
       
-      // Reiniciar container con la guía visual
       container.innerHTML = `<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código de barras</div>`;
       
       await codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-preview', (result, err) => {
@@ -798,10 +781,22 @@
       });
     } catch (err) {
       console.error("Scanner error:", err);
-      container.innerHTML = `<div style="color:white;text-align:center;padding-top:130px">❌ Error: ${err.message.includes('NotFound') ? 'No se encontró cámara' : 'Permiso denegado'}</div><div class="scanner-text">Verificá permisos de cámara</div>`;
-      toast("❌ " + (err.message.includes('NotFound') ? "No se encontró cámara" : "Permiso de cámara denegado"));
-      setTimeout(() => closeScanner(), 2000);
+      let errorMsg = "";
+      if (err.message.includes("NotAllowedError") || err.message.includes("Permission denied")) {
+        errorMsg = "❌ Permiso de cámara denegado. Verificá los permisos del navegador.";
+      } else if (err.message.includes("NotFoundError") || err.message.includes("No se encontró")) {
+        errorMsg = "❌ No se encontró cámara en este dispositivo.";
+      } else {
+        errorMsg = "❌ Error: " + err.message;
+      }
+      container.innerHTML = `<div style="color:white;text-align:center;padding-top:100px">${errorMsg}</div><button class="btn-reintentar" onclick="reiniciarScanner()">🔄 Reintentar</button><div class="scanner-text">También podés ingresar el código manualmente</div>`;
+      toast(errorMsg);
     }
+  }
+  
+  function reiniciarScanner() {
+    closeScanner();
+    setTimeout(() => openScanner(), 300);
   }
   
   function closeScanner() { 
@@ -818,7 +813,7 @@
   function askConfirm() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; if (!name) { toast('Ingresá el nombre'); return; } const icon = document.getElementById('cIcon'); const iconI = document.getElementById('cIconI'); const title = document.getElementById('cTitle'); const body = document.getElementById('cBody'); const okBtn = document.getElementById('cOkBtn'); if (action === 'add') { icon.className = 'confirm-icon add'; iconI.className = 'ti ti-arrow-up'; title.textContent = 'Agregar al inventario'; body.innerHTML = 'Vas a agregar <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong>'; okBtn.className = 'confirm-ok add'; okBtn.textContent = 'Sí, agregar'; } else { const item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (!item) { toast('Producto no encontrado'); return; } if (item.q < qty) { toast('Stock insuficiente (' + item.q + ' disponibles)'); return; } icon.className = 'confirm-icon rem'; iconI.className = 'ti ti-arrow-down'; title.textContent = 'Registrar consumo'; body.innerHTML = 'Vas a consumir <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong><br><span style="font-size:12px;color:var(--text2)">Stock: ' + item.q + ' → ' + (item.q - qty) + '</span>'; okBtn.className = 'confirm-ok rem'; okBtn.textContent = 'Sí, consumir'; } document.getElementById('confirmModal').classList.add('open'); }
   function confirmOk() { document.getElementById('confirmModal').classList.remove('open'); submit(); }
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
-  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); }
+  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); }
 
   function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
   function adj(id, d) { const item = inv.find(i => i.id === id); if (!item) return; item.q = Math.max(0, item.q + d); save(); render(); updateAlerts(); }
