@@ -141,7 +141,7 @@
     margin-bottom: 4px;
     letter-spacing: 0.3px;
   }
-  input[type="text"], input[type="number"] {
+  input[type="text"], input[type="number"], select {
     background: var(--surface2);
     border: 0.5px solid var(--border2);
     border-radius: var(--radius);
@@ -154,15 +154,16 @@
     appearance: none;
     -webkit-appearance: none;
   }
+  select { cursor: pointer; }
   input[type="number"] {
     -moz-appearance: textfield;
   }
   input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"]::-webkit-outer-spin-button {
+  input[number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
+  input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(29,158,117,0.12); }
   .submit-btn {
     width: 100%;
     padding: 15px;
@@ -203,6 +204,31 @@
     padding: 0;
     width: 100%;
   }
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-chip {
+    padding: 8px 16px;
+    border-radius: 30px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-chip.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .filter-chip:active { transform: scale(0.96); }
   .inv-list { display: flex; flex-direction: column; gap: 8px; }
   .inv-item {
     background: var(--surface);
@@ -398,6 +424,36 @@
     cursor: pointer;
   }
   .close-btn:active { opacity: 0.7; }
+  .category-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .category-name { font-size: 15px; font-weight: 500; color: var(--text); }
+  .category-actions { display: flex; gap: 8px; }
+  .cat-edit, .cat-delete {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+  }
+  .cat-edit { color: var(--accent); }
+  .cat-delete { color: var(--danger); }
+  .add-cat-row { display: flex; gap: 8px; margin-top: 8px; }
+  .add-cat-row input { flex: 1; }
+  .small-btn {
+    padding: 0 16px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: white;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+  }
   .sync-status {
     display: flex;
     align-items: center;
@@ -434,7 +490,6 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.10);
   }
   .autocomplete-suggestion .sugg-name { color: var(--text); }
-  .autocomplete-suggestion .sugg-hint { font-size: 12px; color: var(--text2); }
   .confirm-overlay {
     position: fixed;
     inset: 0;
@@ -475,7 +530,6 @@
   .confirm-icon.del { background: #FCEBEB; color: var(--danger); }
   .confirm-title { font-size: 18px; font-weight: 700; color: var(--text); text-align: center; }
   .confirm-body { font-size: 14px; color: var(--text2); text-align: center; line-height: 1.5; }
-  .confirm-body strong { color: var(--text); font-weight: 600; }
   .confirm-actions { display: flex; flex-direction: column; gap: 8px; }
   .confirm-ok {
     width: 100%;
@@ -551,8 +605,6 @@
   }
   .alert-item i { font-size: 16px; color: var(--danger); flex-shrink: 0; }
   .alert-item-name { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
-  .alert-item-tag { font-size: 11px; font-weight: 700; color: var(--danger); background: rgba(226,75,74,0.12); border-radius: 6px; padding: 2px 7px; }
-  .alerts-empty { font-size: 13px; color: var(--text2); text-align: center; padding: 10px 0 4px; }
   .camera-fab {
     position: fixed;
     bottom: 100px;
@@ -659,7 +711,11 @@
       <button class="submit-btn" id="submitBtn" onclick="askConfirm()"><i class="ti ti-check"></i><span id="submitLbl">Agregar al inventario</span></button>
       <div class="alerts-section" id="alertsSection"><div class="alerts-header" onclick="toggleAlerts()"><div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Alertas de stock <span class="alerts-badge" id="alertsBadge">0</span></div><i class="ti ti-chevron-down alerts-chevron"></i></div><div class="alerts-body"><div class="alerts-inner" id="alertsInner"></div></div></div>
     </div>
-    <div class="panel" id="panelInventario"><div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Buscar..." oninput="render()" id="searchInput" autocorrect="off"></div><div class="inv-list" id="invList"></div></div>
+    <div class="panel" id="panelInventario">
+      <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Buscar..." oninput="render()" id="searchInput" autocorrect="off"></div>
+      <div class="filter-bar" id="filterBar"></div>
+      <div class="inv-list" id="invList"></div>
+    </div>
   </div>
   <img src="logo3.png" class="bg-watermark" alt="logo">
   <div class="nav-bar"><button class="nav-btn active" id="navC" onclick="goTab('cargar')"><i class="ti ti-stack-2"></i> Cargar</button><button class="nav-btn" id="navI" onclick="goTab('inventario')"><i class="ti ti-list-check"></i> Inventario</button><button class="nav-btn" id="navS" onclick="openConfig()"><i class="ti ti-settings"></i> Config</button></div>
@@ -667,23 +723,36 @@
 <button class="camera-fab" id="cameraFab" onclick="abrirScanner()"><i class="ti ti-camera"></i></button>
 <div class="toast" id="toast"></div>
 <div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Escanear código</div><div id="scanner-container" style="position:relative"><div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div></div><button class="close-btn" onclick="cerrarScanner()">Cancelar</button></div></div>
-<div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
+<div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div><div><div class="input-label">Categoría</div><select id="editCategorySelect"></select></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
-<div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
+<div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card"><div class="input-label">Categorías</div><div id="categoriesList"></div><div class="add-cat-row"><input type="text" id="newCatName" placeholder="Nueva categoría"><button class="small-btn" onclick="addCategory()">+</button></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
 <script>
   let inv = JSON.parse(localStorage.getItem('inv_v2') || '[]');
   let cfg = JSON.parse(localStorage.getItem('cfg_v2') || '{"accent":"#1D9E75","accentD":"#0F6E56","accentL":"#E1F5EE"}');
+  let categories = JSON.parse(localStorage.getItem('categories_v2') || '["Alimentos", "Limpieza", "Bebidas"]');
   let action = 'add';
   let db = null, fbOn = false;
   let html5QrCode = null;
   let scannerActive = false;
   let editId = null;
   let editQtyTemp = 0;
+  let currentFilter = 'Todas';
+  
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
+  function saveCategories() { localStorage.setItem('categories_v2', JSON.stringify(categories)); renderFilterBar(); updateCategorySelects(); }
+  function addCategory() { const input = document.getElementById('newCatName'); const name = input.value.trim(); if (!name) return; if (categories.includes(name)) { toast('Categoría ya existe'); return; } categories.push(name); saveCategories(); renderCategoriesList(); input.value = ''; toast('Categoría agregada'); }
+  function editCategory(oldName, newName) { if (!newName.trim() || categories.includes(newName.trim())) return; const index = categories.indexOf(oldName); if (index !== -1) { categories[index] = newName.trim(); inv.forEach(p => { if (p.category === oldName) p.category = newName.trim(); }); saveCategories(); renderCategoriesList(); save(); render(); } }
+  function deleteCategory(cat) { if (categories.length <= 1) { toast('Debe haber al menos una categoría'); return; } categories = categories.filter(c => c !== cat); inv.forEach(p => { if (p.category === cat) p.category = categories[0]; }); saveCategories(); renderCategoriesList(); save(); render(); }
+  function renderCategoriesList() { const container = document.getElementById('categoriesList'); if (!container) return; container.innerHTML = categories.map(cat => `<div class="category-item"><span class="category-name">${escapeHtml(cat)}</span><div class="category-actions"><button class="cat-edit" onclick="promptEditCategory('${escapeHtml(cat)}')"><i class="ti ti-edit"></i></button><button class="cat-delete" onclick="deleteCategory('${escapeHtml(cat)}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
+  function promptEditCategory(oldName) { const newName = prompt('Editar categoría:', oldName); if (newName && newName.trim() && newName.trim() !== oldName) editCategory(oldName, newName.trim()); }
+  function updateCategorySelects() { const select = document.getElementById('editCategorySelect'); if (select) { select.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join(''); } }
+  function renderFilterBar() { const container = document.getElementById('filterBar'); if (!container) return; const allFilters = ['Todas', ...categories]; container.innerHTML = allFilters.map(f => `<div class="filter-chip ${currentFilter === f ? 'active' : ''}" onclick="setFilter('${f.replace(/'/g, "\\'")}')">${escapeHtml(f)}</div>`).join(''); render(); }
+  function setFilter(f) { currentFilter = f; renderFilterBar(); render(); }
   function switchTab(t) { const isC = t === 'cargar'; document.getElementById('tabC').classList.toggle('active', isC); document.getElementById('tabI').classList.toggle('active', !isC); document.getElementById('panelCargar').classList.toggle('active', isC); document.getElementById('panelInventario').classList.toggle('active', !isC); const fab = document.getElementById('cameraFab'); if (fab) fab.style.display = isC ? 'flex' : 'none'; if (!isC) render(); }
   function goTab(t) { switchTab(t); document.getElementById('navC').classList.toggle('active', t === 'cargar'); document.getElementById('navI').classList.toggle('active', t === 'inventario'); }
   function setAction(a) { action = a; document.getElementById('btnAdd').className = 'action-btn' + (a === 'add' ? ' sel-add' : ''); document.getElementById('btnRem').className = 'action-btn' + (a === 'remove' ? ' sel-rem' : ''); document.getElementById('submitBtn').className = 'submit-btn' + (a === 'remove' ? ' danger' : ''); document.getElementById('submitLbl').textContent = a === 'add' ? 'Agregar al inventario' : 'Registrar consumo'; }
+  let currentSugg = '';
   function onNameInput() { const val = document.getElementById('prodName').value; const box = document.getElementById('suggBox'); const txt = document.getElementById('suggText'); if (!val.trim()) { box.style.display = 'none'; return; } const match = inv.find(i => i.n.toLowerCase().startsWith(val.toLowerCase()) && i.n.toLowerCase() !== val.toLowerCase()); if (match) { txt.textContent = match.n; box.style.display = 'flex'; } else box.style.display = 'none'; }
   function onNameKey(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('prodQty').focus(); document.getElementById('prodQty').select(); } if (e.key === 'Escape') hideSugg(); }
   function acceptSugg() { const sugg = document.getElementById('suggText').innerText; if (sugg) document.getElementById('prodName').value = sugg; hideSugg(); }
@@ -695,30 +764,31 @@
   function askConfirm() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; if (!name) { toast('Ingresá el nombre'); return; } const icon = document.getElementById('cIcon'); const iconI = document.getElementById('cIconI'); const title = document.getElementById('cTitle'); const body = document.getElementById('cBody'); const okBtn = document.getElementById('cOkBtn'); if (action === 'add') { icon.className = 'confirm-icon add'; iconI.className = 'ti ti-arrow-up'; title.textContent = 'Agregar al inventario'; body.innerHTML = 'Vas a agregar <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong>'; okBtn.className = 'confirm-ok add'; okBtn.textContent = 'Sí, agregar'; } else { const item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (!item) { toast('Producto no encontrado'); return; } if (item.q < qty) { toast('Stock insuficiente (' + item.q + ' disponibles)'); return; } icon.className = 'confirm-icon rem'; iconI.className = 'ti ti-arrow-down'; title.textContent = 'Registrar consumo'; body.innerHTML = 'Vas a consumir <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong><br><span style="font-size:12px;color:var(--text2)">Stock: ' + item.q + ' → ' + (item.q - qty) + '</span>'; okBtn.className = 'confirm-ok rem'; okBtn.textContent = 'Sí, consumir'; } document.getElementById('confirmModal').classList.add('open'); }
   function confirmOk() { document.getElementById('confirmModal').classList.remove('open'); submit(); }
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
-  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); render(); }
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${escapeHtml(item.n)}</span><div class="right-group"><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div></div>`).join(''); }
+  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined, category: categories[0] }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); render(); }
+  function render() { const search = (document.getElementById('searchInput')?.value || '').toLowerCase(); let filtered = search ? inv.filter(i => i.n.toLowerCase().includes(search)) : [...inv]; if (currentFilter !== 'Todas') filtered = filtered.filter(i => i.category === currentFilter); const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${escapeHtml(item.n)}</span><div class="right-group"><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div></div>`).join(''); }
   function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
   let pendingDelId = null;
   function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + escapeHtml(item.n) + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
   function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
-  function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; editQtyTemp = item.q; document.getElementById('editNameInput').value = item.n; document.getElementById('editQtyDisplay').innerText = editQtyTemp; document.getElementById('editModal').classList.add('open'); }
+  function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; editQtyTemp = item.q; document.getElementById('editNameInput').value = item.n; document.getElementById('editQtyDisplay').innerText = editQtyTemp; updateCategorySelects(); const catSelect = document.getElementById('editCategorySelect'); if (catSelect && item.category) catSelect.value = item.category; document.getElementById('editModal').classList.add('open'); }
   function adjustEditQty(delta) { const newVal = editQtyTemp + delta; if (newVal >= 0) { editQtyTemp = newVal; document.getElementById('editQtyDisplay').innerText = editQtyTemp; } }
-  function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } item.n = newName; item.q = editQtyTemp; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Cambios guardados'); }
+  function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } const newCategory = document.getElementById('editCategorySelect').value; item.n = newName; item.q = editQtyTemp; item.category = newCategory; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Cambios guardados'); }
   function closeEditModal() { editId = null; document.getElementById('editModal').classList.remove('open'); document.getElementById('editNameInput').value = ''; }
   function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); render(); updateAlerts(); }
-  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${escapeHtml(i.n)}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
+  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${escapeHtml(i.n)}</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
   function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
-  function openConfig() { if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent)); document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : ''); document.getElementById('syncLabel').textContent = fbOn ? 'Conectado a Firebase ✓' : 'Sin sincronización — solo local'; document.getElementById('configModal').classList.add('open'); }
+  function openConfig() { if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent)); document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : ''); document.getElementById('syncLabel').textContent = fbOn ? 'Conectado a Firebase ✓' : 'Sin sincronización — solo local'; renderCategoriesList(); document.getElementById('configModal').classList.add('open'); }
   function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
   function setAccent(el) { cfg.accent = el.dataset.c; cfg.accentD = el.dataset.d; cfg.accentL = el.dataset.l; applyAccent(); document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel')); el.classList.add('sel'); localStorage.setItem('cfg_v2', JSON.stringify(cfg)); }
   function connectFb() { const str = document.getElementById('fbCfg').value.trim(); if (!str) { toast('Pegá tu config'); return; } try { const parsed = JSON.parse(str); cfg.fbCfg = str; localStorage.setItem('cfg_v2', JSON.stringify(cfg)); loadFb(parsed); } catch(e) { toast('JSON inválido'); } }
   function loadFb(parsed) { if (typeof firebase !== 'undefined') { initFb(parsed); return; } let loaded = 0; const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js']; scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); }); }
   function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; toast('🔥 Firebase conectado'); db.collection('inv').onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); }); closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
-  async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
+  async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null, category: item.category || categories[0] }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
-  applyAccent(); updateAlerts(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
+  function toggleFirebase() { const b = document.getElementById('fbBody'); const c = document.getElementById('fbChevron'); const o = b.style.maxHeight && b.style.maxHeight !== '0px'; b.style.maxHeight = o ? '0' : '300px'; c.style.transform = o ? 'rotate(0deg)' : 'rotate(180deg)'; }
+  applyAccent(); updateAlerts(); renderFilterBar(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
 </script>
 </body>
 </html>
