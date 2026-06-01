@@ -208,16 +208,16 @@
     background: var(--surface);
     border-radius: var(--radius);
     border: 0.5px solid var(--border);
-    padding: 12px 14px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
   }
-  .item-info {
+  .item-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     flex: 1;
     min-width: 0;
   }
@@ -228,18 +228,20 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 150px;
+    max-width: 140px;
   }
   .item-quantity {
     font-size: 20px;
     font-weight: 800;
     color: var(--accent);
     background: var(--accent-light);
-    padding: 2px 10px;
-    border-radius: 20px;
+    padding: 2px 12px;
+    border-radius: 24px;
     display: inline-block;
-    line-height: 1.4;
+    line-height: 1.3;
     white-space: nowrap;
+    min-width: 55px;
+    text-align: center;
   }
   .item-quantity.zero {
     background: #FCEBEB;
@@ -252,8 +254,8 @@
     flex-shrink: 0;
   }
   .edit-btn, .del-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 10px;
     border: none;
     background: var(--surface2);
@@ -693,9 +695,10 @@
   function confirmOk() { document.getElementById('confirmModal').classList.remove('open'); submit(); }
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
   function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); render(); }
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><div class="item-info"><span class="item-name">${item.n}</span><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span></div><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
+  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><div class="item-left"><span class="item-name">${escapeHtml(item.n)}</span><span class="item-quantity ${item.q === 0 ? 'zero' : ''}">${item.q}</span></div><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
   let pendingDelId = null;
-  function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
+  function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + escapeHtml(item.n) + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
   function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
   function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; editQtyTemp = item.q; document.getElementById('editNameInput').value = item.n; document.getElementById('editQtyDisplay').innerText = editQtyTemp; document.getElementById('editModal').classList.add('open'); }
@@ -703,7 +706,7 @@
   function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } item.n = newName; item.q = editQtyTemp; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Cambios guardados'); }
   function closeEditModal() { editId = null; document.getElementById('editModal').classList.remove('open'); document.getElementById('editNameInput').value = ''; }
   function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); render(); updateAlerts(); }
-  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
+  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${escapeHtml(i.n)}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
   function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
   function openConfig() { if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent)); document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : ''); document.getElementById('syncLabel').textContent = fbOn ? 'Conectado a Firebase ✓' : 'Sin sincronización — solo local'; document.getElementById('configModal').classList.add('open'); }
