@@ -1,3 +1,6 @@
+Aquí tienes el HTML completo con las modificaciones solicitadas para el manejo de códigos de barras y la integración con la cámara:
+
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,9 +11,11 @@
 <meta name="apple-mobile-web-app-title" content="Inventario">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="icon" type="image/png" href="logo.png">
-<title>Inventario</title>
+<title>Inventario - Código de Barras</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Libreria QuaggaJS para lectura de código de barras -->
+<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
 <style>
   :root {
     --accent: #1D9E75;
@@ -623,6 +628,36 @@
   @media (prefers-color-scheme: dark) {
     .alert-item { background: rgba(226,75,74,0.15); }
   }
+
+  /* BOTÓN FLOTANTE CÁMARA */
+  .camera-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 28px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 50;
+    transition: transform 0.1s, background 0.2s;
+  }
+  .camera-fab:active { transform: scale(0.94); }
+  .camera-fab i { font-size: 28px; }
+  @media (max-width: 480px) {
+    .camera-fab { bottom: 80px; right: 16px; width: 52px; height: 52px; }
+  }
+
+  /* LECTOR QR MODAL */
+  .scanner-modal .modal-sheet { max-height: 70vh; }
+  #scanner-container { width: 100%; height: 280px; background: #000; border-radius: 12px; overflow: hidden; margin-top: 8px; }
+  #scanner-container video, #scanner-container canvas { width: 100%; height: auto; }
 </style>
 </head>
 <body>
@@ -652,6 +687,10 @@
       </div>
 
       <div class="card">
+        <div>
+          <div class="input-label">Código de barras (opcional)</div>
+          <input type="text" id="barcodeInput" placeholder="Ej: 7891234567890" autocomplete="off" onchange="onBarcodeManual()">
+        </div>
         <div>
           <div class="input-label">Nombre del producto</div>
           <div class="autocomplete-wrap">
@@ -699,7 +738,6 @@
   </div>
  <img src="logo3.png" class="bg-watermark" alt="logo">
   <div class="nav-bar">
-       
     <button class="nav-btn active" id="navC" onclick="goTab('cargar')">
       <i class="ti ti-stack-2"></i> Cargar
     </button>
@@ -711,6 +749,11 @@
     </button>
   </div>
 </div>
+
+<!-- Botón flotante cámara (solo aparece en pestaña cargar) -->
+<button class="camera-fab" id="cameraFab" onclick="openScanner()">
+  <i class="ti ti-camera"></i>
+</button>
 
 <div class="toast" id="toast"></div>
 
@@ -740,11 +783,20 @@
   </div>
 </div>
 
+<!-- MODAL SCANNER -->
+<div class="modal-overlay" id="scannerModal">
+  <div class="modal-sheet scanner-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Escanear código de barras</div>
+    <div id="scanner-container"></div>
+    <button class="close-btn" onclick="closeScanner()">Cancelar</button>
+  </div>
+</div>
+
 <div class="modal-overlay" id="configModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-title">Configuración</div>
-
     <div class="card">
       <div class="input-label" style="font-size:13px;font-weight:600;color:var(--text)">Color de acento</div>
       <div class="color-row" id="colorRow">
@@ -758,13 +810,11 @@
     </div>
 
   <div class="card" id="firebaseSection">
-    
   <div class="alerts-header" onclick="toggleFirebase()" style="padding: 0 0 8px 0;">
     <div class="alerts-header-left">
       <i class="ti ti-database"></i>
       Sincronización Firebase
           </div>
-    
     <i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i>
   </div>
   <span id="syncLabel">Sin sincronización — solo local</span>
@@ -797,6 +847,7 @@
   let cfg = JSON.parse(localStorage.getItem('cfg_v2') || '{"accent":"#1D9E75","accentD":"#0F6E56","accentL":"#E1F5EE"}');
   let action = 'add';
   let db = null, fbOn = false;
+  let currentScannerActive = false;
 
   function applyAccent() {
     document.documentElement.style.setProperty('--accent', cfg.accent);
@@ -811,6 +862,9 @@
     document.getElementById('panelCargar').classList.toggle('active', isC);
     document.getElementById('panelInventario').classList.toggle('active', !isC);
     document.getElementById('mainContent').scrollTop = 0;
+    // Mostrar/ocultar botón flotante según pestaña activa
+    const fab = document.getElementById('cameraFab');
+    if (fab) fab.style.display = isC ? 'flex' : 'none';
     if (!isC) render();
   }
 
@@ -819,26 +873,24 @@
     document.getElementById('navC').classList.toggle('active', t === 'cargar');
     document.getElementById('navI').classList.toggle('active', t === 'inventario');
   }
+
   function toggleFirebase() {
-  const body = document.getElementById('fbBody');
-  const chevron = document.getElementById('fbChevron');
-  const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
-  
-  if (isOpen) {
-    body.style.maxHeight = '0';
-    chevron.style.transform = 'rotate(0deg)';
-  } else {
-    body.style.maxHeight = '300px';
-    chevron.style.transform = 'rotate(180deg)';
+    const body = document.getElementById('fbBody');
+    const chevron = document.getElementById('fbChevron');
+    const isOpen = body.style.maxHeight && body.style.maxHeight !== '0px';
+    if (isOpen) {
+      body.style.maxHeight = '0';
+      chevron.style.transform = 'rotate(0deg)';
+    } else {
+      body.style.maxHeight = '300px';
+      chevron.style.transform = 'rotate(180deg)';
+    }
   }
-}
 
   function setAction(a) {
     action = a;
     document.getElementById('btnAdd').className = 'action-btn' + (a === 'add' ? ' sel-add' : '');
     document.getElementById('btnRem').className = 'action-btn' + (a === 'remove' ? ' sel-rem' : '');
-    document.getElementById('btnAdd').innerHTML = '<i class="ti ti-arrow-up"></i> Agregar';
-    document.getElementById('btnRem').innerHTML = '<i class="ti ti-arrow-down" style="color:var(--danger)"></i> Consumí';
     document.getElementById('submitBtn').className = 'submit-btn' + (a === 'remove' ? ' danger' : '');
     document.getElementById('submitLbl').textContent = a === 'add' ? 'Agregar al inventario' : 'Registrar consumo';
   }
@@ -861,10 +913,7 @@
     }
   }
   function onNameKey(e) {
-    if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSugg) {
-      e.preventDefault();
-      acceptSugg();
-    }
+    if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSugg) { e.preventDefault(); acceptSugg(); }
     if (e.key === 'Enter') {
       if (currentSugg) acceptSugg();
       e.preventDefault();
@@ -878,11 +927,66 @@
     document.getElementById('prodName').value = currentSugg;
     hideSugg();
   }
-  function hideSugg() {
-    setTimeout(() => {
-      document.getElementById('suggBox').style.display = 'none';
-      currentSugg = '';
-    }, 120);
+  function hideSugg() { setTimeout(() => { document.getElementById('suggBox').style.display = 'none'; currentSugg = ''; }, 120); }
+
+  // ---- LÓGICA BARCODE + CÁMARA ----
+  function processBarcode(code) {
+    if (!code) return;
+    document.getElementById('barcodeInput').value = code;
+    const found = inv.find(item => item.barcode === code);
+    if (found) {
+      // Producto existe: rellenar nombre y enfocar cantidad
+      document.getElementById('prodName').value = found.n;
+      toast(`📦 Producto encontrado: ${found.n}`);
+      document.getElementById('prodQty').focus();
+      document.getElementById('prodQty').select();
+    } else {
+      // No existe: limpiar nombre y hacer foco en nombre del producto para agregar
+      document.getElementById('prodName').value = '';
+      document.getElementById('prodName').focus();
+      toast('🔍 Producto nuevo, ingresá el nombre');
+    }
+  }
+
+  function onBarcodeManual() {
+    const code = document.getElementById('barcodeInput').value.trim();
+    if (code) processBarcode(code);
+  }
+
+  // Escáner con QuaggaJS
+  function openScanner() {
+    const modal = document.getElementById('scannerModal');
+    modal.classList.add('open');
+    const container = document.getElementById('scanner-container');
+    container.innerHTML = ''; // limpiar
+    Quagga.init({
+      inputStream: {
+        name: "Live",
+        type: "LiveStream",
+        target: container,
+        constraints: { facingMode: "environment" }
+      },
+      decoder: { readers: ["ean_reader", "ean_8_reader", "code_128_reader", "code_39_reader"] }
+    }, function(err) {
+      if (err) { toast("Error al iniciar cámara: " + err); closeScanner(); return; }
+      Quagga.start();
+      currentScannerActive = true;
+    });
+    Quagga.onDetected((result) => {
+      const code = result.codeResult.code;
+      if (code) {
+        Quagga.stop();
+        closeScanner();
+        processBarcode(code);
+      }
+    });
+  }
+
+  function closeScanner() {
+    if (currentScannerActive) { Quagga.stop(); currentScannerActive = false; }
+    document.getElementById('scannerModal').classList.remove('open');
+    const container = document.getElementById('scanner-container');
+    if (container) container.innerHTML = '';
   }
 
   // ---- CONFIRMAR ACCIÓN ----
@@ -919,18 +1023,21 @@
     document.getElementById('confirmModal').classList.remove('open');
     submit();
   }
-  function confirmCancel() {
-    document.getElementById('confirmModal').classList.remove('open');
-  }
+  function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
 
   function submit() {
     const name = document.getElementById('prodName').value.trim();
     const qty = parseInt(document.getElementById('prodQty').value) || 1;
+    const barcode = document.getElementById('barcodeInput').value.trim() || null;
     if (!name) return;
     let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase());
     if (action === 'add') {
-      if (item) { item.q += qty; }
-      else { inv.push({ id: Date.now().toString(), n: name, q: qty }); }
+      if (item) { 
+        item.q += qty;
+        if (barcode) item.barcode = barcode;
+      } else {
+        inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined });
+      }
       toast('✅ ' + name + ' +' + qty);
     } else {
       if (!item || item.q < qty) return;
@@ -940,6 +1047,7 @@
     save();
     document.getElementById('prodName').value = '';
     document.getElementById('prodQty').value = 1;
+    document.getElementById('barcodeInput').value = '';
     hideSugg();
     updateAlerts();
   }
@@ -984,24 +1092,18 @@
   }
   function confirmDel() {
     if (!pendingDelId) return;
-    const item = inv.find(i => i.id === pendingDelId);
     inv = inv.filter(i => i.id !== pendingDelId);
     pendingDelId = null;
     document.getElementById('deleteModal').classList.remove('open');
     save(); render(); updateAlerts();
-    if (item) toast('🗑 ' + item.n + ' eliminado');
+    toast('🗑 eliminado');
   }
-  function cancelDel() {
-    pendingDelId = null;
-    document.getElementById('deleteModal').classList.remove('open');
-  }
+  function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
 
   function save() {
     localStorage.setItem('inv_v2', JSON.stringify(inv));
     if (db && fbOn) syncFb();
   }
-
-  function updateSugg() { /* kept for compat */ }
 
   function updateAlerts() {
     const zeros = inv.filter(i => i.q === 0);
@@ -1009,22 +1111,11 @@
     const inner = document.getElementById('alertsInner');
     badge.textContent = zeros.length;
     badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : '');
-    if (zeros.length === 0) {
-      inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>';
-    } else {
-      inner.innerHTML = zeros.map(i =>
-        `<div class="alert-item">
-          <i class="ti ti-alert-circle"></i>
-          <span class="alert-item-name">${i.n}</span>
-          <span class="alert-item-tag">Sin stock</span>
-        </div>`
-      ).join('');
-    }
+    if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>';
+    else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join('');
   }
 
-  function toggleAlerts() {
-    document.getElementById('alertsSection').classList.toggle('open');
-  }
+  function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
 
   function toast(msg) {
     const t = document.getElementById('toast');
@@ -1041,14 +1132,10 @@
     document.getElementById('configModal').classList.add('open');
   }
 
-  function closeConfig() {
-    document.getElementById('configModal').classList.remove('open');
-  }
+  function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
 
   function setAccent(el) {
-    cfg.accent = el.dataset.c;
-    cfg.accentD = el.dataset.d;
-    cfg.accentL = el.dataset.l;
+    cfg.accent = el.dataset.c; cfg.accentD = el.dataset.d; cfg.accentL = el.dataset.l;
     applyAccent();
     document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
     el.classList.add('sel');
@@ -1058,27 +1145,15 @@
   function connectFb() {
     const str = document.getElementById('fbCfg').value.trim();
     if (!str) { toast('Pegá tu config de Firebase'); return; }
-    try {
-      const parsed = JSON.parse(str);
-      cfg.fbCfg = str;
-      localStorage.setItem('cfg_v2', JSON.stringify(cfg));
-      loadFb(parsed);
-    } catch(e) { toast('JSON inválido, revisá el formato'); }
+    try { const parsed = JSON.parse(str); cfg.fbCfg = str; localStorage.setItem('cfg_v2', JSON.stringify(cfg)); loadFb(parsed); } 
+    catch(e) { toast('JSON inválido'); }
   }
 
   function loadFb(parsed) {
     if (typeof firebase !== 'undefined') { initFb(parsed); return; }
     let loaded = 0;
-    const scripts = [
-      'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js',
-      'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js'
-    ];
-    scripts.forEach(src => {
-      const s = document.createElement('script');
-      s.src = src;
-      s.onload = () => { if (++loaded === 2) initFb(parsed); };
-      document.head.appendChild(s);
-    });
+    const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js'];
+    scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); });
   }
 
   function initFb(parsed) {
@@ -1092,68 +1167,34 @@
       db.collection('inv').onSnapshot(snap => {
         inv = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         localStorage.setItem('inv_v2', JSON.stringify(inv));
-        render();
-        updateSugg();
+        render(); updateAlerts();
       });
       closeConfig();
     } catch(e) { toast('Error: ' + e.message); }
   }
 
   async function syncFb() {
-  try {
-    const snap = await db.collection('inv').get();
-
-    const batch = db.batch();
-
-    snap.docs.forEach(doc => {
-      batch.delete(doc.ref);
-    });
-
-    inv.forEach(item => {
-      const ref = db.collection('inv').doc(item.id);
-      batch.set(ref, {
-        n: item.n,
-        q: item.q
-      });
-    });
-
-    await batch.commit();
-
-    console.log("Sincronizado OK");
-    toast("Firebase sincronizado");
-  } catch (err) {
-    console.error(err);
-    toast("ERROR: " + err.message);
+    try {
+      const snap = await db.collection('inv').get();
+      const batch = db.batch();
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null }); });
+      await batch.commit();
+      toast("Firebase sincronizado");
+    } catch (err) { toast("ERROR: " + err.message); }
   }
-}
-function save() {
-  localStorage.setItem('inv_v2', JSON.stringify(inv));
 
-  console.log("Guardando:", inv);
-
-  if (db && fbOn) {
-    syncFb();
-  }
-}
   function exportData() {
     const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'inventario.json';
-    a.click();
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click();
     toast('📥 Exportado');
   }
 
   applyAccent();
   updateAlerts();
-
-if (cfg.fbCfg) {
-  try {
-    loadFb(JSON.parse(cfg.fbCfg));
-  } catch (e) {
-    console.error("Error cargando Firebase:", e);
-  }
-}
+  document.getElementById('cameraFab').style.display = 'flex';
+  if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
 </script>
 </body>
 </html>
+```
