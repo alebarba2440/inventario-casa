@@ -19,6 +19,7 @@
     --accent-dark: #0F6E56;
     --accent-light: #E1F5EE;
     --danger: #E24B4A;
+    --danger-dark: #C0392B;
     --bg: #f5f5f0;
     --surface: #ffffff;
     --surface2: #f5f5f0;
@@ -159,7 +160,6 @@
     appearance: none;
     -webkit-appearance: none;
   }
-  /* Forzar teclado numérico en móviles */
   input[type="number"] {
     -moz-appearance: textfield;
   }
@@ -217,58 +217,51 @@
     background: var(--surface);
     border-radius: var(--radius);
     border: 0.5px solid var(--border);
-    padding: 10px 14px;
+    padding: 12px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+  }
+  .item-info {
+    flex: 1;
+    min-width: 0;
   }
   .item-name {
-    flex: 1;
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text);
-    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .qty-controls { display: flex; align-items: center; gap: 5px; }
-  .qty-btn {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    border: 0.5px solid var(--border2);
+  .item-stock {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .stock-zero { color: var(--danger); font-weight: 600; }
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .edit-btn, .del-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
     background: var(--surface2);
     cursor: pointer;
-    font-size: 20px;
-    line-height: 1;
-    color: var(--text);
-    font-family: 'DM Sans', system-ui, sans-serif;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.1s;
-    -webkit-user-select: none;
-    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 18px;
   }
-  .qty-btn:active { background: var(--accent-light); color: var(--accent); }
-  .qty-num {
-    font-size: 17px;
-    font-weight: 700;
-    min-width: 32px;
-    text-align: center;
-    color: var(--text);
-  }
-  .qty-zero { color: var(--danger) !important; }
-  .del-btn, .edit-btn {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: none;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--text2);
-    transition: all 0.1s;
-  }
-  .del-btn:active, .edit-btn:active { color: var(--accent); opacity: 0.7; }
-  .del-btn i, .edit-btn i { font-size: 18px; }
+  .edit-btn { color: var(--accent); border: 0.5px solid var(--border2); }
+  .edit-btn:active { background: var(--accent-light); transform: scale(0.96); }
+  .del-btn { color: white; background: var(--danger); border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .del-btn:active { background: var(--danger-dark); transform: scale(0.96); }
 
   .empty {
     text-align: center;
@@ -625,11 +618,38 @@
     z-index: 10;
   }
   
-  /* Mejora para que el input number siempre muestre el teclado numérico */
   @media (hover: none) and (pointer: coarse) {
-    input[type="number"] {
-      font-size: 16px;
-    }
+    input[type="number"] { font-size: 16px; }
+  }
+  
+  .qty-adjust-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    background: var(--surface2);
+    padding: 10px;
+    border-radius: var(--radius);
+    margin: 5px 0;
+  }
+  .qty-adjust-btn {
+    width: 48px; height: 48px;
+    border-radius: 30px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    font-size: 28px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--accent);
+    transition: all 0.1s;
+  }
+  .qty-adjust-btn:active { transform: scale(0.94); background: var(--accent-light); }
+  .edit-qty-number {
+    font-size: 32px;
+    font-weight: 700;
+    min-width: 70px;
+    text-align: center;
+    color: var(--text);
   }
 </style>
 </head>
@@ -649,40 +669,13 @@
           <button class="action-btn" id="btnRem" onclick="setAction('remove')"><i class="ti ti-arrow-down" style="color:var(--danger)"></i> Consumí</button>
         </div>
       </div>
-
       <div class="card">
-        <div>
-          <div class="input-label">📦 Código de barras</div>
-          <input type="text" id="barcodeInput" placeholder="Escanea o escribe el código" autocomplete="off" onchange="onBarcodeManual()" oninput="onBarcodeManual()">
-        </div>
-        <div>
-          <div class="input-label">🏷️ Nombre del producto</div>
-          <div class="autocomplete-wrap">
-            <input type="text" id="prodName" placeholder="ej: Leche, Arroz..." autocomplete="off" autocorrect="off" autocapitalize="words" oninput="onNameInput()" onkeydown="onNameKey(event)" onblur="hideSugg()">
-            <div class="autocomplete-suggestion" id="suggBox" style="display:none" onmousedown="acceptSugg()">
-              <span class="sugg-name" id="suggText"></span>
-              <span class="sugg-hint">↵ aceptar</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <div class="input-label">🔢 Cantidad</div>
-          <input type="number" id="prodQty" value="1" min="1" step="1" inputmode="numeric" pattern="[0-9]*">
-        </div>
+        <div><div class="input-label">📦 Código de barras</div><input type="text" id="barcodeInput" placeholder="Escanea o escribe el código" autocomplete="off" onchange="onBarcodeManual()" oninput="onBarcodeManual()"></div>
+        <div><div class="input-label">🏷️ Nombre del producto</div><div class="autocomplete-wrap"><input type="text" id="prodName" placeholder="ej: Leche, Arroz..." autocomplete="off" autocorrect="off" autocapitalize="words" oninput="onNameInput()" onkeydown="onNameKey(event)" onblur="hideSugg()"><div class="autocomplete-suggestion" id="suggBox" style="display:none" onmousedown="acceptSugg()"><span class="sugg-name" id="suggText"></span><span class="sugg-hint">↵ aceptar</span></div></div></div>
+        <div><div class="input-label">🔢 Cantidad</div><input type="number" id="prodQty" value="1" min="1" step="1" inputmode="numeric" pattern="[0-9]*"></div>
       </div>
-
-      <button class="submit-btn" id="submitBtn" onclick="askConfirm()">
-        <i class="ti ti-check"></i>
-        <span id="submitLbl">Agregar al inventario</span>
-      </button>
-
-      <div class="alerts-section" id="alertsSection">
-        <div class="alerts-header" onclick="toggleAlerts()">
-          <div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Alertas de stock <span class="alerts-badge" id="alertsBadge">0</span></div>
-          <i class="ti ti-chevron-down alerts-chevron"></i>
-        </div>
-        <div class="alerts-body"><div class="alerts-inner" id="alertsInner"></div></div>
-      </div>
+      <button class="submit-btn" id="submitBtn" onclick="askConfirm()"><i class="ti ti-check"></i><span id="submitLbl">Agregar al inventario</span></button>
+      <div class="alerts-section" id="alertsSection"><div class="alerts-header" onclick="toggleAlerts()"><div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Alertas de stock <span class="alerts-badge" id="alertsBadge">0</span></div><i class="ti ti-chevron-down alerts-chevron"></i></div><div class="alerts-body"><div class="alerts-inner" id="alertsInner"></div></div></div>
     </div>
 
     <div class="panel" id="panelInventario">
@@ -701,34 +694,11 @@
 <button class="camera-fab" id="cameraFab" onclick="abrirScanner()"><i class="ti ti-camera"></i></button>
 <div class="toast" id="toast"></div>
 
-<!-- MODAL ESCÁNER AUTOMÁTICO -->
-<div class="modal-overlay" id="scannerModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">📷 Escanear código</div>
-    <div id="scanner-container" style="position:relative">
-      <div class="scanner-guide"></div>
-      <div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>
-    </div>
-    <button class="close-btn" onclick="cerrarScanner()">Cancelar</button>
-  </div>
-</div>
+<!-- MODAL ESCÁNER -->
+<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-container" style="position:relative"><div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div></div><button class="close-btn" onclick="cerrarScanner()">Cancelar</button></div></div>
 
-<!-- MODAL EDITAR NOMBRE -->
-<div class="modal-overlay" id="editModal">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">✏️ Editar producto</div>
-    <div class="card" style="gap: 14px;">
-      <div>
-        <div class="input-label">Nuevo nombre</div>
-        <input type="text" id="editNameInput" placeholder="Nombre del producto">
-      </div>
-    </div>
-    <button class="submit-btn" onclick="confirmEdit()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
-    <button class="close-btn" onclick="closeEditModal()">Cancelar</button>
-  </div>
-</div>
+<!-- MODAL EDITAR (con ajuste de cantidad) -->
+<div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">✏️ Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
 
 <!-- MODALES CONFIRMACIÓN -->
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
@@ -743,19 +713,11 @@
   let html5QrCode = null;
   let scannerActive = false;
   let editId = null;
+  let editQtyTemp = 0;
 
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
 
-  function switchTab(t) {
-    const isC = t === 'cargar';
-    document.getElementById('tabC').classList.toggle('active', isC);
-    document.getElementById('tabI').classList.toggle('active', !isC);
-    document.getElementById('panelCargar').classList.toggle('active', isC);
-    document.getElementById('panelInventario').classList.toggle('active', !isC);
-    const fab = document.getElementById('cameraFab');
-    if (fab) fab.style.display = isC ? 'flex' : 'none';
-    if (!isC) render();
-  }
+  function switchTab(t) { const isC = t === 'cargar'; document.getElementById('tabC').classList.toggle('active', isC); document.getElementById('tabI').classList.toggle('active', !isC); document.getElementById('panelCargar').classList.toggle('active', isC); document.getElementById('panelInventario').classList.toggle('active', !isC); const fab = document.getElementById('cameraFab'); if (fab) fab.style.display = isC ? 'flex' : 'none'; if (!isC) render(); }
   function goTab(t) { switchTab(t); document.getElementById('navC').classList.toggle('active', t === 'cargar'); document.getElementById('navI').classList.toggle('active', t === 'inventario'); }
   function toggleFirebase() { const b = document.getElementById('fbBody'); const c = document.getElementById('fbChevron'); const o = b.style.maxHeight && b.style.maxHeight !== '0px'; b.style.maxHeight = o ? '0' : '300px'; c.style.transform = o ? 'rotate(0deg)' : 'rotate(180deg)'; }
   function setAction(a) { action = a; document.getElementById('btnAdd').className = 'action-btn' + (a === 'add' ? ' sel-add' : ''); document.getElementById('btnRem').className = 'action-btn' + (a === 'remove' ? ' sel-rem' : ''); document.getElementById('submitBtn').className = 'submit-btn' + (a === 'remove' ? ' danger' : ''); document.getElementById('submitLbl').textContent = a === 'add' ? 'Agregar al inventario' : 'Registrar consumo'; }
@@ -766,75 +728,30 @@
   function acceptSugg() { if (!currentSugg) return; document.getElementById('prodName').value = currentSugg; hideSugg(); }
   function hideSugg() { setTimeout(() => { document.getElementById('suggBox').style.display = 'none'; currentSugg = ''; }, 120); }
 
-  function processBarcode(code) { 
-    if (!code) return; 
-    document.getElementById('barcodeInput').value = code; 
-    const found = inv.find(item => item.barcode === code); 
-    if (found) { 
-      document.getElementById('prodName').value = found.n; 
-      toast(`📦 ${found.n} (Stock: ${found.q})`);
-      setTimeout(() => { 
-        const qtyInput = document.getElementById('prodQty');
-        qtyInput.focus(); 
-        qtyInput.select(); 
-      }, 100);
-    } else { 
-      document.getElementById('prodName').value = ''; 
-      document.getElementById('prodName').focus(); 
-      toast('🔍 Producto nuevo, ingresá nombre y cantidad');
-    } 
-  }
+  function processBarcode(code) { if (!code) return; document.getElementById('barcodeInput').value = code; const found = inv.find(item => item.barcode === code); if (found) { document.getElementById('prodName').value = found.n; toast(`📦 ${found.n} (Stock: ${found.q})`); setTimeout(() => { const qtyInput = document.getElementById('prodQty'); qtyInput.focus(); qtyInput.select(); }, 100); } else { document.getElementById('prodName').value = ''; document.getElementById('prodName').focus(); toast('🔍 Producto nuevo, ingresá nombre y cantidad'); } }
   function onBarcodeManual() { const code = document.getElementById('barcodeInput').value.trim(); if (code) processBarcode(code); }
 
-  // Escáner automático 
-  async function abrirScanner() {
-    const modal = document.getElementById('scannerModal');
-    modal.classList.add('open');
-    const container = document.getElementById('scanner-container');
-    try {
-      html5QrCode = new Html5Qrcode("scanner-container");
-      const config = { fps: 20, qrbox: { width: 280, height: 180 }, aspectRatio: 1.333, disableFlip: false };
-      await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-          if (decodedText && !scannerActive) {
-            scannerActive = true;
-            html5QrCode.stop();
-            cerrarScanner();
-            processBarcode(decodedText);
-            setTimeout(() => { scannerActive = false; }, 2000);
-          }
-        }, (error) => {});
-    } catch (err) {
-      container.innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error al iniciar cámara<br><br>Verificá los permisos</div>`;
-      toast("Error al iniciar la cámara");
-    }
-  }
-  
-  function cerrarScanner() {
-    if (html5QrCode && html5QrCode.isScanning) { try { html5QrCode.stop(); } catch(e) {} html5QrCode = null; }
-    scannerActive = false;
-    document.getElementById('scannerModal').classList.remove('open');
-    document.getElementById('scanner-container').innerHTML = '<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>';
-  }
+  async function abrirScanner() { const modal = document.getElementById('scannerModal'); modal.classList.add('open'); const container = document.getElementById('scanner-container'); try { html5QrCode = new Html5Qrcode("scanner-container"); const config = { fps: 20, qrbox: { width: 280, height: 180 }, aspectRatio: 1.333, disableFlip: false }; await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => { if (decodedText && !scannerActive) { scannerActive = true; html5QrCode.stop(); cerrarScanner(); processBarcode(decodedText); setTimeout(() => { scannerActive = false; }, 2000); } }, (error) => {}); } catch (err) { container.innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error al iniciar cámara<br><br>Verificá los permisos</div>`; toast("Error al iniciar la cámara"); } }
+  function cerrarScanner() { if (html5QrCode && html5QrCode.isScanning) { try { html5QrCode.stop(); } catch(e) {} html5QrCode = null; } scannerActive = false; document.getElementById('scannerModal').classList.remove('open'); document.getElementById('scanner-container').innerHTML = '<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>'; }
 
   function askConfirm() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; if (!name) { toast('Ingresá el nombre'); return; } const icon = document.getElementById('cIcon'); const iconI = document.getElementById('cIconI'); const title = document.getElementById('cTitle'); const body = document.getElementById('cBody'); const okBtn = document.getElementById('cOkBtn'); if (action === 'add') { icon.className = 'confirm-icon add'; iconI.className = 'ti ti-arrow-up'; title.textContent = 'Agregar al inventario'; body.innerHTML = 'Vas a agregar <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong>'; okBtn.className = 'confirm-ok add'; okBtn.textContent = 'Sí, agregar'; } else { const item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (!item) { toast('Producto no encontrado'); return; } if (item.q < qty) { toast('Stock insuficiente (' + item.q + ' disponibles)'); return; } icon.className = 'confirm-icon rem'; iconI.className = 'ti ti-arrow-down'; title.textContent = 'Registrar consumo'; body.innerHTML = 'Vas a consumir <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong><br><span style="font-size:12px;color:var(--text2)">Stock: ' + item.q + ' → ' + (item.q - qty) + '</span>'; okBtn.className = 'confirm-ok rem'; okBtn.textContent = 'Sí, consumir'; } document.getElementById('confirmModal').classList.add('open'); }
   function confirmOk() { document.getElementById('confirmModal').classList.remove('open'); submit(); }
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
-  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); }
+  function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); render(); }
 
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
-  
-  function adj(id, d) { const item = inv.find(i => i.id === id); if (!item) return; item.q = Math.max(0, item.q + d); save(); render(); updateAlerts(); }
+  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><div class="item-info"><div class="item-name">${item.n}</div><div class="item-stock ${item.q === 0 ? 'stock-zero' : ''}">Stock: ${item.q} unidad${item.q !== 1 ? 'es' : ''}</div></div><div class="action-buttons"><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
   
   let pendingDelId = null;
   function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
   function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
   
-  function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; document.getElementById('editNameInput').value = item.n; document.getElementById('editModal').classList.add('open'); }
+  function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; editQtyTemp = item.q; document.getElementById('editNameInput').value = item.n; document.getElementById('editQtyDisplay').innerText = editQtyTemp; document.getElementById('editModal').classList.add('open'); }
+  function adjustEditQty(delta) { const newVal = editQtyTemp + delta; if (newVal >= 0) { editQtyTemp = newVal; document.getElementById('editQtyDisplay').innerText = editQtyTemp; } }
+  function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } item.n = newName; item.q = editQtyTemp; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Cambios guardados'); }
   function closeEditModal() { editId = null; document.getElementById('editModal').classList.remove('open'); document.getElementById('editNameInput').value = ''; }
-  function confirmEdit() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } item.n = newName; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Nombre actualizado'); }
   
-  function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); }
+  function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); render(); updateAlerts(); }
   function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
   function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
@@ -847,8 +764,7 @@
   async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
 
-  applyAccent(); updateAlerts(); 
-  if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
+  applyAccent(); updateAlerts(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
 </script>
 </body>
 </html>
