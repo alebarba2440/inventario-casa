@@ -695,36 +695,42 @@
     } catch(e) { toast('Error: ' + e.message); }
   }
 
-  function syncFb() {
-  db.collection('inv').get()
-    .then(snap => {
-      const batch = db.batch();
+  async function syncFb() {
+  try {
+    const snap = await db.collection('inv').get();
 
-      snap.docs.forEach(d => {
-        batch.delete(d.ref);
-      });
+    const batch = db.batch();
 
-      inv.forEach(item => {
-        batch.set(
-          db.collection('inv').doc(item.id),
-          {
-            n: item.n,
-            q: item.q
-          }
-        );
-      });
-
-      return batch.commit();
-    })
-    .then(() => {
-      console.log("Firebase sincronizado");
-    })
-    .catch(err => {
-      console.error("Error Firebase:", err);
-      toast("Error Firebase: " + err.message);
+    snap.docs.forEach(doc => {
+      batch.delete(doc.ref);
     });
-}
 
+    inv.forEach(item => {
+      const ref = db.collection('inv').doc(item.id);
+      batch.set(ref, {
+        n: item.n,
+        q: item.q
+      });
+    });
+
+    await batch.commit();
+
+    console.log("Sincronizado OK");
+    toast("Firebase sincronizado");
+  } catch (err) {
+    console.error(err);
+    toast("ERROR: " + err.message);
+  }
+}
+function save() {
+  localStorage.setItem('inv_v2', JSON.stringify(inv));
+
+  console.log("Guardando:", inv);
+
+  if (db && fbOn) {
+    syncFb();
+  }
+}
   function exportData() {
     const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
