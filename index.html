@@ -159,7 +159,7 @@
     -moz-appearance: textfield;
   }
   input[type="number"]::-webkit-inner-spin-button,
-  input[number]::-webkit-outer-spin-button {
+  input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
@@ -204,31 +204,18 @@
     padding: 0;
     width: 100%;
   }
-  .filter-bar {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    -webkit-overflow-scrolling: touch;
+  .filter-select-wrap {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border);
+    padding: 4px;
   }
-  .filter-chip {
-    padding: 8px 16px;
-    border-radius: 30px;
-    background: var(--surface2);
-    border: 0.5px solid var(--border2);
-    font-size: 14px;
+  .filter-select-wrap select {
+    border: none;
+    background: transparent;
+    padding: 10px 12px;
     font-weight: 500;
-    color: var(--text2);
-    white-space: nowrap;
-    cursor: pointer;
-    transition: all 0.15s;
   }
-  .filter-chip.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
-  .filter-chip:active { transform: scale(0.96); }
   .inv-list { display: flex; flex-direction: column; gap: 8px; }
   .inv-item {
     background: var(--surface);
@@ -713,7 +700,7 @@
     </div>
     <div class="panel" id="panelInventario">
       <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Buscar..." oninput="render()" id="searchInput" autocorrect="off"></div>
-      <div class="filter-bar" id="filterBar"></div>
+      <div class="filter-select-wrap"><select id="categoryFilterSelect" onchange="setFilter(this.value)"><option value="Todas">Todas las categorías</option></select></div>
       <div class="inv-list" id="invList"></div>
     </div>
   </div>
@@ -740,15 +727,15 @@
   let currentFilter = 'Todas';
   
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
-  function saveCategories() { localStorage.setItem('categories_v2', JSON.stringify(categories)); renderFilterBar(); updateCategorySelects(); }
+  function saveCategories() { localStorage.setItem('categories_v2', JSON.stringify(categories)); updateFilterSelect(); updateCategorySelects(); renderCategoriesList(); }
   function addCategory() { const input = document.getElementById('newCatName'); const name = input.value.trim(); if (!name) return; if (categories.includes(name)) { toast('Categoría ya existe'); return; } categories.push(name); saveCategories(); renderCategoriesList(); input.value = ''; toast('Categoría agregada'); }
-  function editCategory(oldName, newName) { if (!newName.trim() || categories.includes(newName.trim())) return; const index = categories.indexOf(oldName); if (index !== -1) { categories[index] = newName.trim(); inv.forEach(p => { if (p.category === oldName) p.category = newName.trim(); }); saveCategories(); renderCategoriesList(); save(); render(); } }
-  function deleteCategory(cat) { if (categories.length <= 1) { toast('Debe haber al menos una categoría'); return; } categories = categories.filter(c => c !== cat); inv.forEach(p => { if (p.category === cat) p.category = categories[0]; }); saveCategories(); renderCategoriesList(); save(); render(); }
+  function editCategory(oldName, newName) { if (!newName.trim() || categories.includes(newName.trim())) return; const index = categories.indexOf(oldName); if (index !== -1) { categories[index] = newName.trim(); inv.forEach(p => { if (p.category === oldName) p.category = newName.trim(); }); saveCategories(); save(); render(); } }
+  function deleteCategory(cat) { if (categories.length <= 1) { toast('Debe haber al menos una categoría'); return; } categories = categories.filter(c => c !== cat); inv.forEach(p => { if (p.category === cat) p.category = categories[0]; }); saveCategories(); save(); render(); }
   function renderCategoriesList() { const container = document.getElementById('categoriesList'); if (!container) return; container.innerHTML = categories.map(cat => `<div class="category-item"><span class="category-name">${escapeHtml(cat)}</span><div class="category-actions"><button class="cat-edit" onclick="promptEditCategory('${escapeHtml(cat)}')"><i class="ti ti-edit"></i></button><button class="cat-delete" onclick="deleteCategory('${escapeHtml(cat)}')"><i class="ti ti-trash"></i></button></div></div>`).join(''); }
   function promptEditCategory(oldName) { const newName = prompt('Editar categoría:', oldName); if (newName && newName.trim() && newName.trim() !== oldName) editCategory(oldName, newName.trim()); }
   function updateCategorySelects() { const select = document.getElementById('editCategorySelect'); if (select) { select.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join(''); } }
-  function renderFilterBar() { const container = document.getElementById('filterBar'); if (!container) return; const allFilters = ['Todas', ...categories]; container.innerHTML = allFilters.map(f => `<div class="filter-chip ${currentFilter === f ? 'active' : ''}" onclick="setFilter('${f.replace(/'/g, "\\'")}')">${escapeHtml(f)}</div>`).join(''); render(); }
-  function setFilter(f) { currentFilter = f; renderFilterBar(); render(); }
+  function updateFilterSelect() { const select = document.getElementById('categoryFilterSelect'); if (!select) return; select.innerHTML = '<option value="Todas">Todas las categorías</option>' + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join(''); select.value = currentFilter; }
+  function setFilter(f) { currentFilter = f; updateFilterSelect(); render(); }
   function switchTab(t) { const isC = t === 'cargar'; document.getElementById('tabC').classList.toggle('active', isC); document.getElementById('tabI').classList.toggle('active', !isC); document.getElementById('panelCargar').classList.toggle('active', isC); document.getElementById('panelInventario').classList.toggle('active', !isC); const fab = document.getElementById('cameraFab'); if (fab) fab.style.display = isC ? 'flex' : 'none'; if (!isC) render(); }
   function goTab(t) { switchTab(t); document.getElementById('navC').classList.toggle('active', t === 'cargar'); document.getElementById('navI').classList.toggle('active', t === 'inventario'); }
   function setAction(a) { action = a; document.getElementById('btnAdd').className = 'action-btn' + (a === 'add' ? ' sel-add' : ''); document.getElementById('btnRem').className = 'action-btn' + (a === 'remove' ? ' sel-rem' : ''); document.getElementById('submitBtn').className = 'submit-btn' + (a === 'remove' ? ' danger' : ''); document.getElementById('submitLbl').textContent = a === 'add' ? 'Agregar al inventario' : 'Registrar consumo'; }
@@ -788,7 +775,7 @@
   async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null, category: item.category || categories[0] }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
   function toggleFirebase() { const b = document.getElementById('fbBody'); const c = document.getElementById('fbChevron'); const o = b.style.maxHeight && b.style.maxHeight !== '0px'; b.style.maxHeight = o ? '0' : '300px'; c.style.transform = o ? 'rotate(0deg)' : 'rotate(180deg)'; }
-  applyAccent(); updateAlerts(); renderFilterBar(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
+  applyAccent(); updateAlerts(); updateFilterSelect(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
 </script>
 </body>
 </html>
