@@ -8,10 +8,11 @@
 <meta name="apple-mobile-web-app-title" content="Inventario">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="icon" type="image/png" href="logo.png">
-<title>Inventario - Escáner Rápido iOS</title>
+<title>Inventario - Escáner Automático</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<!-- html5-qrcode para escaneo continuo automático -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --accent: #1D9E75;
@@ -575,44 +576,45 @@
   .camera-fab:active { transform: scale(0.94); }
   .camera-fab i { font-size: 28px; }
 
-  /* Input cámara nativa oculto */
-  #hiddenCamera {
-    display: none;
+  /* Escáner modal */
+  #scanner-container {
+    width: 100%;
+    min-height: 350px;
+    background: #000;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
   }
-
-  /* Overlay de procesamiento rápido */
-  .scanning-overlay {
-    position: fixed;
-    top: 0;
+  #scanner-container video, #scanner-container canvas {
+    width: 100%;
+    height: auto;
+    min-height: 350px;
+    object-fit: cover;
+  }
+  .scanner-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 85%;
+    height: 30%;
+    border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 12px;
+    box-shadow: 0 0 0 2000px rgba(0,0,0,0.3);
+    pointer-events: none;
+  }
+  .scanner-text {
+    position: absolute;
+    bottom: 12px;
     left: 0;
     right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    z-index: 300;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 20px;
+    text-align: center;
     color: white;
-    font-size: 18px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
+    background: rgba(0,0,0,0.7);
+    padding: 8px;
+    font-size: 12px;
+    z-index: 10;
   }
-  .scanning-overlay.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .spinner-fast {
-    width: 44px;
-    height: 44px;
-    border: 3px solid rgba(255,255,255,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -680,12 +682,20 @@
   </div>
 </div>
 
-<button class="camera-fab" id="cameraFab" onclick="abrirCamaraRapida()"><i class="ti ti-camera"></i></button>
-<input type="file" id="hiddenCamera" accept="image/*" capture="environment" style="display:none">
+<button class="camera-fab" id="cameraFab" onclick="abrirScanner()"><i class="ti ti-camera"></i></button>
 <div class="toast" id="toast"></div>
-<div class="scanning-overlay" id="scanOverlay">
-  <div class="spinner-fast"></div>
-  <div>Procesando código...</div>
+
+<!-- MODAL ESCÁNER AUTOMÁTICO -->
+<div class="modal-overlay" id="scannerModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📷 Escanear código</div>
+    <div id="scanner-container" style="position:relative">
+      <div class="scanner-guide"></div>
+      <div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>
+    </div>
+    <button class="close-btn" onclick="cerrarScanner()">Cancelar</button>
+  </div>
 </div>
 
 <!-- MODALES CONFIRMACIÓN -->
@@ -698,6 +708,8 @@
   let cfg = JSON.parse(localStorage.getItem('cfg_v2') || '{"accent":"#1D9E75","accentD":"#0F6E56","accentL":"#E1F5EE"}');
   let action = 'add';
   let db = null, fbOn = false;
+  let html5QrCode = null;
+  let scannerActive = false;
 
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
 
@@ -728,69 +740,60 @@
     if (found) { 
       document.getElementById('prodName').value = found.n; 
       toast(`📦 ${found.n} (Stock: ${found.q})`);
-      setTimeout(() => { document.getElementById('prodQty').focus(); document.getElementById('prodQty').select(); }, 80);
+      setTimeout(() => { document.getElementById('prodQty').focus(); document.getElementById('prodQty').select(); }, 100);
     } else { 
       document.getElementById('prodName').value = ''; 
       document.getElementById('prodName').focus(); 
-      toast('🔍 Producto nuevo, ingresá nombre');
+      toast('🔍 Producto nuevo, ingresá nombre y cantidad');
     } 
   }
   function onBarcodeManual() { const code = document.getElementById('barcodeInput').value.trim(); if (code) processBarcode(code); }
 
-  // MÉTODO RÁPIDO - Cámara nativa + jsQR (menos de 0.5 segundos de procesamiento)
-  function abrirCamaraRapida() {
-    const input = document.getElementById('hiddenCamera');
-    input.onchange = procesarFotoRapida;
-    input.click();
+  // Escáner automático - detecta solo, sin botón de captura
+  async function abrirScanner() {
+    const modal = document.getElementById('scannerModal');
+    modal.classList.add('open');
+    const container = document.getElementById('scanner-container');
+    
+    try {
+      html5QrCode = new Html5Qrcode("scanner-container");
+      const config = { 
+        fps: 20, 
+        qrbox: { width: 280, height: 180 },
+        aspectRatio: 1.333,
+        disableFlip: false
+      };
+      
+      await html5QrCode.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+          // Detección automática - sin botón!
+          if (decodedText && !scannerActive) {
+            scannerActive = true;
+            html5QrCode.stop();
+            cerrarScanner();
+            processBarcode(decodedText);
+            setTimeout(() => { scannerActive = false; }, 2000);
+          }
+        },
+        (error) => { /* ignorar errores normales */ }
+      );
+    } catch (err) {
+      console.error("Error:", err);
+      container.innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error al iniciar cámara<br><br>Verificá los permisos</div>`;
+      toast("Error al iniciar la cámara");
+    }
   }
   
-  function procesarFotoRapida(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const overlay = document.getElementById('scanOverlay');
-    overlay.classList.add('active');
-    
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      const img = new Image();
-      img.onload = function() {
-        // Reducir drásticamente el tamaño para procesar en milisegundos
-        let width = img.width;
-        let height = img.height;
-        const maxSize = 600;
-        if (width > maxSize) {
-          height = (height * maxSize) / width;
-          width = maxSize;
-        }
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const imageData = ctx.getImageData(0, 0, width, height);
-        
-        // jsQR es muy rápido con imágenes pequeñas
-        const code = jsQR(imageData.data, canvas.width, canvas.height, {
-          inversionAttempts: "dontInvert",
-        });
-        
-        overlay.classList.remove('active');
-        
-        if (code && code.data) {
-          processBarcode(code.data);
-        } else {
-          toast("❌ No se detectó código. Acercá más o mejor luz.");
-        }
-        
-        // Limpiar
-        input.value = '';
-      };
-      img.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
+  function cerrarScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+      try { html5QrCode.stop(); } catch(e) {}
+      html5QrCode = null;
+    }
+    scannerActive = false;
+    document.getElementById('scannerModal').classList.remove('open');
+    document.getElementById('scanner-container').innerHTML = '<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>';
   }
 
   function askConfirm() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; if (!name) { toast('Ingresá el nombre'); return; } const icon = document.getElementById('cIcon'); const iconI = document.getElementById('cIconI'); const title = document.getElementById('cTitle'); const body = document.getElementById('cBody'); const okBtn = document.getElementById('cOkBtn'); if (action === 'add') { icon.className = 'confirm-icon add'; iconI.className = 'ti ti-arrow-up'; title.textContent = 'Agregar al inventario'; body.innerHTML = 'Vas a agregar <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong>'; okBtn.className = 'confirm-ok add'; okBtn.textContent = 'Sí, agregar'; } else { const item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (!item) { toast('Producto no encontrado'); return; } if (item.q < qty) { toast('Stock insuficiente (' + item.q + ' disponibles)'); return; } icon.className = 'confirm-icon rem'; iconI.className = 'ti ti-arrow-down'; title.textContent = 'Registrar consumo'; body.innerHTML = 'Vas a consumir <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong><br><span style="font-size:12px;color:var(--text2)">Stock: ' + item.q + ' → ' + (item.q - qty) + '</span>'; okBtn.className = 'confirm-ok rem'; okBtn.textContent = 'Sí, consumir'; } document.getElementById('confirmModal').classList.add('open'); }
@@ -798,22 +801,22 @@
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
   function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); }
 
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
+  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
   function adj(id, d) { const item = inv.find(i => i.id === id); if (!item) return; item.q = Math.max(0, item.q + d); save(); render(); updateAlerts(); }
   let pendingDelId = null;
   function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
   function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
   function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); }
-  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin alertas</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
+  function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
-  function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
-  function openConfig() { if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent)); document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : ''); document.getElementById('syncLabel').textContent = fbOn ? 'Conectado ✓' : 'Solo local'; document.getElementById('configModal').classList.add('open'); }
+  function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
+  function openConfig() { if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg; document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent)); document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : ''); document.getElementById('syncLabel').textContent = fbOn ? 'Conectado a Firebase ✓' : 'Sin sincronización — solo local'; document.getElementById('configModal').classList.add('open'); }
   function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
   function setAccent(el) { cfg.accent = el.dataset.c; cfg.accentD = el.dataset.d; cfg.accentL = el.dataset.l; applyAccent(); document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel')); el.classList.add('sel'); localStorage.setItem('cfg_v2', JSON.stringify(cfg)); }
   function connectFb() { const str = document.getElementById('fbCfg').value.trim(); if (!str) { toast('Pegá tu config'); return; } try { const parsed = JSON.parse(str); cfg.fbCfg = str; localStorage.setItem('cfg_v2', JSON.stringify(cfg)); loadFb(parsed); } catch(e) { toast('JSON inválido'); } }
   function loadFb(parsed) { if (typeof firebase !== 'undefined') { initFb(parsed); return; } let loaded = 0; const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js']; scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); }); }
-  function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado ✓'; toast('🔥 Firebase conectado'); db.collection('inv').onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); }); closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
+  function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; toast('🔥 Firebase conectado'); db.collection('inv').onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); }); closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
   async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
 
