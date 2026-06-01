@@ -696,13 +696,34 @@
   }
 
   function syncFb() {
-    const batch = db.batch();
-    db.collection('inv').get().then(snap => {
-      snap.docs.forEach(d => batch.delete(d.ref));
-      inv.forEach(item => batch.set(db.collection('inv').doc(item.id), { n: item.n, q: item.q }));
-      batch.commit();
+  db.collection('inv').get()
+    .then(snap => {
+      const batch = db.batch();
+
+      snap.docs.forEach(d => {
+        batch.delete(d.ref);
+      });
+
+      inv.forEach(item => {
+        batch.set(
+          db.collection('inv').doc(item.id),
+          {
+            n: item.n,
+            q: item.q
+          }
+        );
+      });
+
+      return batch.commit();
+    })
+    .then(() => {
+      console.log("Firebase sincronizado");
+    })
+    .catch(err => {
+      console.error("Error Firebase:", err);
+      toast("Error Firebase: " + err.message);
     });
-  }
+}
 
   function exportData() {
     const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' });
