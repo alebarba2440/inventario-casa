@@ -271,6 +271,7 @@
     background: var(--surface);
     border-top: 0.5px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom, 12px);
+    margin-bottom: 15px;
     flex-shrink: 0;
   }
   .nav-btn {
@@ -408,6 +409,194 @@
   }
   .sync-dot.on { background: var(--accent); animation: pulse 2s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* AUTOCOMPLETE CUSTOM */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-suggestion {
+    position: absolute;
+    left: 0; right: 0; top: 100%;
+    margin-top: 4px;
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 11px 14px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text2);
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+    transition: background 0.1s;
+  }
+  .autocomplete-suggestion .sugg-name { color: var(--text); }
+  .autocomplete-suggestion .sugg-hint { font-size: 12px; color: var(--text2); }
+  .autocomplete-suggestion:active { background: var(--accent-light); }
+
+  /* CONFIRM MODAL */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    padding: 20px;
+  }
+  .confirm-overlay.open { opacity: 1; pointer-events: all; }
+  .confirm-sheet {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px 20px 20px;
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transform: scale(0.92) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.32,0.72,0,1);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .confirm-overlay.open .confirm-sheet { transform: scale(1) translateY(0); }
+  .confirm-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+    font-size: 26px;
+  }
+  .confirm-icon.add { background: var(--accent-light); color: var(--accent-dark); }
+  .confirm-icon.rem { background: #FEF3C7; color: #D97706; }
+  .confirm-icon.del { background: #FCEBEB; color: var(--danger); }
+  .confirm-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+  }
+  .confirm-body {
+    font-size: 14px;
+    color: var(--text2);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .confirm-body strong { color: var(--text); font-weight: 600; }
+  .confirm-actions { display: flex; flex-direction: column; gap: 8px; }
+  .confirm-ok {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .confirm-ok:active { transform: scale(0.98); opacity: 0.9; }
+  .confirm-ok.add { background: var(--accent); color: white; }
+  .confirm-ok.rem { background: #D97706; color: white; }
+  .confirm-ok.del { background: var(--danger); color: white; }
+  .confirm-cancel {
+    width: 100%;
+    padding: 13px;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .confirm-cancel:active { opacity: 0.7; }
+
+  /* ALERTAS EXPANDIBLE */
+  .alerts-section {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    overflow: hidden;
+  }
+  .alerts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .alerts-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .alerts-header-left i { font-size: 18px; color: var(--danger); }
+  .alerts-badge {
+    background: var(--danger);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 1px 7px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .alerts-badge.none { background: var(--accent); }
+  .alerts-chevron {
+    font-size: 18px;
+    color: var(--text2);
+    transition: transform 0.2s;
+  }
+  .alerts-section.open .alerts-chevron { transform: rotate(180deg); }
+  .alerts-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.4,0,0.2,1);
+    border-top: 0px solid var(--border);
+  }
+  .alerts-section.open .alerts-body {
+    max-height: 300px;
+    border-top-width: 0.5px;
+  }
+  .alerts-inner { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
+  .alert-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #FCEBEB;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .alert-item i { font-size: 16px; color: var(--danger); flex-shrink: 0; }
+  .alert-item-name { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .alert-item-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--danger);
+    background: rgba(226,75,74,0.12);
+    border-radius: 6px;
+    padding: 2px 7px;
+  }
+  .alerts-empty {
+    font-size: 13px;
+    color: var(--text2);
+    text-align: center;
+    padding: 10px 0 4px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .alert-item { background: rgba(226,75,74,0.15); }
+  }
 </style>
 </head>
 <body>
@@ -439,8 +628,13 @@
       <div class="card">
         <div>
           <div class="input-label">Nombre del producto</div>
-          <input type="text" id="prodName" placeholder="ej: Leche, Arroz..." list="prodSugg" autocomplete="off" autocorrect="off">
-          <datalist id="prodSugg"></datalist>
+          <div class="autocomplete-wrap">
+            <input type="text" id="prodName" placeholder="ej: Leche, Arroz..." autocomplete="off" autocorrect="off" autocapitalize="words" oninput="onNameInput()" onkeydown="onNameKey(event)" onblur="hideSugg()">
+            <div class="autocomplete-suggestion" id="suggBox" style="display:none" onmousedown="acceptSugg()">
+              <span class="sugg-name" id="suggText"></span>
+              <span class="sugg-hint">↵ aceptar</span>
+            </div>
+          </div>
         </div>
         <div>
           <div class="input-label">Cantidad</div>
@@ -448,10 +642,24 @@
         </div>
       </div>
 
-      <button class="submit-btn" id="submitBtn" onclick="submit()">
+      <button class="submit-btn" id="submitBtn" onclick="askConfirm()">
         <i class="ti ti-check"></i>
         <span id="submitLbl">Agregar al inventario</span>
       </button>
+
+      <div class="alerts-section" id="alertsSection">
+        <div class="alerts-header" onclick="toggleAlerts()">
+          <div class="alerts-header-left">
+            <i class="ti ti-bell-ringing"></i>
+            Alertas de stock
+            <span class="alerts-badge" id="alertsBadge">0</span>
+          </div>
+          <i class="ti ti-chevron-down alerts-chevron"></i>
+        </div>
+        <div class="alerts-body">
+          <div class="alerts-inner" id="alertsInner"></div>
+        </div>
+      </div>
     </div>
 
     <div class="panel" id="panelInventario">
@@ -478,6 +686,32 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- MODAL CONFIRMAR ACCIÓN -->
+<div class="confirm-overlay" id="confirmModal">
+  <div class="confirm-sheet">
+    <div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div>
+    <div class="confirm-title" id="cTitle">¿Confirmar?</div>
+    <div class="confirm-body" id="cBody"></div>
+    <div class="confirm-actions">
+      <button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button>
+      <button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR -->
+<div class="confirm-overlay" id="deleteModal">
+  <div class="confirm-sheet">
+    <div class="confirm-icon del"><i class="ti ti-trash"></i></div>
+    <div class="confirm-title">Eliminar producto</div>
+    <div class="confirm-body" id="dBody"></div>
+    <div class="confirm-actions">
+      <button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button>
+      <button class="confirm-cancel" onclick="cancelDel()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="configModal">
   <div class="modal-sheet">
@@ -556,26 +790,99 @@
     document.getElementById('submitLbl').textContent = a === 'add' ? 'Agregar al inventario' : 'Registrar consumo';
   }
 
-  function submit() {
+  // ---- AUTOCOMPLETE ----
+  let currentSugg = '';
+  function onNameInput() {
+    const val = document.getElementById('prodName').value;
+    const box = document.getElementById('suggBox');
+    const txt = document.getElementById('suggText');
+    if (!val.trim()) { box.style.display = 'none'; currentSugg = ''; return; }
+    const match = inv.find(i => i.n.toLowerCase().startsWith(val.toLowerCase()) && i.n.toLowerCase() !== val.toLowerCase());
+    if (match) {
+      currentSugg = match.n;
+      txt.textContent = match.n;
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+      currentSugg = '';
+    }
+  }
+  function onNameKey(e) {
+    if ((e.key === 'Tab' || e.key === 'Enter' || e.key === 'ArrowRight') && currentSugg) {
+      e.preventDefault();
+      acceptSugg();
+    }
+    if (e.key === 'Escape') hideSugg();
+  }
+  function acceptSugg() {
+    if (!currentSugg) return;
+    document.getElementById('prodName').value = currentSugg;
+    hideSugg();
+  }
+  function hideSugg() {
+    setTimeout(() => {
+      document.getElementById('suggBox').style.display = 'none';
+      currentSugg = '';
+    }, 120);
+  }
+
+  // ---- CONFIRMAR ACCIÓN ----
+  function askConfirm() {
     const name = document.getElementById('prodName').value.trim();
     const qty = parseInt(document.getElementById('prodQty').value) || 1;
     if (!name) { toast('Ingresá el nombre del producto'); return; }
+    const icon = document.getElementById('cIcon');
+    const iconI = document.getElementById('cIconI');
+    const title = document.getElementById('cTitle');
+    const body = document.getElementById('cBody');
+    const okBtn = document.getElementById('cOkBtn');
+    if (action === 'add') {
+      icon.className = 'confirm-icon add';
+      iconI.className = 'ti ti-arrow-up';
+      title.textContent = 'Agregar al inventario';
+      body.innerHTML = 'Vas a agregar <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong>';
+      okBtn.className = 'confirm-ok add';
+      okBtn.textContent = 'Sí, agregar';
+    } else {
+      const item = inv.find(i => i.n.toLowerCase() === name.toLowerCase());
+      if (!item) { toast('Producto no encontrado'); return; }
+      if (item.q < qty) { toast('Sin suficiente stock (' + item.q + ' disponibles)'); return; }
+      icon.className = 'confirm-icon rem';
+      iconI.className = 'ti ti-arrow-down';
+      title.textContent = 'Registrar consumo';
+      body.innerHTML = 'Vas a consumir <strong>' + qty + ' unidad' + (qty > 1 ? 'es' : '') + '</strong> de<br><strong>' + name + '</strong><br><span style="font-size:12px;color:var(--text2)">Stock actual: ' + item.q + ' → ' + (item.q - qty) + '</span>';
+      okBtn.className = 'confirm-ok rem';
+      okBtn.textContent = 'Sí, consumir';
+    }
+    document.getElementById('confirmModal').classList.add('open');
+  }
+  function confirmOk() {
+    document.getElementById('confirmModal').classList.remove('open');
+    submit();
+  }
+  function confirmCancel() {
+    document.getElementById('confirmModal').classList.remove('open');
+  }
 
+  function submit() {
+    const name = document.getElementById('prodName').value.trim();
+    const qty = parseInt(document.getElementById('prodQty').value) || 1;
+    if (!name) return;
     let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase());
     if (action === 'add') {
       if (item) { item.q += qty; }
       else { inv.push({ id: Date.now().toString(), n: name, q: qty }); }
       toast('✅ ' + name + ' +' + qty);
     } else {
-      if (!item) { toast('Producto no encontrado'); return; }
-      if (item.q < qty) { toast('Sin suficiente stock'); return; }
+      if (!item || item.q < qty) return;
       item.q -= qty;
       toast('📉 ' + name + ' −' + qty);
     }
     save();
     document.getElementById('prodName').value = '';
     document.getElementById('prodQty').value = 1;
-    updateSugg();
+    hideSugg();
+    updateAlerts();
   }
 
   function render() {
@@ -605,12 +912,29 @@
     const item = inv.find(i => i.id === id);
     if (!item) return;
     item.q = Math.max(0, item.q + d);
-    save(); render();
+    save(); render(); updateAlerts();
   }
 
+  let pendingDelId = null;
   function del(id) {
-    inv = inv.filter(i => i.id !== id);
-    save(); render(); toast('Eliminado');
+    const item = inv.find(i => i.id === id);
+    if (!item) return;
+    pendingDelId = id;
+    document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong> del inventario?<br><span style="font-size:12px;color:var(--text2)">Esta acción no se puede deshacer.</span>';
+    document.getElementById('deleteModal').classList.add('open');
+  }
+  function confirmDel() {
+    if (!pendingDelId) return;
+    const item = inv.find(i => i.id === pendingDelId);
+    inv = inv.filter(i => i.id !== pendingDelId);
+    pendingDelId = null;
+    document.getElementById('deleteModal').classList.remove('open');
+    save(); render(); updateAlerts();
+    if (item) toast('🗑 ' + item.n + ' eliminado');
+  }
+  function cancelDel() {
+    pendingDelId = null;
+    document.getElementById('deleteModal').classList.remove('open');
   }
 
   function save() {
@@ -618,8 +942,29 @@
     if (db && fbOn) syncFb();
   }
 
-  function updateSugg() {
-    document.getElementById('prodSugg').innerHTML = inv.map(i => `<option value="${i.n}">`).join('');
+  function updateSugg() { /* kept for compat */ }
+
+  function updateAlerts() {
+    const zeros = inv.filter(i => i.q === 0);
+    const badge = document.getElementById('alertsBadge');
+    const inner = document.getElementById('alertsInner');
+    badge.textContent = zeros.length;
+    badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : '');
+    if (zeros.length === 0) {
+      inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>';
+    } else {
+      inner.innerHTML = zeros.map(i =>
+        `<div class="alert-item">
+          <i class="ti ti-alert-circle"></i>
+          <span class="alert-item-name">${i.n}</span>
+          <span class="alert-item-tag">Sin stock</span>
+        </div>`
+      ).join('');
+    }
+  }
+
+  function toggleAlerts() {
+    document.getElementById('alertsSection').classList.toggle('open');
   }
 
   function toast(msg) {
@@ -741,7 +1086,7 @@ function save() {
   }
 
   applyAccent();
-updateSugg();
+  updateAlerts();
 
 if (cfg.fbCfg) {
   try {
