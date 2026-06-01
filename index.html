@@ -273,6 +273,8 @@
     padding-bottom: env(safe-area-inset-bottom, 12px);
     margin-bottom: 15px;
     flex-shrink: 0;
+    position: relative;
+    overflow: visible;
   }
   .nav-btn {
     flex: 1;
@@ -292,7 +294,16 @@
   }
   .nav-btn i { font-size: 30px; }
   .nav-btn.active { color: var(--accent); }
-
+.nav-watermark {
+    position: absolute;
+    bottom: 100%;          /* base pegada al borde superior del nav */
+    right: 12px;           /* pegado a la derecha */
+    width: 90px;           /* ajustá este tamaño a gusto */
+    opacity: 0.18;         /* marca de agua, bien tenue */
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
   /* TOAST */
   .toast {
     position: fixed;
@@ -672,7 +683,8 @@
 
   </div>
 
-  <div class="nav-bar">
+  <div class="nav-bar
+     <img src="logo.png" class="nav-watermark" alt="">
     <button class="nav-btn active" id="navC" onclick="goTab('cargar')">
       <i class="ti ti-stack-2"></i> Cargar
     </button>
