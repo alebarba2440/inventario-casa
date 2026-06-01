@@ -217,10 +217,10 @@
     background: var(--surface);
     border-radius: var(--radius);
     border: 0.5px solid var(--border);
-    padding: 13px 14px;
+    padding: 10px 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
   .item-name {
     flex: 1;
@@ -257,7 +257,7 @@
     color: var(--text);
   }
   .qty-zero { color: var(--danger) !important; }
-  .del-btn {
+  .del-btn, .edit-btn {
     width: 32px; height: 32px;
     border-radius: 8px;
     border: none;
@@ -265,10 +265,10 @@
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     color: var(--text2);
-    margin-left: 2px;
+    transition: all 0.1s;
   }
-  .del-btn:active { color: var(--danger); }
-  .del-btn i { font-size: 18px; }
+  .del-btn:active, .edit-btn:active { color: var(--accent); opacity: 0.7; }
+  .del-btn i, .edit-btn i { font-size: 18px; }
 
   .empty {
     text-align: center;
@@ -667,7 +667,6 @@
         </div>
         <div>
           <div class="input-label">🔢 Cantidad</div>
-          <!-- input mode numérico para mostrar siempre teclado numérico -->
           <input type="number" id="prodQty" value="1" min="1" step="1" inputmode="numeric" pattern="[0-9]*">
         </div>
       </div>
@@ -715,6 +714,22 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR NOMBRE -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Editar producto</div>
+    <div class="card" style="gap: 14px;">
+      <div>
+        <div class="input-label">Nuevo nombre</div>
+        <input type="text" id="editNameInput" placeholder="Nombre del producto">
+      </div>
+    </div>
+    <button class="submit-btn" onclick="confirmEdit()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
+    <button class="close-btn" onclick="closeEditModal()">Cancelar</button>
+  </div>
+</div>
+
 <!-- MODALES CONFIRMACIÓN -->
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
@@ -727,6 +742,7 @@
   let db = null, fbOn = false;
   let html5QrCode = null;
   let scannerActive = false;
+  let editId = null;
 
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
 
@@ -757,7 +773,6 @@
     if (found) { 
       document.getElementById('prodName').value = found.n; 
       toast(`📦 ${found.n} (Stock: ${found.q})`);
-      // Enfocar y seleccionar cantidad para que aparezca el teclado numérico
       setTimeout(() => { 
         const qtyInput = document.getElementById('prodQty');
         qtyInput.focus(); 
@@ -771,26 +786,15 @@
   }
   function onBarcodeManual() { const code = document.getElementById('barcodeInput').value.trim(); if (code) processBarcode(code); }
 
-  // Escáner automático - detecta solo, sin botón de captura
+  // Escáner automático 
   async function abrirScanner() {
     const modal = document.getElementById('scannerModal');
     modal.classList.add('open');
     const container = document.getElementById('scanner-container');
-    
     try {
       html5QrCode = new Html5Qrcode("scanner-container");
-      const config = { 
-        fps: 20, 
-        qrbox: { width: 280, height: 180 },
-        aspectRatio: 1.333,
-        disableFlip: false
-      };
-      
-      await html5QrCode.start(
-        { facingMode: "environment" }, 
-        config, 
-        (decodedText) => {
-          // Detección automática - sin botón!
+      const config = { fps: 20, qrbox: { width: 280, height: 180 }, aspectRatio: 1.333, disableFlip: false };
+      await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
           if (decodedText && !scannerActive) {
             scannerActive = true;
             html5QrCode.stop();
@@ -798,21 +802,15 @@
             processBarcode(decodedText);
             setTimeout(() => { scannerActive = false; }, 2000);
           }
-        },
-        (error) => { /* ignorar errores normales */ }
-      );
+        }, (error) => {});
     } catch (err) {
-      console.error("Error:", err);
       container.innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error al iniciar cámara<br><br>Verificá los permisos</div>`;
       toast("Error al iniciar la cámara");
     }
   }
   
   function cerrarScanner() {
-    if (html5QrCode && html5QrCode.isScanning) {
-      try { html5QrCode.stop(); } catch(e) {}
-      html5QrCode = null;
-    }
+    if (html5QrCode && html5QrCode.isScanning) { try { html5QrCode.stop(); } catch(e) {} html5QrCode = null; }
     scannerActive = false;
     document.getElementById('scannerModal').classList.remove('open');
     document.getElementById('scanner-container').innerHTML = '<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código - se detecta automáticamente</div>';
@@ -823,12 +821,19 @@
   function confirmCancel() { document.getElementById('confirmModal').classList.remove('open'); }
   function submit() { const name = document.getElementById('prodName').value.trim(); const qty = parseInt(document.getElementById('prodQty').value) || 1; const barcode = document.getElementById('barcodeInput').value.trim() || null; if (!name) return; let item = inv.find(i => i.n.toLowerCase() === name.toLowerCase()); if (action === 'add') { if (item) { item.q += qty; if (barcode && !item.barcode) item.barcode = barcode; } else { inv.push({ id: Date.now().toString(), n: name, q: qty, barcode: barcode || undefined }); } toast('✅ ' + name + ' +' + qty); } else { if (!item || item.q < qty) return; item.q -= qty; toast('📉 ' + name + ' −' + qty); } save(); document.getElementById('prodName').value = ''; document.getElementById('prodQty').value = 1; document.getElementById('barcodeInput').value = ''; hideSugg(); updateAlerts(); }
 
-  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
+  function render() { const q = (document.getElementById('searchInput').value || '').toLowerCase(); const filtered = q ? inv.filter(i => i.n.toLowerCase().includes(q)) : [...inv]; const list = document.getElementById('invList'); if (!filtered.length) { list.innerHTML = '<div class="empty"><i class="ti ti-packages"></i><p>Sin productos cargados</p></div>'; return; } list.innerHTML = filtered.map(item => `<div class="inv-item"><span class="item-name">${item.n}</span><div class="qty-controls"><button class="qty-btn" onclick="adj('${item.id}',-1)">−</button><span class="qty-num${item.q === 0 ? ' qty-zero' : ''}">${item.q}</span><button class="qty-btn" onclick="adj('${item.id}',1)">+</button></div><button class="edit-btn" onclick="openEditModal('${item.id}')"><i class="ti ti-edit"></i></button><button class="del-btn" onclick="del('${item.id}')"><i class="ti ti-trash"></i></button></div>`).join(''); }
+  
   function adj(id, d) { const item = inv.find(i => i.id === id); if (!item) return; item.q = Math.max(0, item.q + d); save(); render(); updateAlerts(); }
+  
   let pendingDelId = null;
   function del(id) { const item = inv.find(i => i.id === id); if (!item) return; pendingDelId = id; document.getElementById('dBody').innerHTML = '¿Eliminar <strong>' + item.n + '</strong>?'; document.getElementById('deleteModal').classList.add('open'); }
   function confirmDel() { if (!pendingDelId) return; inv = inv.filter(i => i.id !== pendingDelId); pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); save(); render(); updateAlerts(); toast('🗑 Eliminado'); }
   function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
+  
+  function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; document.getElementById('editNameInput').value = item.n; document.getElementById('editModal').classList.add('open'); }
+  function closeEditModal() { editId = null; document.getElementById('editModal').classList.remove('open'); document.getElementById('editNameInput').value = ''; }
+  function confirmEdit() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } item.n = newName; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Nombre actualizado'); }
+  
   function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); }
   function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${i.n}</span><span class="alert-item-tag">Sin stock</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
