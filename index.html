@@ -8,11 +8,11 @@
 <meta name="apple-mobile-web-app-title" content="Inventario">
 <link rel="apple-touch-icon" href="logo.png">
 <link rel="icon" type="image/png" href="logo.png">
-<title>Inventario - Lector de Códigos</title>
+<title>Inventario - Lector iOS</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- ZXing Library -->
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<!-- Libreria de escaneo ligera para iOS -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --accent: #1D9E75;
@@ -554,6 +554,7 @@
   .alert-item-tag { font-size: 11px; font-weight: 700; color: var(--danger); background: rgba(226,75,74,0.12); border-radius: 6px; padding: 2px 7px; }
   .alerts-empty { font-size: 13px; color: var(--text2); text-align: center; padding: 10px 0 4px; }
 
+  /* Botón cámara iOS nativo */
   .camera-fab {
     position: fixed;
     bottom: 90px;
@@ -575,17 +576,24 @@
   .camera-fab:active { transform: scale(0.94); }
   .camera-fab i { font-size: 28px; }
 
+  /* Ocultar input de archivo real */
+  #hiddenCameraInput {
+    display: none;
+  }
+
+  /* Escáner continuo */
   #scanner-preview {
     width: 100%;
-    height: 300px;
+    min-height: 280px;
     background: #000;
     border-radius: 16px;
     overflow: hidden;
     position: relative;
   }
-  #scanner-preview video {
+  #scanner-preview video, #scanner-preview canvas {
     width: 100%;
-    height: 100%;
+    height: auto;
+    min-height: 280px;
     object-fit: cover;
   }
   .scanner-guide {
@@ -612,15 +620,19 @@
     font-size: 12px;
     z-index: 10;
   }
-  .btn-reintentar {
+  .btn-camera-nativo {
     background: var(--accent);
     border: none;
-    padding: 10px 20px;
+    padding: 12px;
     border-radius: 30px;
     color: white;
     font-weight: 600;
     margin-top: 12px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
 </style>
 </head>
@@ -690,12 +702,14 @@
 </div>
 
 <button class="camera-fab" id="cameraFab" onclick="openScanner()"><i class="ti ti-camera"></i></button>
+<input type="file" id="hiddenCameraInput" accept="image/*" capture="environment" style="display:none">
+
 <div class="toast" id="toast"></div>
 
 <!-- MODALES -->
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
-<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-preview" style="position:relative"></div><button class="close-btn" onclick="closeScanner()">Cancelar</button></div></div>
+<div class="modal-overlay" id="scannerModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">📷 Escanear código</div><div id="scanner-preview" style="position:relative; min-height:200px;"><div style="text-align:center; color:white; padding:60px 20px;">Iniciando cámara...</div></div><button class="btn-camera-nativo" id="fallbackCameraBtn" onclick="usarCamaraNativa()"><i class="ti ti-camera"></i> Usar cámara del sistema</button><button class="close-btn" onclick="closeScanner()">Cancelar</button></div></div>
 <div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
 
 <script>
@@ -703,8 +717,7 @@
   let cfg = JSON.parse(localStorage.getItem('cfg_v2') || '{"accent":"#1D9E75","accentD":"#0F6E56","accentL":"#E1F5EE"}');
   let action = 'add';
   let db = null, fbOn = false;
-  let currentScanner = null;
-  let scanTimeout = null;
+  let html5QrCode = null;
 
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
 
@@ -744,67 +757,80 @@
   }
   function onBarcodeManual() { const code = document.getElementById('barcodeInput').value.trim(); if (code) processBarcode(code); }
 
+  // Escáner continuo con html5-qrcode (mejor para iOS)
   async function openScanner() {
     const modal = document.getElementById('scannerModal');
     modal.classList.add('open');
     const container = document.getElementById('scanner-preview');
-    container.innerHTML = '<div style="color:white;text-align:center;padding-top:130px">📷 Solicitando permiso de cámara...</div><div class="scanner-text">Esperando permiso</div>';
+    container.innerHTML = '<div style="text-align:center; color:white; padding:60px 20px;">📷 Solicitando cámara...</div><div class="scanner-text">Iniciando...</div>';
     
     try {
-      const codeReader = new ZXing.BrowserMultiFormatReader();
-      currentScanner = codeReader;
-      
-      const videoInputDevices = await codeReader.listVideoInputDevices();
-      let selectedDeviceId = null;
-      
-      for (const device of videoInputDevices) {
-        if (device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear') || device.label.toLowerCase().includes('environment')) {
-          selectedDeviceId = device.deviceId;
-          break;
+      html5QrCode = new Html5Qrcode("scanner-preview");
+      const config = { fps: 15, qrbox: { width: 250, height: 150 }, aspectRatio: 1.333 };
+      await html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
+        if (decodedText && !window._scanningBlock) {
+          window._scanningBlock = true;
+          html5QrCode.stop();
+          closeScanner();
+          processBarcode(decodedText);
+          setTimeout(() => { window._scanningBlock = false; }, 2000);
         }
-      }
-      if (!selectedDeviceId && videoInputDevices.length > 0) selectedDeviceId = videoInputDevices[0].deviceId;
-      if (!selectedDeviceId) throw new Error("No se encontró cámara");
-      
-      container.innerHTML = `<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código de barras</div>`;
-      
-      await codeReader.decodeFromVideoDevice(selectedDeviceId, 'scanner-preview', (result, err) => {
-        if (result && !scanTimeout) {
-          const code = result.getText();
-          if (code) {
-            scanTimeout = setTimeout(() => { scanTimeout = null; }, 2000);
-            codeReader.reset();
-            closeScanner();
-            processBarcode(code);
-          }
-        }
-      });
+      }, (error) => { console.log("Scan error:", error); });
     } catch (err) {
-      console.error("Scanner error:", err);
-      let errorMsg = "";
-      if (err.message.includes("NotAllowedError") || err.message.includes("Permission denied")) {
-        errorMsg = "❌ Permiso de cámara denegado. Verificá los permisos del navegador.";
-      } else if (err.message.includes("NotFoundError") || err.message.includes("No se encontró")) {
-        errorMsg = "❌ No se encontró cámara en este dispositivo.";
-      } else {
-        errorMsg = "❌ Error: " + err.message;
-      }
-      container.innerHTML = `<div style="color:white;text-align:center;padding-top:100px">${errorMsg}</div><button class="btn-reintentar" onclick="reiniciarScanner()">🔄 Reintentar</button><div class="scanner-text">También podés ingresar el código manualmente</div>`;
-      toast(errorMsg);
+      console.error("Error scanner:", err);
+      container.innerHTML = `<div style="text-align:center; color:white; padding:40px 20px;">⚠️ No se pudo iniciar la cámara continua.<br><br>Usá el botón de abajo para escanear con la cámara nativa.</div><div class="scanner-text">Error: ${err.message}</div>`;
     }
   }
   
-  function reiniciarScanner() {
+  // Fallback: cámara nativa de iOS (abre la cámara directamente)
+  function usarCamaraNativa() {
+    const input = document.getElementById('hiddenCameraInput');
+    input.onchange = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          // Usar jsQR para leer el código de barras desde la imagen
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          
+          // Cargar jsQR dinámicamente si no está
+          if (typeof jsQR === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js';
+            script.onload = () => {
+              const code = jsQR(imageData.data, canvas.width, canvas.height);
+              if (code && code.data) processBarcode(code.data);
+              else toast("No se detectó código en la imagen");
+            };
+            document.head.appendChild(script);
+          } else {
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code && code.data) processBarcode(code.data);
+            else toast("No se detectó código en la imagen");
+          }
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+      input.value = '';
+    };
+    input.click();
     closeScanner();
-    setTimeout(() => openScanner(), 300);
   }
   
   function closeScanner() { 
-    if (scanTimeout) { clearTimeout(scanTimeout); scanTimeout = null; }
-    if (currentScanner) { 
-      try { currentScanner.reset(); } catch(e){} 
-      currentScanner = null; 
-    } 
+    if (html5QrCode && html5QrCode.isScanning) {
+      try { html5QrCode.stop(); } catch(e) {}
+      html5QrCode = null;
+    }
     document.getElementById('scannerModal').classList.remove('open'); 
     const container = document.getElementById('scanner-preview');
     if (container) container.innerHTML = '';
