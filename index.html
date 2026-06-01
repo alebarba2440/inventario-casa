@@ -48,12 +48,27 @@
   }
 .bg-watermark {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 150px;
-    opacity: 0.15;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    opacity: 0.08;
     pointer-events: none;
-    z-index: -1;  /* ← Esto lo manda al fondo de TODO */
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 9999;
+}
+  .nav-watermark {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 500px;
+    opacity: 0.08;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 9999;
 }
   .app {
     display: flex;
