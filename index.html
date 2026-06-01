@@ -725,9 +725,41 @@
   let editId = null;
   let editQtyTemp = 0;
   let currentFilter = 'Todas';
+  let categoriesListenerUnsubscribe = null;
+  let invListenerUnsubscribe = null;
   
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
-  function saveCategories() { localStorage.setItem('categories_v2', JSON.stringify(categories)); updateFilterSelect(); updateCategorySelects(); renderCategoriesList(); }
+  
+  async function syncCategoriesToFirebase() {
+    if (!db || !fbOn) return;
+    try {
+      await db.collection('app_config').doc('categories').set({ list: categories });
+    } catch(e) { console.error("Error sync categories:", e); }
+  }
+  
+  async function syncCategoriesFromFirebase() {
+    if (!db || !fbOn) return;
+    try {
+      const doc = await db.collection('app_config').doc('categories').get();
+      if (doc.exists && doc.data().list && Array.isArray(doc.data().list) && doc.data().list.length > 0) {
+        categories = doc.data().list;
+        localStorage.setItem('categories_v2', JSON.stringify(categories));
+        updateFilterSelect();
+        updateCategorySelects();
+        renderCategoriesList();
+        render();
+      }
+    } catch(e) { console.error("Error loading categories from Firebase:", e); }
+  }
+  
+  function saveCategories() { 
+    localStorage.setItem('categories_v2', JSON.stringify(categories)); 
+    updateFilterSelect(); 
+    updateCategorySelects(); 
+    renderCategoriesList();
+    if (db && fbOn) syncCategoriesToFirebase();
+  }
+  
   function addCategory() { const input = document.getElementById('newCatName'); const name = input.value.trim(); if (!name) return; if (categories.includes(name)) { toast('Categoría ya existe'); return; } categories.push(name); saveCategories(); renderCategoriesList(); input.value = ''; toast('Categoría agregada'); }
   function editCategory(oldName, newName) { if (!newName.trim() || categories.includes(newName.trim())) return; const index = categories.indexOf(oldName); if (index !== -1) { categories[index] = newName.trim(); inv.forEach(p => { if (p.category === oldName) p.category = newName.trim(); }); saveCategories(); save(); render(); } }
   function deleteCategory(cat) { if (categories.length <= 1) { toast('Debe haber al menos una categoría'); return; } categories = categories.filter(c => c !== cat); inv.forEach(p => { if (p.category === cat) p.category = categories[0]; }); saveCategories(); save(); render(); }
@@ -771,8 +803,13 @@
   function setAccent(el) { cfg.accent = el.dataset.c; cfg.accentD = el.dataset.d; cfg.accentL = el.dataset.l; applyAccent(); document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel')); el.classList.add('sel'); localStorage.setItem('cfg_v2', JSON.stringify(cfg)); }
   function connectFb() { const str = document.getElementById('fbCfg').value.trim(); if (!str) { toast('Pegá tu config'); return; } try { const parsed = JSON.parse(str); cfg.fbCfg = str; localStorage.setItem('cfg_v2', JSON.stringify(cfg)); loadFb(parsed); } catch(e) { toast('JSON inválido'); } }
   function loadFb(parsed) { if (typeof firebase !== 'undefined') { initFb(parsed); return; } let loaded = 0; const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js']; scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); }); }
-  function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; toast('🔥 Firebase conectado'); db.collection('inv').onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); }); closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
-  async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null, category: item.category || categories[0] }); }); await batch.commit(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
+  function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; toast('🔥 Firebase conectado'); 
+    if (invListenerUnsubscribe) invListenerUnsubscribe();
+    invListenerUnsubscribe = db.collection('inv').onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); });
+    if (categoriesListenerUnsubscribe) categoriesListenerUnsubscribe();
+    categoriesListenerUnsubscribe = db.collection('app_config').doc('categories').onSnapshot(doc => { if (doc.exists && doc.data().list && Array.isArray(doc.data().list) && doc.data().list.length > 0) { categories = doc.data().list; localStorage.setItem('categories_v2', JSON.stringify(categories)); updateFilterSelect(); updateCategorySelects(); renderCategoriesList(); render(); } });
+    closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
+  async function syncFb() { try { const snap = await db.collection('inv').get(); const batch = db.batch(); snap.docs.forEach(doc => batch.delete(doc.ref)); inv.forEach(item => { const ref = db.collection('inv').doc(item.id); batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null, category: item.category || categories[0] }); }); await batch.commit(); await syncCategoriesToFirebase(); toast("Firebase sincronizado"); } catch(err) { toast("ERROR: " + err.message); } }
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
   function toggleFirebase() { const b = document.getElementById('fbBody'); const c = document.getElementById('fbChevron'); const o = b.style.maxHeight && b.style.maxHeight !== '0px'; b.style.maxHeight = o ? '0' : '300px'; c.style.transform = o ? 'rotate(0deg)' : 'rotate(180deg)'; }
   applyAccent(); updateAlerts(); updateFilterSelect(); if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
