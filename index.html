@@ -713,7 +713,7 @@
 <div class="modal-overlay" id="editModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Editar producto</div><div class="card" style="gap: 14px;"><div><div class="input-label">Nuevo nombre</div><input type="text" id="editNameInput" placeholder="Nombre del producto"></div><div><div class="input-label">Cantidad actual</div><div class="qty-adjust-group"><button class="qty-adjust-btn" onclick="adjustEditQty(-1)">−</button><span class="edit-qty-number" id="editQtyDisplay">0</span><button class="qty-adjust-btn" onclick="adjustEditQty(1)">+</button></div></div><div><div class="input-label">Categoría</div><select id="editCategorySelect"></select></div></div><button class="submit-btn" onclick="saveEditChanges()"><i class="ti ti-device-floppy"></i> Guardar cambios</button><button class="close-btn" onclick="closeEditModal()">Cancelar</button></div></div>
 <div class="confirm-overlay" id="confirmModal"><div class="confirm-sheet"><div class="confirm-icon" id="cIcon"><i id="cIconI" class="ti ti-check"></i></div><div class="confirm-title" id="cTitle">¿Confirmar?</div><div class="confirm-body" id="cBody"></div><div class="confirm-actions"><button class="confirm-ok" id="cOkBtn" onclick="confirmOk()">Confirmar</button><button class="confirm-cancel" onclick="confirmCancel()">Cancelar</button></div></div></div>
 <div class="confirm-overlay" id="deleteModal"><div class="confirm-sheet"><div class="confirm-icon del"><i class="ti ti-trash"></i></div><div class="confirm-title">Eliminar producto</div><div class="confirm-body" id="dBody"></div><div class="confirm-actions"><button class="confirm-ok del" onclick="confirmDel()">Sí, eliminar</button><button class="confirm-cancel" onclick="cancelDel()">Cancelar</button></div></div></div>
-<div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card"><div class="input-label">Categorías</div><div id="categoriesList"></div><div class="add-cat-row"><input type="text" id="newCatName" placeholder="Nueva categoría"><button class="small-btn" onclick="addCategory()">+</button></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
+<div class="modal-overlay" id="configModal"><div class="modal-sheet"><div class="modal-handle"></div><div class="modal-title">Configuración</div><div class="card"><div class="input-label">Color de acento</div><div class="color-row" id="colorRow"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div></div></div><div class="card"><div class="input-label">Categorías</div><div id="categoriesList"></div><div class="add-cat-row"><input type="text" id="newCatName" placeholder="Nueva categoría"><button class="small-btn" onclick="addCategory()">+</button></div></div><div class="card" id="firebaseSection"><div class="alerts-header" onclick="toggleFirebase()" style="padding:0 0 8px 0"><div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div><i class="ti ti-chevron-down alerts-chevron" id="fbChevron"></i></div><span id="syncLabel">Sin sincronización — solo local</span><div class="alerts-body" id="fbBody" style="max-height:0; overflow:hidden"><div class="alerts-inner" style="padding:8px 0 0 0"><textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"..."}'></textarea><button class="submit-btn" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar Firebase</button><button class="submit-btn" style="margin-top:8px;background:var(--accent);" onclick="syncAllToFirebase()"><i class="ti ti-refresh"></i> Sincronizar productos y categorías</button><div class="sync-status"><div class="sync-dot" id="syncDot"></div></div></div></div></div><div class="card"><button class="submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportData()"><i class="ti ti-download"></i> Exportar datos JSON</button></div><button class="close-btn" onclick="closeConfig()">Cerrar</button></div></div>
 <script>
   let inv = JSON.parse(localStorage.getItem('inv_v2') || '[]');
   let cfg = JSON.parse(localStorage.getItem('cfg_v2') || '{"accent":"#1D9E75","accentD":"#0F6E56","accentL":"#E1F5EE"}');
@@ -730,8 +730,8 @@
   
   function applyAccent() { document.documentElement.style.setProperty('--accent', cfg.accent); document.documentElement.style.setProperty('--accent-dark', cfg.accentD); document.documentElement.style.setProperty('--accent-light', cfg.accentL); }
   
-  // Guardar categorías localmente y en Firebase si está conectado
-  async function saveCategoriesToLocalAndFirebase(newCategories) {
+  // Función para guardar categorías localmente y en Firebase
+  async function saveCategories(newCategories, skipFirebase = false) {
     categories = [...newCategories];
     localStorage.setItem('categories_v2', JSON.stringify(categories));
     updateFilterSelect();
@@ -739,14 +739,12 @@
     renderCategoriesList();
     render();
     
-    // Si estamos conectados a Firebase, actualizar en la nube
-    if (db && fbOn) {
+    if (!skipFirebase && db && fbOn) {
       try {
-        await db.collection('app_config').doc('categories').set({ list: categories });
-        toast('Categorías sincronizadas en la nube');
+        await db.collection('categorias').doc('lista').set({ items: categories });
+        console.log('Categorías guardadas en Firebase');
       } catch(e) {
-        console.error("Error saving categories to Firebase:", e);
-        toast('Error al sincronizar categorías');
+        console.error("Error guardando categorías en Firebase:", e);
       }
     }
   }
@@ -759,8 +757,7 @@
       toast('Categoría ya existe'); 
       return; 
     } 
-    const newCategories = [...categories, name];
-    await saveCategoriesToLocalAndFirebase(newCategories);
+    await saveCategories([...categories, name]);
     input.value = ''; 
     toast('Categoría agregada y sincronizada'); 
   }
@@ -771,10 +768,10 @@
     if (index !== -1) { 
       const newCategories = [...categories];
       newCategories[index] = newName.trim();
-      await saveCategoriesToLocalAndFirebase(newCategories);
-      // Actualizar productos que tenían esta categoría
+      await saveCategories(newCategories);
       inv.forEach(p => { if (p.category === oldName) p.category = newName.trim(); });
-      save(); // guardar productos también
+      await saveProductsToFirebase();
+      render();
     } 
   }
   
@@ -784,11 +781,45 @@
       return; 
     } 
     const newCategories = categories.filter(c => c !== cat);
-    await saveCategoriesToLocalAndFirebase(newCategories);
-    // Reasignar productos de esta categoría a la primera categoría disponible
+    await saveCategories(newCategories);
     inv.forEach(p => { if (p.category === cat) p.category = newCategories[0]; });
-    save(); // guardar productos también
+    await saveProductsToFirebase();
     if (currentFilter === cat) setFilter('Todas');
+    render();
+  }
+  
+  async function saveProductsToFirebase() {
+    if (!db || !fbOn) return;
+    try {
+      const batch = db.batch();
+      const snapshot = await db.collection('inventario').get();
+      snapshot.docs.forEach(doc => batch.delete(doc.ref));
+      inv.forEach(item => {
+        const ref = db.collection('inventario').doc(item.id);
+        batch.set(ref, { 
+          nombre: item.n, 
+          cantidad: item.q, 
+          codigoBarras: item.barcode || null, 
+          categoria: item.category || categories[0],
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      await batch.commit();
+      toast('Productos sincronizados con Firebase');
+    } catch(e) {
+      console.error("Error guardando productos:", e);
+      toast('Error al sincronizar productos');
+    }
+  }
+  
+  async function syncAllToFirebase() {
+    if (!db || !fbOn) {
+      toast('Primero conecta Firebase');
+      return;
+    }
+    await saveCategories(categories, false);
+    await saveProductsToFirebase();
+    toast('¡Todo sincronizado! Productos y categorías guardados en la nube');
   }
   
   function renderCategoriesList() { 
@@ -851,10 +882,16 @@
   
   function openEditModal(id) { const item = inv.find(i => i.id === id); if (!item) return; editId = id; editQtyTemp = item.q; document.getElementById('editNameInput').value = item.n; document.getElementById('editQtyDisplay').innerText = editQtyTemp; updateCategorySelects(); const catSelect = document.getElementById('editCategorySelect'); if (catSelect && item.category) catSelect.value = item.category; document.getElementById('editModal').classList.add('open'); }
   function adjustEditQty(delta) { const newVal = editQtyTemp + delta; if (newVal >= 0) { editQtyTemp = newVal; document.getElementById('editQtyDisplay').innerText = editQtyTemp; } }
-  function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } const newCategory = document.getElementById('editCategorySelect').value; item.n = newName; item.q = editQtyTemp; item.category = newCategory; save(); render(); updateAlerts(); closeEditModal(); toast('✏️ Cambios guardados'); }
+  async function saveEditChanges() { const newName = document.getElementById('editNameInput').value.trim(); if (!newName) { toast('El nombre no puede estar vacío'); return; } const item = inv.find(i => i.id === editId); if (!item) { closeEditModal(); return; } if (inv.some(i => i.id !== editId && i.n.toLowerCase() === newName.toLowerCase())) { toast('Ya existe un producto con ese nombre'); return; } const newCategory = document.getElementById('editCategorySelect').value; item.n = newName; item.q = editQtyTemp; item.category = newCategory; await save(); closeEditModal(); toast('✏️ Cambios guardados'); }
   function closeEditModal() { editId = null; document.getElementById('editModal').classList.remove('open'); document.getElementById('editNameInput').value = ''; }
   
-  function save() { localStorage.setItem('inv_v2', JSON.stringify(inv)); if (db && fbOn) syncFb(); render(); updateAlerts(); }
+  async function save() { 
+    localStorage.setItem('inv_v2', JSON.stringify(inv)); 
+    if (db && fbOn) await saveProductsToFirebase();
+    render(); 
+    updateAlerts(); 
+  }
+  
   function updateAlerts() { const zeros = inv.filter(i => i.q === 0); const badge = document.getElementById('alertsBadge'); const inner = document.getElementById('alertsInner'); badge.textContent = zeros.length; badge.className = 'alerts-badge' + (zeros.length === 0 ? ' none' : ''); if (zeros.length === 0) inner.innerHTML = '<div class="alerts-empty"><i class="ti ti-check" style="color:var(--accent)"></i> Sin productos sin stock</div>'; else inner.innerHTML = zeros.map(i => `<div class="alert-item"><i class="ti ti-alert-circle"></i><span class="alert-item-name">${escapeHtml(i.n)}</span></div>`).join(''); }
   function toggleAlerts() { document.getElementById('alertsSection').classList.toggle('open'); }
   function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2200); }
@@ -874,26 +911,30 @@
       fbOn = true; 
       document.getElementById('syncDot').className = 'sync-dot on'; 
       document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; 
-      toast('🔥 Firebase conectado - sincronizando categorías...');
+      toast('🔥 Conectado a Firebase - sincronizando...');
       
-      // Escuchar cambios en categorías desde Firebase
       if (categoriesUnsubscribe) categoriesUnsubscribe();
-      categoriesUnsubscribe = db.collection('app_config').doc('categories').onSnapshot(doc => { 
-        if (doc.exists && doc.data().list && Array.isArray(doc.data().list) && doc.data().list.length > 0) { 
-          categories = doc.data().list; 
+      categoriesUnsubscribe = db.collection('categorias').doc('lista').onSnapshot(doc => { 
+        if (doc.exists && doc.data().items && Array.isArray(doc.data().items) && doc.data().items.length > 0) { 
+          categories = doc.data().items; 
           localStorage.setItem('categories_v2', JSON.stringify(categories)); 
           updateFilterSelect(); 
           updateCategorySelects(); 
           renderCategoriesList(); 
           render(); 
-          toast('Categorías sincronizadas desde la nube');
+          toast('Categorías sincronizadas');
         } 
       });
       
-      // Escuchar cambios en inventario desde Firebase
       if (invUnsubscribe) invUnsubscribe();
-      invUnsubscribe = db.collection('inv').onSnapshot(snap => { 
-        inv = snap.docs.map(d => ({ id: d.id, ...d.data() })); 
+      invUnsubscribe = db.collection('inventario').onSnapshot(snap => { 
+        inv = snap.docs.map(d => ({ 
+          id: d.id, 
+          n: d.data().nombre, 
+          q: d.data().cantidad, 
+          barcode: d.data().codigoBarras, 
+          category: d.data().categoria || categories[0] 
+        })); 
         localStorage.setItem('inv_v2', JSON.stringify(inv)); 
         render(); 
         updateAlerts(); 
@@ -901,21 +942,6 @@
       
       closeConfig(); 
     } catch(e) { toast('Error: ' + e.message); } 
-  }
-  
-  async function syncFb() { 
-    try { 
-      const snap = await db.collection('inv').get(); 
-      const batch = db.batch(); 
-      snap.docs.forEach(doc => batch.delete(doc.ref)); 
-      inv.forEach(item => { 
-        const ref = db.collection('inv').doc(item.id); 
-        batch.set(ref, { n: item.n, q: item.q, barcode: item.barcode || null, category: item.category || categories[0] }); 
-      }); 
-      await batch.commit(); 
-      await db.collection('app_config').doc('categories').set({ list: categories });
-      toast("Firebase sincronizado"); 
-    } catch(err) { toast("ERROR: " + err.message); } 
   }
   
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
