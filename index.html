@@ -904,45 +904,56 @@
   
   function loadFb(parsed) { if (typeof firebase !== 'undefined') { initFb(parsed); return; } let loaded = 0; const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js']; scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); }); }
   
-  function initFb(parsed) { 
-    try { 
-      if (!firebase.apps.length) firebase.initializeApp(parsed); 
-      db = firebase.firestore(); 
-      fbOn = true; 
-      document.getElementById('syncDot').className = 'sync-dot on'; 
-      document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; 
-      toast('🔥 Conectado a Firebase - sincronizando...');
-      
-      if (categoriesUnsubscribe) categoriesUnsubscribe();
-      categoriesUnsubscribe = db.collection('categorias').doc('lista').onSnapshot(doc => { 
-        if (doc.exists && doc.data().items && Array.isArray(doc.data().items) && doc.data().items.length > 0) { 
-          categories = doc.data().items; 
-          localStorage.setItem('categories_v2', JSON.stringify(categories)); 
-          updateFilterSelect(); 
-          updateCategorySelects(); 
-          renderCategoriesList(); 
-          render(); 
-          toast('Categorías sincronizadas');
-        } 
-      });
-      
-      if (invUnsubscribe) invUnsubscribe();
-      invUnsubscribe = db.collection('inventario').onSnapshot(snap => { 
-        inv = snap.docs.map(d => ({ 
-          id: d.id, 
-          n: d.data().nombre, 
-          q: d.data().cantidad, 
-          barcode: d.data().codigoBarras, 
-          category: d.data().categoria || categories[0] 
-        })); 
-        localStorage.setItem('inv_v2', JSON.stringify(inv)); 
-        render(); 
-        updateAlerts(); 
-      });
-      
-      closeConfig(); 
-    } catch(e) { toast('Error: ' + e.message); } 
-  }
+ function initFb(parsed) { 
+  try { 
+    if (!firebase.apps.length) firebase.initializeApp(parsed); 
+    db = firebase.firestore(); 
+    fbOn = true; 
+    document.getElementById('syncDot').className = 'sync-dot on'; 
+    document.getElementById('syncLabel').textContent = 'Conectado a Firebase ✓'; 
+    toast('🔥 Conectado a Firebase - sincronizando...');
+    
+    if (categoriesUnsubscribe) categoriesUnsubscribe();
+
+    // ── CATEGORÍAS: merge inteligente ──────────────────────────────────────────
+    categoriesUnsubscribe = db.collection('categorias').doc('lista').onSnapshot(async doc => { 
+      if (doc.exists && Array.isArray(doc.data().items) && doc.data().items.length > 0) {
+        // Firebase tiene categorías → las uso localmente
+        categories = doc.data().items; 
+        localStorage.setItem('categories_v2', JSON.stringify(categories)); 
+        updateFilterSelect(); 
+        updateCategorySelects(); 
+        renderCategoriesList(); 
+        render();
+      } else {
+        // Firebase NO tiene categorías → subo las locales
+        try {
+          await db.collection('categorias').doc('lista').set({ items: categories });
+          toast('📂 Categorías locales subidas a la nube');
+        } catch(e) {
+          console.error('Error subiendo categorías iniciales:', e);
+        }
+      }
+    });
+    // ──────────────────────────────────────────────────────────────────────────
+    
+    if (invUnsubscribe) invUnsubscribe();
+    invUnsubscribe = db.collection('inventario').onSnapshot(snap => { 
+      inv = snap.docs.map(d => ({ 
+        id: d.id, 
+        n: d.data().nombre, 
+        q: d.data().cantidad, 
+        barcode: d.data().codigoBarras, 
+        category: d.data().categoria || categories[0] 
+      })); 
+      localStorage.setItem('inv_v2', JSON.stringify(inv)); 
+      render(); 
+      updateAlerts(); 
+    });
+    
+    closeConfig(); 
+  } catch(e) { toast('Error: ' + e.message); } 
+}
   
   function exportData() { const blob = new Blob([JSON.stringify(inv, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'inventario.json'; a.click(); toast('📥 Exportado'); }
   function toggleFirebase() { const b = document.getElementById('fbBody'); const c = document.getElementById('fbChevron'); const o = b.style.maxHeight && b.style.maxHeight !== '0px'; b.style.maxHeight = o ? '0' : '300px'; c.style.transform = o ? 'rotate(0deg)' : 'rotate(180deg)'; }
