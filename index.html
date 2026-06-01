@@ -46,7 +46,15 @@
     color: var(--text);
     overflow: hidden;
   }
-
+.bg-watermark {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: -1;  /* ← Esto lo manda al fondo de TODO */
+}
   .app {
     display: flex;
     flex-direction: column;
@@ -54,7 +62,9 @@
     max-width: 430px;
     margin: 0 auto;
     background: var(--bg);
-  }
+    position: relative;
+    z-index: 1;  /* ← esto hace que todo dentro del .app esté por encima del logo */
+}
 
   /* TABS */
   .tabs {
@@ -686,9 +696,9 @@
     </div>
 
   </div>
-
+ <img src="logo3.png" class="nav-watermark" alt="logo">
   <div class="nav-bar">
-       <img src="logo3.png" class="nav-watermark" alt="logo">
+       
     <button class="nav-btn active" id="navC" onclick="goTab('cargar')">
       <i class="ti ti-stack-2"></i> Cargar
     </button>
