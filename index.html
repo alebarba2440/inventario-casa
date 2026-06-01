@@ -808,9 +808,15 @@
     }
   }
   function onNameKey(e) {
-    if ((e.key === 'Tab' || e.key === 'Enter' || e.key === 'ArrowRight') && currentSugg) {
+    if ((e.key === 'Tab' || e.key === 'ArrowRight') && currentSugg) {
       e.preventDefault();
       acceptSugg();
+    }
+    if (e.key === 'Enter') {
+      if (currentSugg) acceptSugg();
+      e.preventDefault();
+      document.getElementById('prodQty').focus();
+      document.getElementById('prodQty').select();
     }
     if (e.key === 'Escape') hideSugg();
   }
