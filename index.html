@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Inventario">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="icon" type="image/png" href="logo.png">
 <title>Inventario</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -52,22 +54,6 @@
     max-width: 430px;
     margin: 0 auto;
     background: var(--bg);
-  }
-
-  /* LOGO */
-  .logo-bar {
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: calc(env(safe-area-inset-top, 0px) + 12px) 20px 12px;
-    border-bottom: 0.5px solid var(--border);
-    flex-shrink: 0;
-  }
-  .logo-bar img {
-    height: 44px;
-    width: auto;
-    object-fit: contain;
   }
 
   /* TABS */
@@ -427,7 +413,6 @@
 <body>
 
 <div class="app">
-  <div class="logo-bar"><img src="logo.png" alt="Logo" onerror="this.style.display='none'"></div>
   <div class="tabs">
     <button class="tab active" id="tabC" onclick="switchTab('cargar')">
       <i class="ti ti-stack-2"></i> Cargar
