@@ -768,10 +768,17 @@
         <div class="swatch" style="background:#64748B" data-c="#64748B" data-d="#334155" data-l="#F1F5F9" onclick="setAccent(this)"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="input-label">Categorías</div>
-      <div id="categoriesList"></div>
-      <div class="add-cat-row"><input type="text" id="newCatName" placeholder="Nueva categoría"><button class="small-btn" onclick="addCategory()">+</button></div>
+    <div class="alerts-section" id="categoriesSection">
+      <div class="alerts-header" onclick="toggleCategories()">
+        <div class="alerts-header-left"><i class="ti ti-tag"></i> Categorías</div>
+        <i class="ti ti-chevron-down alerts-chevron"></i>
+      </div>
+      <div class="alerts-body" id="catBody">
+        <div class="alerts-inner" style="padding:8px 12px 14px;">
+          <div id="categoriesList"></div>
+          <div class="add-cat-row" style="margin-top:10px;"><input type="text" id="newCatName" placeholder="Nueva categoría"><button class="small-btn" onclick="addCategory()">+</button></div>
+        </div>
+      </div>
     </div>
     <div class="alerts-section" id="firebaseSection">
       <div class="alerts-header" onclick="toggleFirebase()">
@@ -1322,6 +1329,9 @@
   }
   function toggleFirebase() {
     document.getElementById('firebaseSection').classList.toggle('open');
+  }
+  function toggleCategories() {
+    document.getElementById('categoriesSection').classList.toggle('open');
   }
 
   // ─── INIT ─────────────────────────────────────────────────────────────────
