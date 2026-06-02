@@ -895,10 +895,10 @@
     if (!db || !fbOn) return;
     try {
       await db.collection(FB_INV).doc(item.id).set({
-        nombre: item.n,
-        cantidad: item.q,
-        codigoBarras: item.barcode || null,
-        categoria: item.category || categories[0],
+        n: item.n,
+        q: item.q,
+        barcode: item.barcode || null,
+        category: item.category || categories[0],
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch(e) { console.error('Error upsert producto:', e); }
@@ -917,10 +917,10 @@
       const batch = db.batch();
       inv.forEach(item => {
         batch.set(db.collection(FB_INV).doc(item.id), {
-          nombre: item.n,
-          cantidad: item.q,
-          codigoBarras: item.barcode || null,
-          categoria: item.category || categories[0],
+          n: item.n,
+          q: item.q,
+          barcode: item.barcode || null,
+          category: item.category || categories[0],
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
       });
@@ -1264,10 +1264,10 @@
       invUnsubscribe = db.collection(FB_INV).onSnapshot(snap => {
         inv = snap.docs.map(d => ({
           id: d.id,
-          n: d.data().nombre,
-          q: d.data().cantidad,
-          barcode: d.data().codigoBarras,
-          category: d.data().categoria || categories[0]
+          n: d.data().n,
+          q: d.data().q,
+          barcode: d.data().barcode || null,
+          category: d.data().category || categories[0]
         }));
         localStorage.setItem('inv_v2', JSON.stringify(inv));
         render();
