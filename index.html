@@ -264,23 +264,35 @@
   }
   .item-quantity.zero { background: #FCEBEB; color: var(--danger); }
   .action-buttons { display: flex; gap: 0.5rem; align-items: center; flex-shrink: 0; }
+  
+  /* Botones de acción sin fondo ni bordes - solo iconos */
   .edit-btn, .del-btn {
-    width: 2.375rem;
-    height: 2.375rem;
-    border-radius: 10px;
+    background: transparent;
     border: none;
-    background: var(--surface2);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
-    font-size: 1.125rem;
+    transition: transform 0.1s, opacity 0.15s;
+    font-size: 1.375rem;
+    padding: 6px;
+    margin: -6px;
   }
-  .edit-btn { color: var(--accent); border: 0.5px solid var(--border2); }
-  .edit-btn:active { background: var(--accent-light); transform: scale(0.96); }
-  .del-btn { color: white; background: var(--danger); border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-  .del-btn:active { background: var(--danger-dark); transform: scale(0.96); }
+  .edit-btn {
+    color: var(--accent);
+  }
+  .edit-btn:active {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  .del-btn {
+    color: var(--danger);
+  }
+  .del-btn:active {
+    transform: scale(0.92);
+    opacity: 0.7;
+  }
+  
   .empty { text-align: center; padding: 3.75rem 1.25rem; color: var(--text2); }
   .empty i { font-size: 3.25rem; display: block; margin-bottom: 12px; opacity: 0.2; }
   .empty p { font-size: 0.9375rem; }
@@ -573,7 +585,9 @@
     color: var(--text2);
     font-size: 15px;
     cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.1s;
   }
   .scroll-arr-btn:active { background: var(--accent-light); color: var(--accent); transform: scale(0.92); }
@@ -693,8 +707,6 @@
   }
   .font-size-row span.small { font-size: 0.6875rem; }
   .font-size-row span.large { font-size: 1.0625rem; font-weight: 600; }
-  
-  /* Slider específico - CORREGIDO */
   .font-size-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -730,7 +742,6 @@
     box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   }
   .font-size-slider:focus { outline: none; }
-  
   .theme-toggle-row { display: flex; gap: 8px; }
   .theme-btn {
     flex: 1;
@@ -980,7 +991,6 @@
   const FB_INV = 'inv';
   const FB_CAT = 'categorias';
 
-  // Función para aplicar el tamaño de fuente - CORREGIDA
   function applyFontSize(val) {
     const scale = parseFloat(val);
     if (isNaN(scale)) return;
@@ -994,7 +1004,6 @@
     }
   }
   
-  // Inicializar el slider
   function initFontSizeSlider() {
     const slider = document.getElementById('fontSizeSlider');
     if (slider) {
@@ -1106,7 +1115,6 @@
   function loadFb(parsed) { if (typeof firebase !== 'undefined') { initFb(parsed); return; } let loaded = 0; const scripts = ['https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js','https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js']; scripts.forEach(src => { const s = document.createElement('script'); s.src = src; s.onload = () => { if (++loaded === 2) initFb(parsed); }; document.head.appendChild(s); }); }
   function initFb(parsed) { try { if (!firebase.apps.length) firebase.initializeApp(parsed); db = firebase.firestore(); fbOn = true; document.getElementById('syncDot').className = 'sync-dot on'; document.getElementById('syncLabel').textContent = 'Conectado ✓'; toast('🔥 Conectado'); if (categoriesUnsubscribe) categoriesUnsubscribe(); categoriesUnsubscribe = db.collection(FB_CAT).doc('lista').onSnapshot(async doc => { if (doc.exists && Array.isArray(doc.data().items) && doc.data().items.length > 0) { categories = doc.data().items; localStorage.setItem('categories_v2', JSON.stringify(categories)); updateFilterSelect(); updateCategorySelects(); renderCategoriesList(); render(); } else { try { await db.collection(FB_CAT).doc('lista').set({ items: categories }); } catch(e) {} } }); if (invUnsubscribe) invUnsubscribe(); invUnsubscribe = db.collection(FB_INV).onSnapshot(snap => { inv = snap.docs.map(d => ({ id: d.id, n: d.data().n, q: d.data().q, barcode: d.data().barcode || null, category: d.data().category || categories[0] })); localStorage.setItem('inv_v2', JSON.stringify(inv)); render(); updateAlerts(); }); closeConfig(); } catch(e) { toast('Error: ' + e.message); } }
   
-  // Inicialización
   applyAccent(); 
   initFontSizeSlider();
   if (cfg.theme && cfg.theme !== 'auto') document.documentElement.setAttribute('data-theme', cfg.theme); 
@@ -1114,7 +1122,6 @@
   updateFilterSelect(); 
   if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
   
-  // Abrir primer acordeón por defecto
   setTimeout(() => {
     const firstSection = document.getElementById('aspectoSection');
     if (firstSection) {
