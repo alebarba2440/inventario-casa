@@ -848,18 +848,17 @@
 
   async function deleteCategory(cat) {
     if (categories.length <= 1) { toast('Debe haber al menos una categoría'); return; }
-    const newCategories = categories.filter(c => c !== cat);
-    await saveCategories(newCategories);
-    inv.forEach(p => { if (p.category === cat) p.category = newCategories[0]; });
-    await upsertAllProducts();
-    if (currentFilter === cat) setFilter('Todas');
-    render();
+    pendingDelCat = cat;
+    const affected = inv.filter(p => p.category === cat).length;
+    document.getElementById('dBody').innerHTML = '¿Eliminar la categoría <strong>' + escapeHtml(cat) + '</strong>?' +
+      (affected > 0 ? '<br><span style="font-size:12px;color:var(--text2)">(' + affected + ' producto' + (affected > 1 ? 's' : '') + ' se moverá' + (affected > 1 ? 'n' : '') + ' a "' + escapeHtml(categories.filter(c=>c!==cat)[0]) + '")</span>' : '');
+    document.getElementById('deleteModal').classList.add('open');
   }
 
   function renderCategoriesList() {
     const container = document.getElementById('categoriesList');
     if (!container) return;
-    container.innerHTML = categories.map(cat =>
+    container.innerHTML = [...categories].sort((a,b)=>a.localeCompare(b,'es')).map(cat =>
       `<div class="category-item">
         <span class="category-name">${escapeHtml(cat)}</span>
         <div class="category-actions">
@@ -876,14 +875,14 @@
 
   function updateCategorySelects() {
     const select = document.getElementById('editCategorySelect');
-    if (select) select.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    if (select) select.innerHTML = [...categories].sort((a,b)=>a.localeCompare(b,'es')).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   }
 
   function updateFilterSelect() {
     const select = document.getElementById('categoryFilterSelect');
     if (!select) return;
     select.innerHTML = '<option value="Todas">Todas las categorías</option>' +
-      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+      [...categories].sort((a,b)=>a.localeCompare(b,'es')).map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
     select.value = currentFilter;
   }
 
@@ -1115,6 +1114,8 @@
 
   // ─── DELETE ───────────────────────────────────────────────────────────────
   let pendingDelId = null;
+  let pendingDelCat = null;
+
   function del(id) {
     const item = inv.find(i => i.id === id);
     if (!item) return;
@@ -1123,18 +1124,33 @@
     document.getElementById('deleteModal').classList.add('open');
   }
   async function confirmDel() {
-    if (!pendingDelId) return;
-    const id = pendingDelId;
-    inv = inv.filter(i => i.id !== id);
-    pendingDelId = null;
     document.getElementById('deleteModal').classList.remove('open');
-    localStorage.setItem('inv_v2', JSON.stringify(inv));
-    await deleteProduct(id);   // borra solo ese doc en Firebase
-    render();
-    updateAlerts();
-    toast('🗑 Eliminado');
+    if (pendingDelCat) {
+      const cat = pendingDelCat;
+      pendingDelCat = null;
+      const newCategories = categories.filter(c => c !== cat);
+      await saveCategories(newCategories);
+      inv.forEach(p => { if (p.category === cat) p.category = newCategories[0]; });
+      await upsertAllProducts();
+      if (currentFilter === cat) setFilter('Todas');
+      render();
+      toast('🗑 Categoría eliminada');
+    } else if (pendingDelId) {
+      const id = pendingDelId;
+      pendingDelId = null;
+      inv = inv.filter(i => i.id !== id);
+      localStorage.setItem('inv_v2', JSON.stringify(inv));
+      await deleteProduct(id);
+      render();
+      updateAlerts();
+      toast('🗑 Eliminado');
+    }
   }
-  function cancelDel() { pendingDelId = null; document.getElementById('deleteModal').classList.remove('open'); }
+  function cancelDel() {
+    pendingDelId = null;
+    pendingDelCat = null;
+    document.getElementById('deleteModal').classList.remove('open');
+  }
 
   // ─── EDIT ─────────────────────────────────────────────────────────────────
   function openEditModal(id) {
