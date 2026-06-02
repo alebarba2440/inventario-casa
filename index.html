@@ -68,32 +68,27 @@
     position: relative;
     z-index: 1;
   }
-  .tabs {
-    display: flex;
+  .top-header {
     background: var(--surface);
-    border-bottom: 0.5px solid var(--border);
+    border-bottom: 3px solid var(--accent);
     padding-top: env(safe-area-inset-top, 0px);
     flex-shrink: 0;
-  }
-  .tab {
-    flex: 1;
-    padding: 14px 12px 12px;
-    background: none;
-    border: none;
-    border-bottom: 2.5px solid transparent;
-    font-family: 'DM Sans', system-ui, sans-serif;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text2);
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    transition: color 0.15s, border-color 0.15s;
+    padding-bottom: 14px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
   }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab i { font-size: 20px; }
+  .top-header-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0.2px;
+  }
+  .top-header-title i { font-size: 22px; }
   .content {
     flex: 1;
     overflow-y: auto;
@@ -643,9 +638,8 @@
 </head>
 <body>
 <div class="app">
-  <div class="tabs">
-    <button class="tab active" id="tabC" onclick="switchTab('cargar')"><i class="ti ti-stack-2"></i> Cargar</button>
-    <button class="tab" id="tabI" onclick="switchTab('inventario')"><i class="ti ti-list-check"></i> Inventario</button>
+  <div class="top-header">
+    <div class="top-header-title" id="topTitle"><i class="ti ti-stack-2" id="topIcon"></i><span id="topLabel">Cargar</span></div>
   </div>
   <div class="content" id="mainContent">
     <div class="panel active" id="panelCargar">
@@ -947,10 +941,10 @@
   // ─── TABS / NAV ────────────────────────────────────────────────────────────
   function switchTab(t) {
     const isC = t === 'cargar';
-    document.getElementById('tabC').classList.toggle('active', isC);
-    document.getElementById('tabI').classList.toggle('active', !isC);
     document.getElementById('panelCargar').classList.toggle('active', isC);
     document.getElementById('panelInventario').classList.toggle('active', !isC);
+    document.getElementById('topIcon').className = isC ? 'ti ti-stack-2' : 'ti ti-list-check';
+    document.getElementById('topLabel').textContent = isC ? 'Cargar' : 'Inventario';
     const fab = document.getElementById('cameraFab');
     if (fab) fab.style.display = isC ? 'flex' : 'none';
     if (!isC) render();
