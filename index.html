@@ -28,9 +28,10 @@
     --text2: #666;
     --radius: 12px;
     --radius-lg: 16px;
+    --app-font-size: 1;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --bg: #111;
       --surface: #1c1c1e;
       --surface2: #2c2c2e;
@@ -39,6 +40,24 @@
       --text: #f5f5f5;
       --text2: #aaa;
     }
+  }
+  :root[data-theme="dark"] {
+    --bg: #111;
+    --surface: #1c1c1e;
+    --surface2: #2c2c2e;
+    --border: rgba(255,255,255,0.1);
+    --border2: rgba(255,255,255,0.2);
+    --text: #f5f5f5;
+    --text2: #aaa;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f5f0;
+    --surface: #ffffff;
+    --surface2: #f5f5f0;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1a1a1a;
+    --text2: #666;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -565,7 +584,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #FCEBEB;
+    background: rgba(226,75,74,0.15);
+    border: 0.5px solid rgba(226,75,74,0.3);
     border-radius: 8px;
     padding: 8px 12px;
   }
@@ -658,6 +678,56 @@
     text-align: center;
     color: var(--text);
   }
+  .aspect-section { display: flex; flex-direction: column; gap: 14px; }
+  .aspect-row { display: flex; flex-direction: column; gap: 6px; }
+  .aspect-row-label { font-size: 12px; color: var(--text2); font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+  .font-size-row { display: flex; align-items: center; gap: 10px; }
+  .font-size-row span { font-size: 13px; color: var(--text2); min-width: 20px; text-align: center; }
+  .font-size-row span.small { font-size: 11px; }
+  .font-size-row span.large { font-size: 17px; font-weight: 600; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    flex: 1;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 3px solid var(--surface);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  input[type="range"]:focus { border-color: transparent; box-shadow: none; }
+  .theme-toggle-row { display: flex; gap: 8px; }
+  .theme-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .theme-btn i { font-size: 16px; }
+  .theme-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+  .section-divider { height: 0.5px; background: var(--border); margin: 2px 0; }
 </style>
 </head>
 <body>
@@ -765,12 +835,32 @@
     <div class="modal-title">Configuración</div>
     <div class="alerts-section scrollable" id="colorsSection">
       <div class="alerts-header" onclick="toggleColors()">
-        <div class="alerts-header-left"><i class="ti ti-palette"></i> Color de acento</div>
+        <div class="alerts-header-left"><i class="ti ti-palette"></i> Aspecto</div>
         <i class="ti ti-chevron-down alerts-chevron"></i>
       </div>
       <div class="alerts-body">
         <div class="alerts-inner" style="padding:10px 12px 14px;">
-          <div class="scrollable-wrap">
+          <div class="aspect-section">
+            <div class="aspect-row">
+              <div class="aspect-row-label">Tamaño del texto</div>
+              <div class="font-size-row">
+                <span class="small">A</span>
+                <input type="range" id="fontSizeSlider" min="0.85" max="1.2" step="0.05" value="1" oninput="applyFontSize(this.value)">
+                <span class="large">A</span>
+              </div>
+            </div>
+            <div class="aspect-row">
+              <div class="aspect-row-label">Modo</div>
+              <div class="theme-toggle-row">
+                <button class="theme-btn" id="themeBtnLight" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
+                <button class="theme-btn" id="themeBtnDark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
+                <button class="theme-btn" id="themeBtnAuto" onclick="setTheme('auto')"><i class="ti ti-device-mobile"></i> Auto</button>
+              </div>
+            </div>
+            <div class="section-divider"></div>
+            <div class="aspect-row-label">Color de acento</div>
+          </div>
+          <div class="scrollable-wrap" style="margin-top:6px;">
             <div class="scrollable-body" id="colorsScroll">
               <div style="display:flex;flex-direction:column;gap:10px;">
                 <div style="display:flex;flex-direction:column;gap:4px;">
@@ -921,6 +1011,35 @@
     document.documentElement.style.setProperty('--accent', cfg.accent);
     document.documentElement.style.setProperty('--accent-dark', cfg.accentD);
     document.documentElement.style.setProperty('--accent-light', cfg.accentL);
+  }
+
+  // ─── FONT SIZE ─────────────────────────────────────────────────────────────
+  function applyFontSize(val) {
+    const scale = parseFloat(val);
+    cfg.fontSize = scale;
+    localStorage.setItem('cfg_v2', JSON.stringify(cfg));
+    document.documentElement.style.fontSize = (scale * 100) + '%';
+    const slider = document.getElementById('fontSizeSlider');
+    if (slider) slider.value = scale;
+  }
+
+  // ─── THEME ─────────────────────────────────────────────────────────────────
+  function setTheme(mode) {
+    cfg.theme = mode;
+    localStorage.setItem('cfg_v2', JSON.stringify(cfg));
+    if (mode === 'auto') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', mode);
+    }
+    updateThemeBtns();
+  }
+  function updateThemeBtns() {
+    const mode = cfg.theme || 'auto';
+    document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('active'));
+    const map = { light: 'themeBtnLight', dark: 'themeBtnDark', auto: 'themeBtnAuto' };
+    const el = document.getElementById(map[mode]);
+    if (el) el.classList.add('active');
   }
 
   // ─── CATEGORÍAS ────────────────────────────────────────────────────────────
@@ -1325,6 +1444,9 @@
     document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent));
     document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : '');
     document.getElementById('syncLabel').textContent = fbOn ? 'Conectado ✓' : 'Solo local';
+    const slider = document.getElementById('fontSizeSlider');
+    if (slider) slider.value = cfg.fontSize || 1;
+    updateThemeBtns();
     renderCategoriesList();
     document.getElementById('configModal').classList.add('open');
   }
@@ -1440,6 +1562,8 @@
 
   // ─── INIT ─────────────────────────────────────────────────────────────────
   applyAccent();
+  if (cfg.fontSize) applyFontSize(cfg.fontSize);
+  if (cfg.theme && cfg.theme !== 'auto') document.documentElement.setAttribute('data-theme', cfg.theme);
   updateAlerts();
   updateFilterSelect();
   if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
