@@ -238,7 +238,14 @@
   padding: 0.375rem 0.75rem 0.5rem 0;
   font-weight: 500;
   color: var(--text);
-}
+  text-align: center;
+  }
+.filter-select-wrap select:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: transparent;
+}-
+
   .inv-list { display: flex; flex-direction: column; gap: 0.5rem; }
   .inv-item {
     background: var(--surface);
@@ -823,7 +830,7 @@
     <div class="panel" id="panelInventario">
       <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Buscar..." oninput="render()" id="searchInput" autocorrect="off"></div>
       <div class="filter-select-wrap">
-  <span class="filter-label">Categoría</span>
+  
   <select id="categoryFilterSelect" onchange="setFilter(this.value)">
     <option value="Todas">Todas las categorías</option>
   </select>
