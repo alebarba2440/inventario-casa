@@ -288,15 +288,15 @@
     background: #FEECEC;
   }
   .inv-item.zero-stock .item-name { color: #9B1C1C; }
-  .item-quantity.zero { background: #FCA5A5; color: #9B1C1C; }
+  .inv-item.zero-stock .item-quantity { background: #FCA5A5; color: #9B1C1C; }
   /* dark rojo: sólido visible sobre fondo oscuro */
   :root[data-theme="dark"] .inv-item.zero-stock { border-color: #9B1C1C; background: #3D1212; }
   :root[data-theme="dark"] .inv-item.zero-stock .item-name { color: #F07070; }
-  :root[data-theme="dark"] .item-quantity.zero { background: #5A1A1A; color: #F07070; }
+  :root[data-theme="dark"] .inv-item.zero-stock .item-quantity { background: #5A1A1A; color: #F07070; }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) .inv-item.zero-stock { border-color: #9B1C1C; background: #3D1212; }
     :root:not([data-theme="light"]) .inv-item.zero-stock .item-name { color: #F07070; }
-    :root:not([data-theme="light"]) .item-quantity.zero { background: #5A1A1A; color: #F07070; }
+    :root:not([data-theme="light"]) .inv-item.zero-stock .item-quantity { background: #5A1A1A; color: #F07070; }
   }
   .item-name {
     font-size: 1rem;
