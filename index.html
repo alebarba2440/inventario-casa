@@ -266,37 +266,37 @@
     width: 100%;
     transition: border-color 0.2s, background 0.2s;
   }
-  /* Poca cantidad - naranja */
+  /* Poca cantidad - naranja (claro: sólido cálido) */
   .inv-item.low-stock {
-    border-color: rgba(217,119,6,0.45);
-    background: var(--warn-light);
+    border-color: #F5C97A;
+    background: #FEF3C7;
   }
-  .inv-item.low-stock .item-name { color: var(--warn-dark); }
-  .item-quantity.low { background: rgba(217,119,6,0.18); color: var(--warn); }
-  /* dark naranja */
-  :root[data-theme="dark"] .inv-item.low-stock { border-color: rgba(251,176,64,0.55); }
+  .inv-item.low-stock .item-name { color: #92400E; }
+  .item-quantity.low { background: #FDE68A; color: #92400E; }
+  /* dark naranja: sólido visible sobre fondo oscuro */
+  :root[data-theme="dark"] .inv-item.low-stock { border-color: #A16207; background: #3D2E10; }
   :root[data-theme="dark"] .inv-item.low-stock .item-name { color: #FBB040; }
-  :root[data-theme="dark"] .item-quantity.low { background: rgba(217,119,6,0.30); color: #FBB040; }
+  :root[data-theme="dark"] .item-quantity.low { background: #5A3E0E; color: #FBB040; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .inv-item.low-stock { border-color: rgba(251,176,64,0.55); }
+    :root:not([data-theme="light"]) .inv-item.low-stock { border-color: #A16207; background: #3D2E10; }
     :root:not([data-theme="light"]) .inv-item.low-stock .item-name { color: #FBB040; }
-    :root:not([data-theme="light"]) .item-quantity.low { background: rgba(217,119,6,0.30); color: #FBB040; }
+    :root:not([data-theme="light"]) .item-quantity.low { background: #5A3E0E; color: #FBB040; }
   }
-  /* Sin stock - rojo */
+  /* Sin stock - rojo (claro: sólido suave) */
   .inv-item.zero-stock {
-    border-color: rgba(226,75,74,0.45);
-    background: rgba(226,75,74,0.08);
+    border-color: #F5A0A0;
+    background: #FEECEC;
   }
-  .inv-item.zero-stock .item-name { color: var(--danger-dark); }
-  .item-quantity.zero { background: rgba(226,75,74,0.15); color: var(--danger); }
-  /* dark rojo */
-  :root[data-theme="dark"] .inv-item.zero-stock { border-color: rgba(226,75,74,0.55); background: rgba(226,75,74,0.14); }
+  .inv-item.zero-stock .item-name { color: #9B1C1C; }
+  .item-quantity.zero { background: #FCA5A5; color: #9B1C1C; }
+  /* dark rojo: sólido visible sobre fondo oscuro */
+  :root[data-theme="dark"] .inv-item.zero-stock { border-color: #9B1C1C; background: #3D1212; }
   :root[data-theme="dark"] .inv-item.zero-stock .item-name { color: #F07070; }
-  :root[data-theme="dark"] .item-quantity.zero { background: rgba(226,75,74,0.28); color: #F07070; }
+  :root[data-theme="dark"] .item-quantity.zero { background: #5A1A1A; color: #F07070; }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .inv-item.zero-stock { border-color: rgba(226,75,74,0.55); background: rgba(226,75,74,0.14); }
+    :root:not([data-theme="light"]) .inv-item.zero-stock { border-color: #9B1C1C; background: #3D1212; }
     :root:not([data-theme="light"]) .inv-item.zero-stock .item-name { color: #F07070; }
-    :root:not([data-theme="light"]) .item-quantity.zero { background: rgba(226,75,74,0.28); color: #F07070; }
+    :root:not([data-theme="light"]) .item-quantity.zero { background: #5A1A1A; color: #F07070; }
   }
   .item-name {
     font-size: 1rem;
