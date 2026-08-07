@@ -931,23 +931,42 @@
       <button class="submit-btn" id="submitBtn" onclick="askConfirm()"><i class="ti ti-check"></i><span id="submitLbl">Agregar al inventario</span></button>
 
       <!-- Alertas: sin stock -->
-      <div class="alerts-section" id="alertsSection">
-        <div class="alerts-header" onclick="toggleAlerts()">
-          <div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Sin stock <span class="alerts-badge" id="alertsBadge">0</span></div>
-          <i class="ti ti-chevron-down alerts-chevron"></i>
+<div class="alerts-section" id="alertsSection">
+  <div class="alerts-header" onclick="toggleAlerts()">
+    <div class="alerts-header-left"><i class="ti ti-bell-ringing"></i> Sin stock <span class="alerts-badge" id="alertsBadge">0</span></div>
+    <i class="ti ti-chevron-down alerts-chevron"></i>
+  </div>
+  <div class="alerts-body">
+    <div class="alerts-inner" style="padding-bottom:10px">
+      <div class="scrollable-wrap">
+        <div class="scrollable-body" id="alertsInner" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="scroll-arrows">
+          <button class="scroll-arr-btn" onclick="scrollAlerts(-1)"><i class="ti ti-chevron-up"></i></button>
+          <button class="scroll-arr-btn" onclick="scrollAlerts(1)"><i class="ti ti-chevron-down"></i></button>
         </div>
-        <div class="alerts-body"><div class="alerts-inner" id="alertsInner"></div></div>
-      </div>
-
-      <!-- Alertas: poca cantidad -->
-      <div class="alerts-section" id="warnSection">
-        <div class="alerts-header" onclick="toggleWarnSection()">
-          <div class="alerts-header-left"><i class="ti ti-alert-triangle" style="color:var(--warn)"></i> Poca cantidad <span class="alerts-badge warn" id="warnBadge">0</span></div>
-          <i class="ti ti-chevron-down alerts-chevron"></i>
-        </div>
-        <div class="alerts-body"><div class="alerts-inner" id="warnInner"></div></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Alertas: poca cantidad -->
+<div class="alerts-section" id="warnSection">
+  <div class="alerts-header" onclick="toggleWarnSection()">
+    <div class="alerts-header-left"><i class="ti ti-alert-triangle" style="color:var(--warn)"></i> Poca cantidad <span class="alerts-badge warn" id="warnBadge">0</span></div>
+    <i class="ti ti-chevron-down alerts-chevron"></i>
+  </div>
+  <div class="alerts-body">
+    <div class="alerts-inner" style="padding-bottom:10px">
+      <div class="scrollable-wrap">
+        <div class="scrollable-body" id="warnInner" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div class="scroll-arrows">
+          <button class="scroll-arr-btn" onclick="scrollWarn(-1)"><i class="ti ti-chevron-up"></i></button>
+          <button class="scroll-arr-btn" onclick="scrollWarn(1)"><i class="ti ti-chevron-down"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
     <div class="panel" id="panelInventario">
       <div class="search-wrap"><i class="ti ti-search"></i><input type="text" placeholder="Buscar..." oninput="render()" id="searchInput" autocorrect="off"></div>
@@ -1688,7 +1707,8 @@
   }
   function scrollCats(dir) { const el = document.getElementById('categoriesScroll'); if (el) el.scrollBy({ top: dir * 60, behavior: 'smooth' }); }
   function scrollColorsCfg(dir) { const el = document.getElementById('colorsScroll'); if (el) el.scrollBy({ top: dir * 60, behavior: 'smooth' }); }
-
+function scrollAlerts(dir) { const el = document.getElementById('alertsInner'); if (el) el.scrollBy({ top: dir * 60, behavior: 'smooth' }); }
+function scrollWarn(dir) { const el = document.getElementById('warnInner'); if (el) el.scrollBy({ top: dir * 60, behavior: 'smooth' }); }
   /* ============================================================
      FIREBASE
   ============================================================ */
