@@ -74,6 +74,11 @@
   .pal{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
   .sw{aspect-ratio:1;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
   .sw.sel{border-color:var(--text);transform:scale(1.1)}
+  .custom-color{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:.92rem;cursor:pointer}
+  .cc-dot{position:relative;width:38px;height:38px;border-radius:50%;flex-shrink:0;border:3px solid transparent;
+          background:conic-gradient(#e11d48,#f59e0b,#eab308,#16a34a,#0891b2,#2563eb,#9333ea,#e11d48)}
+  .cc-dot.sel{border-color:var(--text)}
+  .cc-dot input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
   .fb-line{display:flex;align-items:center;gap:8px;font-size:.92rem}
   .fb-line .d{width:10px;height:10px;border-radius:50%;background:#aaa;flex-shrink:0}
   .fb-line .d.on{background:var(--ok)} .fb-line .d.err{background:var(--err)}
@@ -131,13 +136,13 @@
       <div class="seg">
         <button data-t="light" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
         <button data-t="dark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
-        <button data-t="auto" onclick="setTheme('auto')"><i class="ti ti-device-mobile"></i> Auto</button>
       </div>
     </div>
 
     <div class="block">
       <h3><i class="ti ti-palette"></i> Color</h3>
       <div class="pal" id="pal"></div>
+      <label class="custom-color"><span class="cc-dot" id="ccDot"><input type="color" id="ccInput" aria-label="Elegir color a mano"></span><span>Elegir otro color a mano</span></label>
     </div>
 
     <div class="block">
@@ -179,10 +184,23 @@ COLORS.forEach(([c,d,l])=>{
     R.style.setProperty('--accent',c);R.style.setProperty('--accent-dark',d);R.style.setProperty('--accent-light',l);markColor();};
   b.dataset.c=c;pal.appendChild(b);
 });
-function markColor(){const cur=cfg.accent||'#1D9E75';pal.querySelectorAll('.sw').forEach(s=>s.classList.toggle('sel',s.dataset.c===cur));}
+function markColor(){
+  const cur=(cfg.accent||'#1D9E75').toUpperCase();let found=false;
+  pal.querySelectorAll('.sw').forEach(s=>{const m=s.dataset.c.toUpperCase()===cur;s.classList.toggle('sel',m);if(m)found=true;});
+  const dot=document.getElementById('ccDot');dot.classList.toggle('sel',!found);
+  dot.style.background=found?'':cur;document.getElementById('ccInput').value=cur.toLowerCase();
+}
+/* color manual: a partir del color elegido arma la versión oscura y la clara */
+function mix(hex,to,t){const n=parseInt(hex.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;
+  const f=v=>Math.round(v+(to-v)*t).toString(16).padStart(2,'0');return '#'+f(r)+f(g)+f(b);}
+document.getElementById('ccInput').addEventListener('input',e=>{
+  const c=e.target.value.toUpperCase(),d=mix(c,0,.4).toUpperCase(),l=mix(c,255,.87).toUpperCase();
+  cfg.accent=c;cfg.accentD=d;cfg.accentL=l;saveCfg();
+  R.style.setProperty('--accent',c);R.style.setProperty('--accent-dark',d);R.style.setProperty('--accent-light',l);markColor();
+});
 
-function setTheme(t){cfg.theme=t;saveCfg();if(t==='auto')R.removeAttribute('data-theme');else R.setAttribute('data-theme',t);markTheme();}
-function markTheme(){const t=cfg.theme||'auto';document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));}
+function setTheme(t){cfg.theme=t;saveCfg();R.setAttribute('data-theme',t);markTheme();}
+function markTheme(){const t=cfg.theme==='dark'?'dark':'light';document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));}
 
 const fs=document.getElementById('fsSlider');
 fs.value=cfg.fontSize||1;

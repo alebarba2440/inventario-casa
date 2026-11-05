@@ -8,7 +8,7 @@
       if (c.accentD) r.style.setProperty('--accent-dark', c.accentD);
       if (c.accentL) r.style.setProperty('--accent-light', c.accentL);
     }
-    if (c.theme && c.theme !== 'auto') r.setAttribute('data-theme', c.theme);
+    r.setAttribute('data-theme', c.theme === 'dark' ? 'dark' : 'light'); // sin modo automático
     if (c.fontSize) r.style.fontSize = (parseFloat(c.fontSize) * 100) + '%';
   } catch (e) {}
 })();

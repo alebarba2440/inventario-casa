@@ -991,7 +991,7 @@
   <div class="nav-bar">
     <button class="nav-btn active" id="navC" onclick="goTab('cargar')"><i class="ti ti-stack-2"></i> Cargar</button>
     <button class="nav-btn" id="navI" onclick="goTab('inventario')"><i class="ti ti-list-check"></i> Inventario</button>
-    <button class="nav-btn" id="navS" onclick="openConfig()"><i class="ti ti-settings"></i> Config</button>
+    <button class="nav-btn" id="navS" onclick="openConfig()"><i class="ti ti-tag"></i> Categorías</button>
   </div>
 </div>
 
@@ -1082,15 +1082,9 @@
 <div class="modal-overlay" id="configModal">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Configuración</div>
+    <div class="modal-title">Categorías</div>
     
-    <a class="global-cfg-link" href="index.html#ajustes"><i class="ti ti-adjustments"></i><span><b>Color, modo y tamaño de texto</b><br>Se cambian desde el inicio y aplican a las 3 apps</span><i class="ti ti-chevron-right"></i></a>
-
-    <div class="alerts-section" id="categoriesSection">
-      <div class="alerts-header" onclick="toggleSection('categoriesSection')">
-        <div class="alerts-header-left"><i class="ti ti-tag"></i> Categorías</div>
-        <i class="ti ti-chevron-down alerts-chevron"></i>
-      </div>
+    <div class="alerts-section open" id="categoriesSection">
       <div class="alerts-body">
         <div class="alerts-inner">
           <div class="scrollable-wrap">
@@ -1721,7 +1715,7 @@ function scrollWarn(dir) { const el = document.getElementById('warnInner'); if (
   ============================================================ */
   applyAccent();
   initFontSizeSlider();
-  if (cfg.theme && cfg.theme !== 'auto') document.documentElement.setAttribute('data-theme', cfg.theme);
+  document.documentElement.setAttribute('data-theme', cfg.theme === 'dark' ? 'dark' : 'light');
   updateAlerts();
   updateFilterSelect();
   { const fbc = window.getFbConfig && window.getFbConfig(); if (fbc) { try { loadFb(fbc); } catch(e) {} } }

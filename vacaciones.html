@@ -89,7 +89,7 @@
 /* ---------- tema compartido con el inventario ---------- */
 const CFG=(()=>{try{return JSON.parse(localStorage.getItem('cfg_v2')||'{}')}catch(e){return{}}})();
 (()=>{const r=document.documentElement;if(CFG.accent){r.style.setProperty('--accent',CFG.accent);if(CFG.accentD)r.style.setProperty('--accent-dark',CFG.accentD);if(CFG.accentL)r.style.setProperty('--accent-light',CFG.accentL);}
-if(CFG.theme&&CFG.theme!=='auto')r.setAttribute('data-theme',CFG.theme);})();
+r.setAttribute('data-theme',CFG.theme==='dark'?'dark':'light');})();
 
 const LS='vac_v1';
 const uid=()=>Math.random().toString(36).slice(2,9);
