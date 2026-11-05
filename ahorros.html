@@ -65,9 +65,20 @@
   .acc-b{display:none;padding:0 14px 14px}
   .acc.open .acc-b{display:block}
   /* meses */
-  .mes{border:.5px solid var(--border2);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--surface)}
-  .mes-h{position:relative;text-align:center;font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;padding:0 30px 10px;border-bottom:.5px solid var(--border);margin-bottom:10px;cursor:pointer}
-  .mes-h .del{position:absolute;right:0;top:-2px;background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:2px}
+  .mes{border:.5px solid var(--border2);border-radius:14px;margin-bottom:10px;background:var(--surface);overflow:hidden}
+  .mes-h{width:100%;display:flex;align-items:center;gap:10px;padding:12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .mes-h .nm{font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;flex:1;min-width:0}
+  .mes-h .rs{display:flex;flex-direction:column;align-items:flex-end;font-size:.8rem;line-height:1.35;font-variant-numeric:tabular-nums}
+  .mes-h .rs span{color:var(--text2)} .mes-h .rs b{font-weight:700;margin-left:4px}
+  .mes-h .chev{color:var(--text2);transition:transform .2s;font-size:1rem}
+  .mes.open .mes-h{border-bottom:.5px solid var(--border)}
+  .mes.open .mes-h .nm{text-align:center}
+  .mes.open .mes-h .rs{display:none}
+  .mes.open .mes-h .chev{transform:rotate(180deg)}
+  .mes-b{display:none;padding:12px}
+  .mes.open .mes-b{display:block}
+  .mes-act{display:flex;justify-content:center;gap:18px;margin-top:10px}
+  .mes-act button{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:4px}
   .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .col{display:flex;flex-direction:column;gap:6px;min-width:0}
   .col .who{font-size:.78rem;font-weight:700;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.04em;text-align:center;cursor:pointer}
@@ -100,7 +111,7 @@
       <div class="tots"><div><span id="totJN"></span><b id="tJ"></b></div><div><span id="totAN"></span><b id="tA"></b></div></div>
       <div class="neto"><span>NETO (total)</span><b id="neto">$ 0</b></div>
       <div class="addm"><input type="text" id="newMes" placeholder="Nuevo mes" style="text-transform:uppercase"><button class="btn" onclick="addMes()"><i class="ti ti-plus"></i> Mes</button></div>
-      <p class="hint" style="margin-top:8px">Escribí el monto y tocá <b class="pos">+</b> si pusiste o <b class="neg">−</b> si sacaste. Tocá el total de cada uno para ver o borrar movimientos, y el nombre del mes para cambiarlo.</p>
+      <p class="hint" style="margin-top:8px">Escribí el monto y tocá <b class="pos">+</b> si pusiste o <b class="neg">−</b> si sacaste. Tocá un mes para abrirlo, y el total de cada uno para ver o borrar movimientos.</p>
     </div>
   </section>
 
@@ -153,8 +164,9 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g
 
 function nextLabel(){
   const d=new Date();
-  if(state.months.length){ // sugerir el mes siguiente al último si tiene formato "Mes año"
-    const m=state.months[state.months.length-1].label.match(/^(\p{L}+)\s*(\d{4})?/u);
+  const last=sortedMonths().filter((m,i)=>monthKey(m,i)<1e9).pop();
+  if(last){ // sugerir el mes siguiente al último
+    const m=last.label.match(/^(\p{L}+)\s*(\d{4})?/u);
     if(m){const i=MESES.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());
       if(i>=0){let y=m[2]?+m[2]:d.getFullYear(),n=i+1;if(n>11){n=0;y++}return MESES[n]+' '+y;}}
   }
@@ -174,23 +186,46 @@ function colHTML(m,p){
       <button class="pm p" onclick="quick('${m.id}','${p}',1)" aria-label="Puse">+</button><button class="pm m" onclick="quick('${m.id}','${p}',-1)" aria-label="Saqué">−</button></div>
   </div>`;
 }
+/* orden por mes: "OCTUBRE 2026" va antes que "NOVIEMBRE 2026". Si un nombre no es un mes, queda al final. */
+function monthKey(m,i){
+  const x=String(m.label).match(/^(\p{L}+)\s*(\d{4})?/u);
+  if(x){const k=MESES.findIndex(n=>n.toLowerCase()===x[1].toLowerCase());
+    if(k>=0)return (x[2]?+x[2]:new Date().getFullYear())*12+k;}
+  return 1e9+i;
+}
+function sortedMonths(){return state.months.map((m,i)=>[monthKey(m,i),i,m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]);}
+let openMes; // mes abierto (uno a la vez)
+function toggleMes(id){openMes=openMes===id?null:id;
+  document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 function render(){
   document.getElementById('thEJ').textContent=state.names.j;
   document.getElementById('thEA').textContent=state.names.a;
   document.getElementById('totJN').textContent='Total '+state.names.j;
   document.getElementById('totAN').textContent='Total '+state.names.a;
-  document.getElementById('listReal').innerHTML=state.months.length?state.months.map(m=>{
-    const t=cellTot(m,'j')+cellTot(m,'a');
-    return `<div class="mes">
-      <div class="mes-h" onclick="renameM('${m.id}')">${esc(m.label)}<button class="del" onclick="event.stopPropagation();delMes('${m.id}')" aria-label="Borrar mes"><i class="ti ti-trash"></i></button></div>
-      <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
-      <div class="mes-t"><span>Total del mes</span><span class="${cls(t)}">${fmt(t)}</span></div>
+  const ms=sortedMonths();
+  if(openMes===undefined){ // al entrar: abierto el mes actual (o el último si no existe)
+    const d=new Date(),hoy=d.getFullYear()*12+d.getMonth();
+    const act=ms.find((m,i)=>monthKey(m,i)===hoy);openMes=act?act.id:(ms.length?ms[ms.length-1].id:null);}
+  document.getElementById('listReal').innerHTML=ms.length?ms.map(m=>{
+    const j=cellTot(m,'j'),a=cellTot(m,'a'),t=j+a,op=m.id===openMes;
+    return `<div class="mes${op?' open':''}" id="mes_${m.id}">
+      <button class="mes-h" onclick="toggleMes('${m.id}')" aria-expanded="${op}">
+        <span class="nm">${esc(m.label)}</span>
+        <span class="rs"><span>${esc(state.names.j)}:<b class="${cls(j)}">${fmt(j)}</b></span><span>${esc(state.names.a)}:<b class="${cls(a)}">${fmt(a)}</b></span></span>
+        <i class="ti ti-chevron-down chev"></i>
+      </button>
+      <div class="mes-b">
+        <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
+        <div class="mes-t"><span>Total del mes</span><span class="${cls(t)}">${fmt(t)}</span></div>
+        <div class="mes-act"><button onclick="renameM('${m.id}')"><i class="ti ti-pencil"></i> Cambiar nombre</button><button onclick="delMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button></div>
+      </div>
     </div>`}).join(''):'<p class="hint" style="text-align:center;padding:16px 0">Todavía no hay meses. Agregá el primero abajo.</p>';
-  document.getElementById('tbEst').innerHTML=state.months.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
+  document.getElementById('tbEst').innerHTML=ms.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
     <td id="et_${m.id}"></td></tr>`).join('');
   recalc();
+  document.getElementById('newMes').placeholder='Nuevo mes (ej: '+nextLabel().toUpperCase()+')';
 }
 /* carga rápida desde el mes: + puse / − saqué */
 function quick(id,p,sign){
@@ -215,7 +250,7 @@ function setEst(id,p,v){state.months.find(m=>m.id===id).est[p]=v===''?0:parseFlo
 
 /* ---------- meses ---------- */
 const inMes=document.getElementById('newMes');
-function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();state.months.push(emptyMonth(l));inMes.value='';save();render();}
+function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();const nm=emptyMonth(l);state.months.push(nm);openMes=nm.id;inMes.value='';save();render();}
 function delMes(id){const m=state.months.find(x=>x.id===id);if(!confirm('¿Borrar "'+m.label+'" y sus movimientos?'))return;state.months=state.months.filter(x=>x.id!==id);save();render();}
 function renameM(id){const m=state.months.find(x=>x.id===id);const n=prompt('Nombre del mes',m.label);if(n&&n.trim()){m.label=n.trim().toUpperCase();save();render();}}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
