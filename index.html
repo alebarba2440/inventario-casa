@@ -27,8 +27,9 @@
   header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
   h1{font-size:1.7rem;font-weight:700;color:var(--accent)}
   p.sub{color:var(--text2);font-size:.95rem;margin-top:2px}
-  .gear{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--accent);
-        font-size:1.4rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative}
+  .gear{width:44px;height:44px;border:none;background:none;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;padding:0;border-radius:10px;transition:transform .12s ease}
+  .gear svg{width:30px;height:30px;display:block}
+  .gear:active{transform:scale(.88) rotate(30deg)}
   .gear .dot{display:none !important;position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#aaa;border:2px solid var(--surface)}
   .gear .dot.on{background:var(--ok)} .gear .dot.err{background:var(--err)}
 
@@ -101,7 +102,7 @@
       <h1>Nuestras apps</h1>
       <p class="sub">Tocá una para entrar</p>
     </div>
-    <button class="gear" onclick="openCfg()" aria-label="Ajustes"><i class="ti ti-settings"></i><span class="dot" id="gearDot"></span></button>
+    <button class="gear" onclick="openCfg()" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.647 4.081a.724 .724 0 0 0 1.08 .448c2.439 -1.485 5.23 1.305 3.745 3.744a.724 .724 0 0 0 .447 1.08c2.775 .673 2.775 4.62 0 5.294a.724 .724 0 0 0 -.448 1.08c1.485 2.439 -1.305 5.23 -3.744 3.745a.724 .724 0 0 0 -1.08 .447c-.673 2.775 -4.62 2.775 -5.294 0a.724 .724 0 0 0 -1.08 -.448c-2.439 1.485 -5.23 -1.305 -3.745 -3.744a.724 .724 0 0 0 -.447 -1.08c-2.775 -.673 -2.775 -4.62 0 -5.294a.724 .724 0 0 0 .448 -1.08c-1.485 -2.439 1.305 -5.23 3.744 -3.745a.722 .722 0 0 0 1.08 -.447c.673 -2.775 4.62 -2.775 5.294 0zm-2.647 4.919a3 3 0 1 0 0 6a3 3 0 0 0 0 -6z"/></svg><span class="dot" id="gearDot"></span></button>
   </header>
   <nav class="grid">
     <a class="card" href="inventario.html">
