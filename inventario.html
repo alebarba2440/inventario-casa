@@ -917,6 +917,7 @@
   .fb-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px}
   .home-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border2);color:var(--accent);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 </style>
+<link rel="stylesheet" href="fondo.css">
 </head>
 <body>
 <a class="home-btn" href="index.html" aria-label="Inicio"><i class="ti ti-home"></i></a>
@@ -1151,6 +1152,7 @@
      ACCENT / THEME
   ============================================================ */
   function applyAccent() {
+    if (!cfg.accent) return; // sin color elegido: queda el verde por defecto
     document.documentElement.style.setProperty('--accent', cfg.accent);
     document.documentElement.style.setProperty('--accent-dark', cfg.accentD);
     document.documentElement.style.setProperty('--accent-light', cfg.accentL);

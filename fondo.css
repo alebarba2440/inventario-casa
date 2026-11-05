@@ -1,0 +1,9 @@
+/* Fondo con los personajes en las 3 apps. Para hacerlo más o menos visible, cambiá --fondo-opacidad. */
+:root{--fondo-opacidad:.16}
+html{background:var(--bg) !important;min-height:100%}
+body{background:transparent !important}
+html::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:url("img/solos.webp") center bottom / contain no-repeat;
+  opacity:var(--fondo-opacidad);
+}
