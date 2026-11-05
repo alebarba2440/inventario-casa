@@ -10,26 +10,33 @@
 <link rel="apple-touch-icon" href="img/apple-touch.png">
 <link rel="icon" type="image/png" href="logo3.png">
 <title>Nuestras apps</title>
+<script src="tema.js"></script>
+<script src="firebase-config.js"></script>
 <link rel="preload" as="image" href="img/inventario.webp">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--bg:#f5f5f0;--surface:#fff;--border:rgba(0,0,0,.08);--text:#1a1a1a;--text2:#666}
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--border:rgba(255,255,255,.1);--text:#f5f5f5;--text2:#aaa;--accent-light:#173a30}}
-  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--border:rgba(255,255,255,.1);--text:#f5f5f5;--text2:#aaa;--accent-light:#173a30}
+  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--bg:#f5f5f0;--surface:#fff;--surface2:#f5f5f0;--border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.16);--text:#1a1a1a;--text2:#666;--ok:#1D9E75;--err:#E24B4A}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa}}
+  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;
        padding:calc(env(safe-area-inset-top,0px) + 24px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
   .wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-  header{margin-bottom:4px}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
   h1{font-size:1.7rem;font-weight:700;color:var(--accent)}
   p.sub{color:var(--text2);font-size:.95rem;margin-top:2px}
+  .gear{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--accent);
+        font-size:1.4rem;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative}
+  .gear .dot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#aaa;border:2px solid var(--surface)}
+  .gear .dot.on{background:var(--ok)} .gear .dot.err{background:var(--err)}
 
   a.card{display:flex;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);
          border-radius:20px;padding:12px 16px 12px 12px;text-decoration:none;color:var(--text);
          box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease, box-shadow .12s ease}
   a.card:hover{box-shadow:0 6px 18px rgba(0,0,0,.08)}
   a.card:active{transform:scale(.98)}
-  a.card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  a.card:focus-visible,.gear:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   .pic{width:118px;height:132px;flex-shrink:0;border-radius:16px;background:var(--accent-light);
        display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
   .pic img{max-width:100%;max-height:100%;object-fit:contain;display:block;padding-top:6px}
@@ -37,7 +44,6 @@
   .txt b{display:block;font-size:1.2rem;font-weight:700}
   .txt span{display:block;font-size:.88rem;color:var(--text2);margin-top:3px;line-height:1.3}
   .go{color:var(--accent);font-size:1.6rem;line-height:1;flex-shrink:0}
-
   @media (min-width:760px){
     .wrap{max-width:900px}
     .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -46,13 +52,49 @@
     .go{display:none}
   }
   @media (max-width:759px){.grid{display:flex;flex-direction:column;gap:14px}}
+
+  /* ---------- Ajustes ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
+  .overlay.open{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;border-radius:22px 22px 0 0;
+         padding:10px 18px calc(env(safe-area-inset-bottom,0px) + 18px)}
+  @media (min-width:760px){.overlay{align-items:center}.sheet{border-radius:22px}}
+  .handle{width:40px;height:5px;border-radius:3px;background:var(--border2);margin:2px auto 12px}
+  .sheet h2{font-size:1.25rem;margin-bottom:2px}
+  .sheet .hint{font-size:.85rem;color:var(--text2);margin-bottom:14px}
+  .block{border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px}
+  .block h3{font-size:.95rem;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .block h3 i{color:var(--accent);font-size:1.15rem}
+  .size-row{display:flex;align-items:center;gap:10px}
+  .size-row input{flex:1;accent-color:var(--accent)}
+  .seg{display:flex;gap:8px}
+  .seg button{flex:1;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);
+              font-family:inherit;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .seg button.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
+  .pal{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .sw{aspect-ratio:1;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+  .sw.sel{border-color:var(--text);transform:scale(1.1)}
+  .fb-line{display:flex;align-items:center;gap:8px;font-size:.92rem}
+  .fb-line .d{width:10px;height:10px;border-radius:50%;background:#aaa;flex-shrink:0}
+  .fb-line .d.on{background:var(--ok)} .fb-line .d.err{background:var(--err)}
+  .fb-sub{font-size:.8rem;color:var(--text2);margin-top:6px;line-height:1.4}
+  textarea{width:100%;min-height:90px;margin-top:10px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);
+           padding:10px;font-family:ui-monospace,monospace;font-size:.78rem}
+  .btn{border:none;border-radius:12px;padding:11px 14px;font-family:inherit;font-size:.92rem;font-weight:600;cursor:pointer}
+  .btn.pri{background:var(--accent);color:#fff}
+  .btn.sec{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+  .row-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .close{width:100%;margin-top:4px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Nuestras apps</h1>
-    <p class="sub">Tocá una para entrar</p>
+    <div>
+      <h1>Nuestras apps</h1>
+      <p class="sub">Tocá una para entrar</p>
+    </div>
+    <button class="gear" onclick="openCfg()" aria-label="Ajustes"><i class="ti ti-settings"></i><span class="dot" id="gearDot"></span></button>
   </header>
   <nav class="grid">
     <a class="card" href="inventario.html">
@@ -72,13 +114,128 @@
     </a>
   </nav>
 </div>
+
+<div class="overlay" id="cfgOverlay" onclick="if(event.target===this)closeCfg()">
+  <div class="sheet" role="dialog" aria-label="Ajustes">
+    <div class="handle"></div>
+    <h2>Ajustes</h2>
+    <p class="hint">Se aplican a Inventario, Ahorros y Vacaciones.</p>
+
+    <div class="block">
+      <h3><i class="ti ti-typography"></i> Tamaño del texto</h3>
+      <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
+    </div>
+
+    <div class="block">
+      <h3><i class="ti ti-sun-moon"></i> Modo</h3>
+      <div class="seg">
+        <button data-t="light" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
+        <button data-t="dark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
+        <button data-t="auto" onclick="setTheme('auto')"><i class="ti ti-device-mobile"></i> Auto</button>
+      </div>
+    </div>
+
+    <div class="block">
+      <h3><i class="ti ti-palette"></i> Color</h3>
+      <div class="pal" id="pal"></div>
+    </div>
+
+    <div class="block">
+      <h3><i class="ti ti-database"></i> Firebase (datos compartidos)</h3>
+      <div class="fb-line"><span class="d" id="fbDot"></span><span id="fbTxt">Revisando…</span></div>
+      <div class="fb-sub" id="fbSub"></div>
+      <div id="fbPaste" style="display:none">
+        <textarea id="fbCfg" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
+      </div>
+      <div class="row-btns">
+        <button class="btn pri" id="fbSave" style="display:none" onclick="saveFb()">Guardar</button>
+        <button class="btn sec" onclick="testFb()"><i class="ti ti-refresh"></i> Probar conexión</button>
+      </div>
+    </div>
+
+    <button class="btn pri close" onclick="closeCfg()">Listo</button>
+  </div>
+</div>
+
 <script>
-  // Mismo color y tema que eligieron dentro del Inventario
+const LS='cfg_v2';
+let cfg={};try{cfg=JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){}
+function saveCfg(){try{localStorage.setItem(LS,JSON.stringify(cfg))}catch(e){}}
+const R=document.documentElement;
+
+/* colores: [principal, oscuro, claro] — los mismos que tenía el Inventario */
+const COLORS=[
+ ['#1D9E75','#0F6E56','#E1F5EE'],['#10B981','#047857','#D1FAE5'],['#16A34A','#14532D','#DCFCE7'],['#0F766E','#134E4A','#CCFBF1'],
+ ['#378ADD','#185FA5','#E6F1FB'],['#2563EB','#1E3A8A','#DBEAFE'],['#0891B2','#0E7490','#CFFAFE'],
+ ['#EAB308','#713F12','#FEF9C3'],['#F59E0B','#78350F','#FEF3C7'],['#BA7517','#854F0B','#FAEEDA'],['#EA580C','#9A3412','#FFEDD5'],
+ ['#D85A30','#993C1D','#FAECE7'],['#D4537E','#993556','#FBEAF0'],['#E11D48','#9F1239','#FFE4E6'],
+ ['#EC4899','#9D174D','#FCE7F3'],['#7F77DD','#534AB7','#EEEDFE'],['#9333EA','#581C87','#F3E8FF'],['#6366F1','#3730A3','#E0E7FF'],
+ ['#7C3AED','#4C1D95','#EDE9FE'],['#64748B','#334155','#F1F5F9'],['#78716C','#44403C','#FAF7F5']
+];
+const pal=document.getElementById('pal');
+COLORS.forEach(([c,d,l])=>{
+  const b=document.createElement('button');b.className='sw';b.style.background=c;b.setAttribute('aria-label','Color '+c);
+  b.onclick=()=>{cfg.accent=c;cfg.accentD=d;cfg.accentL=l;saveCfg();
+    R.style.setProperty('--accent',c);R.style.setProperty('--accent-dark',d);R.style.setProperty('--accent-light',l);markColor();};
+  b.dataset.c=c;pal.appendChild(b);
+});
+function markColor(){const cur=cfg.accent||'#1D9E75';pal.querySelectorAll('.sw').forEach(s=>s.classList.toggle('sel',s.dataset.c===cur));}
+
+function setTheme(t){cfg.theme=t;saveCfg();if(t==='auto')R.removeAttribute('data-theme');else R.setAttribute('data-theme',t);markTheme();}
+function markTheme(){const t=cfg.theme||'auto';document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('active',b.dataset.t===t));}
+
+const fs=document.getElementById('fsSlider');
+fs.value=cfg.fontSize||1;
+fs.addEventListener('input',e=>{cfg.fontSize=parseFloat(e.target.value);saveCfg();R.style.fontSize=(cfg.fontSize*100)+'%';});
+
+/* ---------- Firebase ---------- */
+const fromFile=!!(window.FB_CONFIG&&window.FB_CONFIG.apiKey);
+function fbState(k,txt,sub){
+  document.getElementById('fbDot').className='d '+k;document.getElementById('gearDot').className='dot '+k;
+  document.getElementById('fbTxt').textContent=txt;document.getElementById('fbSub').textContent=sub||'';
+}
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function testFb(){
+  const c=window.getFbConfig();
+  document.getElementById('fbPaste').style.display=fromFile?'none':'block';
+  document.getElementById('fbSave').style.display=fromFile?'none':'inline-block';
+  if(!c){fbState('','Solo local','Todavía no hay config de Firebase. Pegala abajo y tocá Guardar.');return;}
+  fbState('','Conectando…',(fromFile?'Config del archivo firebase-config.js':'Config pegada en este celu')+' · proyecto '+(c.projectId||'?'));
   try{
-    const c=JSON.parse(localStorage.getItem('cfg_v2')||'{}'), r=document.documentElement;
-    if(c.accent){r.style.setProperty('--accent',c.accent);if(c.accentD)r.style.setProperty('--accent-dark',c.accentD);if(c.accentL)r.style.setProperty('--accent-light',c.accentL);}
-    if(c.theme&&c.theme!=='auto')r.setAttribute('data-theme',c.theme);
-  }catch(e){}
+    if(typeof firebase==='undefined'){
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
+    }
+    if(!firebase.apps.length)firebase.initializeApp(c);
+    await firebase.firestore().collection('ahorros').doc('data').get();
+    fbState('on','Conectado ✓','Proyecto '+c.projectId+'. Las 3 apps guardan y comparten los datos.');
+  }catch(e){
+    const msg=e&&e.code==='permission-denied'?'Sin permiso: revisá las reglas de Firestore':'No conectó ('+((e&&(e.code||e.message))||'error')+')';
+    fbState('err',msg,'Proyecto '+(c.projectId||'?'));
+  }
+}
+function saveFb(){
+  const str=document.getElementById('fbCfg').value.trim();
+  if(!str){cfg.fbCfg='';saveCfg();testFb();return;}
+  // acepta tanto JSON como el bloque "const firebaseConfig = {...}" copiado de la consola
+  let o=null;
+  try{o=JSON.parse(str)}catch(e){
+    try{const m=str.match(/\{[\s\S]*\}/);o=m?Function('"use strict";return ('+m[0]+')')():null}catch(e2){}
+  }
+  if(!o||!o.apiKey){fbState('err','No se entiende la config','Copiá el bloque completo { apiKey: ..., projectId: ..., ... }');return;}
+  cfg.fbCfg=JSON.stringify(o);saveCfg();location.reload();
+}
+
+function openCfg(){
+  markColor();markTheme();fs.value=cfg.fontSize||1;
+  if(!fromFile&&cfg.fbCfg)document.getElementById('fbCfg').value=cfg.fbCfg;
+  document.getElementById('cfgOverlay').classList.add('open');
+}
+function closeCfg(){document.getElementById('cfgOverlay').classList.remove('open');if(location.hash==='#ajustes')history.replaceState(null,'',location.pathname);}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfg()});
+
+testFb();
+if(location.hash==='#ajustes')openCfg();
 </script>
 </body>
 </html>

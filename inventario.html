@@ -9,6 +9,8 @@
 <link rel="apple-touch-icon" href="logo3.png">
 <link rel="icon" type="image/png" href="logo3.png">
 <title>Inventario - Escáner Automático</title>
+<script src="tema.js"></script>
+<script src="firebase-config.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -908,6 +910,11 @@
   * {
     font-family: 'Montserrat', system-ui, sans-serif !important;
   }
+  .global-cfg-link{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:12px;border-radius:12px;background:var(--accent-light);color:var(--accent-dark);text-decoration:none;font-size:13px;line-height:1.35}
+  .global-cfg-link i{font-size:1.3rem;flex-shrink:0}
+  .global-cfg-link span{flex:1}
+  .fb-export{border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+  .fb-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px}
   .home-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border2);color:var(--accent);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 </style>
 </head>
@@ -1077,61 +1084,8 @@
     <div class="modal-handle"></div>
     <div class="modal-title">Configuración</div>
     
-    <div class="alerts-section" id="aspectoSection">
-      <div class="alerts-header" onclick="toggleSection('aspectoSection')">
-        <div class="alerts-header-left"><i class="ti ti-typography"></i> Aspecto</div>
-        <i class="ti ti-chevron-down alerts-chevron"></i>
-      </div>
-      <div class="alerts-body">
-        <div class="alerts-inner">
-          <div class="aspect-row">
-            <div class="aspect-row-label">Tamaño del texto</div>
-            <div class="font-size-row">
-              <span class="small">A</span>
-              <input type="range" class="font-size-slider" id="fontSizeSlider" min="0.7" max="1.4" step="0.02" value="1">
-              <span class="large">A</span>
-            </div>
-          </div>
-          <div class="aspect-row" style="margin-top:12px">
-            <div class="aspect-row-label">Modo</div>
-            <div class="theme-toggle-row">
-              <button class="theme-btn" id="themeBtnLight" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
-              <button class="theme-btn" id="themeBtnDark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
-              <button class="theme-btn" id="themeBtnAuto" onclick="setTheme('auto')"><i class="ti ti-device-mobile"></i> Auto</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="alerts-section" id="accentSection">
-      <div class="alerts-header" onclick="toggleSection('accentSection')">
-        <div class="alerts-header-left"><i class="ti ti-palette"></i> Color de acento</div>
-        <i class="ti ti-chevron-down alerts-chevron"></i>
-      </div>
-      <div class="alerts-body">
-        <div class="alerts-inner" style="padding-bottom:12px">
-          <div class="scrollable-wrap">
-            <div class="scrollable-body" id="colorsScroll">
-              <div style="display:flex;flex-direction:column;gap:10px;">
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">VERDES</div><div class="color-row"><div class="swatch sel" style="background:#1D9E75" data-c="#1D9E75" data-d="#0F6E56" data-l="#E1F5EE" onclick="setAccent(this)"></div><div class="swatch" style="background:#10B981" data-c="#10B981" data-d="#047857" data-l="#D1FAE5" onclick="setAccent(this)"></div><div class="swatch" style="background:#16A34A" data-c="#16A34A" data-d="#14532D" data-l="#DCFCE7" onclick="setAccent(this)"></div><div class="swatch" style="background:#4ADE80" data-c="#4ADE80" data-d="#15803D" data-l="#F0FDF4" onclick="setAccent(this)"></div><div class="swatch" style="background:#0F766E" data-c="#0F766E" data-d="#134E4A" data-l="#CCFBF1" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">AZULES</div><div class="color-row"><div class="swatch" style="background:#378ADD" data-c="#378ADD" data-d="#185FA5" data-l="#E6F1FB" onclick="setAccent(this)"></div><div class="swatch" style="background:#2563EB" data-c="#2563EB" data-d="#1E3A8A" data-l="#DBEAFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#0891B2" data-c="#0891B2" data-d="#0E7490" data-l="#CFFAFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#1D4ED8" data-c="#1D4ED8" data-d="#1E3A8A" data-l="#DBEAFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#38BDF8" data-c="#38BDF8" data-d="#0369A1" data-l="#E0F2FE" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">AMARILLOS</div><div class="color-row"><div class="swatch" style="background:#EAB308" data-c="#EAB308" data-d="#713F12" data-l="#FEF9C3" onclick="setAccent(this)"></div><div class="swatch" style="background:#FBBF24" data-c="#FBBF24" data-d="#92400E" data-l="#FEF3C7" onclick="setAccent(this)"></div><div class="swatch" style="background:#F59E0B" data-c="#F59E0B" data-d="#78350F" data-l="#FEF3C7" onclick="setAccent(this)"></div><div class="swatch" style="background:#CA8A04" data-c="#CA8A04" data-d="#713F12" data-l="#FEFCE8" onclick="setAccent(this)"></div><div class="swatch" style="background:#FDE047" data-c="#FDE047" data-d="#A16207" data-l="#FEFCE8" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">NARANJAS</div><div class="color-row"><div class="swatch" style="background:#BA7517" data-c="#BA7517" data-d="#854F0B" data-l="#FAEEDA" onclick="setAccent(this)"></div><div class="swatch" style="background:#EA580C" data-c="#EA580C" data-d="#9A3412" data-l="#FFEDD5" onclick="setAccent(this)"></div><div class="swatch" style="background:#D97706" data-c="#D97706" data-d="#92400E" data-l="#FEF3C7" onclick="setAccent(this)"></div><div class="swatch" style="background:#D85A30" data-c="#D85A30" data-d="#993C1D" data-l="#FAECE7" onclick="setAccent(this)"></div><div class="swatch" style="background:#FB923C" data-c="#FB923C" data-d="#C2410C" data-l="#FFEDD5" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">ROJOS / ROSAS</div><div class="color-row"><div class="swatch" style="background:#D4537E" data-c="#D4537E" data-d="#993556" data-l="#FBEAF0" onclick="setAccent(this)"></div><div class="swatch" style="background:#E11D48" data-c="#E11D48" data-d="#9F1239" data-l="#FFE4E6" onclick="setAccent(this)"></div><div class="swatch" style="background:#EC4899" data-c="#EC4899" data-d="#9D174D" data-l="#FCE7F3" onclick="setAccent(this)"></div><div class="swatch" style="background:#F43F5E" data-c="#F43F5E" data-d="#881337" data-l="#FFE4E6" onclick="setAccent(this)"></div><div class="swatch" style="background:#BE123C" data-c="#BE123C" data-d="#881337" data-l="#FFE4E6" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">VIOLETAS</div><div class="color-row"><div class="swatch" style="background:#7F77DD" data-c="#7F77DD" data-d="#534AB7" data-l="#EEEDFE" onclick="setAccent(this)"></div><div class="swatch" style="background:#9333EA" data-c="#9333EA" data-d="#581C87" data-l="#F3E8FF" onclick="setAccent(this)"></div><div class="swatch" style="background:#6366F1" data-c="#6366F1" data-d="#3730A3" data-l="#E0E7FF" onclick="setAccent(this)"></div><div class="swatch" style="background:#A855F7" data-c="#A855F7" data-d="#6B21A8" data-l="#F3E8FF" onclick="setAccent(this)"></div><div class="swatch" style="background:#7C3AED" data-c="#7C3AED" data-d="#4C1D95" data-l="#EDE9FE" onclick="setAccent(this)"></div></div></div>
-                <div><div style="font-size:11px;color:var(--text2);font-weight:600;">NEUTROS</div><div class="color-row"><div class="swatch" style="background:#64748B" data-c="#64748B" data-d="#334155" data-l="#F1F5F9" onclick="setAccent(this)"></div><div class="swatch" style="background:#475569" data-c="#475569" data-d="#1E293B" data-l="#F8FAFC" onclick="setAccent(this)"></div><div class="swatch" style="background:#78716C" data-c="#78716C" data-d="#44403C" data-l="#FAF7F5" onclick="setAccent(this)"></div><div class="swatch" style="background:#A16207" data-c="#A16207" data-d="#713F12" data-l="#FEFCE8" onclick="setAccent(this)"></div><div class="swatch" style="background:#374151" data-c="#374151" data-d="#111827" data-l="#F3F4F6" onclick="setAccent(this)"></div></div></div>
-              </div>
-            </div>
-            <div class="scroll-arrows">
-              <button class="scroll-arr-btn" onclick="scrollColorsCfg(-1)"><i class="ti ti-chevron-up"></i></button>
-              <button class="scroll-arr-btn" onclick="scrollColorsCfg(1)"><i class="ti ti-chevron-down"></i></button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
+    <a class="global-cfg-link" href="index.html#ajustes"><i class="ti ti-adjustments"></i><span><b>Color, modo y tamaño de texto</b><br>Se cambian desde el inicio y aplican a las 3 apps</span><i class="ti ti-chevron-right"></i></a>
+
     <div class="alerts-section" id="categoriesSection">
       <div class="alerts-header" onclick="toggleSection('categoriesSection')">
         <div class="alerts-header-left"><i class="ti ti-tag"></i> Categorías</div>
@@ -1148,22 +1102,11 @@
       </div>
     </div>
     
-    <div class="alerts-section" id="firebaseSection">
-      <div class="alerts-header" onclick="toggleSection('firebaseSection')">
-        <div class="alerts-header-left"><i class="ti ti-database"></i> Sincronización Firebase</div>
-        <div style="display:flex;align-items:center;gap:8px;"><div class="sync-dot" id="syncDot"></div><span id="syncLabel" style="font-size:12px;color:var(--text2)">Solo local</span><i class="ti ti-chevron-down alerts-chevron"></i></div>
-      </div>
-      <div class="alerts-body">
-        <div class="alerts-inner">
-          <textarea id="fbCfg" placeholder='{"apiKey":"...","projectId":"...","authDomain":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea>
-          <div class="action-row-inline">
-            <button class="inline-btn submit-btn" style="background:var(--accent);" onclick="connectFb()"><i class="ti ti-cloud-upload"></i> Conectar</button>
-            <button class="inline-btn submit-btn" style="background:var(--surface2);color:var(--text);border:0.5px solid var(--border2);" onclick="exportDataInline()"><i class="ti ti-download"></i> Exportar JSON</button>
-          </div>
-        </div>
-      </div>
+    <div class="fb-status-row">
+      <div style="display:flex;align-items:center;gap:8px;"><div class="sync-dot" id="syncDot"></div><span id="syncLabel" style="font-size:13px;color:var(--text2)">Solo local</span></div>
+      <button class="fb-export" onclick="exportDataInline()"><i class="ti ti-download"></i> Exportar JSON</button>
     </div>
-    
+
     <button class="close-btn" onclick="closeConfig()">Cerrar</button>
   </div>
 </div>
@@ -1199,6 +1142,7 @@
   }
   function initFontSizeSlider() {
     const slider = document.getElementById('fontSizeSlider');
+    if (!slider && cfg.fontSize) document.documentElement.style.fontSize = (cfg.fontSize * 100) + '%';
     if (slider) {
       const currentSize = cfg.fontSize || 1;
       slider.value = currentSize;
@@ -1681,7 +1625,6 @@
      CONFIG MODAL
   ============================================================ */
   function openConfig() {
-    if (cfg.fbCfg) document.getElementById('fbCfg').value = cfg.fbCfg;
     document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.c === cfg.accent));
     document.getElementById('syncDot').className = 'sync-dot' + (fbOn ? ' on' : '');
     document.getElementById('syncLabel').textContent = fbOn ? 'Conectado ✓' : 'Solo local';
@@ -1715,7 +1658,7 @@ function scrollWarn(dir) { const el = document.getElementById('warnInner'); if (
      FIREBASE
   ============================================================ */
   function connectFb() {
-    const str = document.getElementById('fbCfg').value.trim();
+    const el = document.getElementById('fbCfg'); const str = el ? el.value.trim() : '';
     if (!str) { toast('Pegá tu config'); return; }
     try {
       const parsed = JSON.parse(str);
@@ -1781,10 +1724,10 @@ function scrollWarn(dir) { const el = document.getElementById('warnInner'); if (
   if (cfg.theme && cfg.theme !== 'auto') document.documentElement.setAttribute('data-theme', cfg.theme);
   updateAlerts();
   updateFilterSelect();
-  if (cfg.fbCfg) { try { loadFb(JSON.parse(cfg.fbCfg)); } catch(e) {} }
+  { const fbc = window.getFbConfig && window.getFbConfig(); if (fbc) { try { loadFb(fbc); } catch(e) {} } }
   setTimeout(() => {
-    const firstSection = document.getElementById('aspectoSection');
-    if (firstSection) { firstSection.classList.add('open'); currentOpenSection = 'aspectoSection'; }
+    const firstSection = document.getElementById('categoriesSection');
+    if (firstSection) { firstSection.classList.add('open'); currentOpenSection = 'categoriesSection'; }
   }, 100);
 </script>
 </body>

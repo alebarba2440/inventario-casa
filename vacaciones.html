@@ -8,6 +8,8 @@
 <link rel="apple-touch-icon" href="logo3.png">
 <link rel="icon" type="image/png" href="logo3.png">
 <title>Vacaciones</title>
+<script src="tema.js"></script>
+<script src="firebase-config.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -309,9 +311,9 @@ function startSync(){
 }
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
 async function initFb(){
-  if(!CFG.fbCfg){setSync('','Solo local');return}
+  const c=window.getFbConfig&&window.getFbConfig();
+  if(!c){setSync('','Solo local');return}
   try{
-    const c=JSON.parse(CFG.fbCfg);
     if(typeof firebase==='undefined'){
       await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
       await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
