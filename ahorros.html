@@ -59,7 +59,9 @@
   .acc{background:var(--surface);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
   .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:15px 14px;background:none;border:none;font-family:inherit;color:var(--text);font-size:1rem;font-weight:700;cursor:pointer;text-align:left}
   .acc-h i.ic{color:var(--accent);font-size:1.2rem}
-  .acc-h .sum{margin-left:auto;font-size:.9rem;font-weight:700}
+  .acc-h .sum{margin-left:auto;font-size:.9rem;font-weight:800}
+  .acc-h .year{font-family:inherit;font-size:.85rem;font-weight:700;color:var(--accent-dark);background:var(--accent-light);border:none;border-radius:999px;padding:5px 10px;cursor:pointer;outline:none}
+  .acc-h .year:focus-visible{outline:2px solid var(--accent)}
   .acc-h .chev{color:var(--text2);transition:transform .2s;font-size:1.1rem}
   .acc.open .acc-h .chev{transform:rotate(180deg)}
   .acc-b{display:none;padding:0 14px 14px}
@@ -123,13 +125,15 @@
 </div>
 <main>
   <section class="acc open" id="accReal">
-    <button class="acc-h" onclick="openAcc('accReal')" aria-expanded="true">
-      <i class="ti ti-pig-money ic"></i> Ahorrado <span class="sum" id="sumReal"></span><i class="ti ti-chevron-down chev"></i>
-    </button>
+    <div class="acc-h" role="button" tabindex="0" onclick="openAcc('accReal')" onkeydown="if(event.key==='Enter')openAcc('accReal')" aria-expanded="true">
+      <i class="ti ti-pig-money ic"></i> AHORROS
+      <select id="yearSel" class="year" onclick="event.stopPropagation()" onkeydown="event.stopPropagation()" onchange="setYear(this.value)" aria-label="Año"></select>
+      <span class="sum" id="sumReal"></span><i class="ti ti-chevron-down chev"></i>
+    </div>
     <div class="acc-b">
       <div id="listReal"></div>
       <div class="tots"><div class="pj"><span id="totJN"></span><b id="tJ"></b></div><div class="pa"><span id="totAN"></span><b id="tA"></b></div></div>
-      <div class="neto"><span>NETO (total)</span><b id="neto">$ 0</b></div>
+      <div class="neto"><span id="netoL">NETO (total)</span><b id="neto">$ 0</b></div>
       <div class="addm"><input type="text" id="newMes" placeholder="Nuevo mes" style="text-transform:uppercase"><button class="btn" onclick="addMes()"><i class="ti ti-plus"></i> Mes</button></div>
       <p class="hint" style="margin-top:8px">Escribí el monto y tocá <b class="pos">+</b> si pusiste o <b class="neg">−</b> si sacaste. Tocá un mes para abrirlo, y el total de cada uno para ver o borrar movimientos.</p>
     </div>
@@ -216,16 +220,25 @@ function monthKey(m,i){
     if(k>=0)return (x[2]?+x[2]:new Date().getFullYear())*12+k;}
   return 1e9+i;
 }
+const yearOf=(m,i)=>{const k=monthKey(m,i);return k<1e9?Math.floor(k/12):null;}; // null = sin año: se ve en todos
+let selYear; // año elegido en el menú
+function years(){return [...new Set(state.months.map((m,i)=>yearOf(m,i)).filter(y=>y!==null))].sort((a,b)=>a-b);}
+function setYear(y){selYear=+y;openMes=undefined;render();}
+function monthsOfYear(){return sortedMonths().filter(m=>{const y=yearOf(m,state.months.indexOf(m));return y===null||y===selYear;});}
 function sortedMonths(){return state.months.map((m,i)=>[monthKey(m,i),i,m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]);}
 let openMes; // mes abierto (uno a la vez)
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 function render(){
+  const ys=years(),hoyY=new Date().getFullYear();
+  if(!ys.includes(selYear))selYear=ys.includes(hoyY)?hoyY:(ys.length?ys[ys.length-1]:hoyY);
+  const sel=document.getElementById('yearSel');
+  sel.innerHTML=(ys.length?ys:[hoyY]).map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
   document.getElementById('thEJ').textContent=state.names.j;
   document.getElementById('thEA').textContent=state.names.a;
-  document.getElementById('totJN').textContent='Total '+state.names.j;
-  document.getElementById('totAN').textContent='Total '+state.names.a;
-  const ms=sortedMonths();
+  document.getElementById('totJN').textContent='Total '+state.names.j+' '+selYear;
+  document.getElementById('totAN').textContent='Total '+state.names.a+' '+selYear;
+  const ms=monthsOfYear();
   if(openMes===undefined){ // al entrar: abierto el mes actual (o el último si no existe)
     const d=new Date(),hoy=d.getFullYear()*12+d.getMonth();
     const act=ms.find((m,i)=>monthKey(m,i)===hoy);openMes=act?act.id:(ms.length?ms[ms.length-1].id:null);}
@@ -247,6 +260,7 @@ function render(){
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
     <td id="et_${m.id}"></td></tr>`).join('');
+  document.getElementById('netoL').textContent='NETO '+selYear;
   recalc();
   document.getElementById('newMes').placeholder='Nuevo mes (ej: '+nextLabel().toUpperCase()+')';
 }
@@ -260,12 +274,13 @@ function quick(id,p,sign){
 }
 function colorize(el,n,text){el.textContent=text;el.className=cls(n)}
 function recalc(){
-  const tj=sum(state.months.map(m=>cellTot(m,'j'))),ta=sum(state.months.map(m=>cellTot(m,'a')));
+  const ms=monthsOfYear();
+  const tj=sum(ms.map(m=>cellTot(m,'j'))),ta=sum(ms.map(m=>cellTot(m,'a')));
   const set=(id,n)=>{const e=document.getElementById(id);if(e){e.textContent=fmt(n);e.className=cls(n)}};
   {const a=document.getElementById('tJ'),b=document.getElementById('tA');a.textContent=fmt(tj);a.className=tj<0?'neg':'';b.textContent=fmt(ta);b.className=ta<0?'neg':'';}
   set('neto',tj+ta);{const e=document.getElementById('sumReal');e.textContent=fmt(tj+ta);e.className='sum '+cls(tj+ta);}
   let est=0;
-  state.months.forEach(m=>{const t=(+m.est.j||0)+(+m.est.a||0);est+=t;const e=document.getElementById('et_'+m.id);if(e)e.textContent=fmt(t)});
+  ms.forEach(m=>{const t=(+m.est.j||0)+(+m.est.a||0);est+=t;const e=document.getElementById('et_'+m.id);if(e)e.textContent=fmt(t)});
   document.getElementById('estTot').textContent=fmt(est);
   document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
@@ -274,7 +289,7 @@ function setEst(id,p,v){state.months.find(m=>m.id===id).est[p]=v===''?0:parseFlo
 
 /* ---------- meses ---------- */
 const inMes=document.getElementById('newMes');
-function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();const nm=emptyMonth(l);state.months.push(nm);openMes=nm.id;inMes.value='';save();render();}
+function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();const nm=emptyMonth(l);state.months.push(nm);openMes=nm.id;{const y=yearOf(nm,state.months.length-1);if(y!==null)selYear=y;}inMes.value='';save();render();}
 function delMes(id){const m=state.months.find(x=>x.id===id);if(!confirm('¿Borrar "'+m.label+'" y sus movimientos?'))return;state.months=state.months.filter(x=>x.id!==id);save();render();}
 function renameM(id){const m=state.months.find(x=>x.id===id);const n=prompt('Nombre del mes',m.label);if(n&&n.trim()){m.label=n.trim().toUpperCase();save();render();}}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
