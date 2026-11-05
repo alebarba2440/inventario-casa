@@ -45,7 +45,14 @@
   .mes.paid{border-left-color:var(--pos)}
   .mes-h{width:100%;display:flex;align-items:center;gap:8px;padding:13px 12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
   .mes-h .nm{font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;flex:1;min-width:0}
-  .mes-h .tt{font-weight:800;font-variant-numeric:tabular-nums;font-size:.92rem}
+  .mes-h .tt{font-weight:800;font-variant-numeric:tabular-nums;font-size:.92rem;color:var(--neg)}
+  .mes.paid .mes-h .tt{color:var(--pos)}
+  .mes{background:var(--surface)}
+  .mes .mes-h{background:var(--neg-l)} .mes.paid .mes-h{background:var(--pos-l)}
+  .chk{width:28px;height:28px;flex-shrink:0;border-radius:8px;border:2.5px solid var(--neg);background:var(--surface);color:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:all .15s}
+  .chk svg{width:18px;height:18px}
+  .chk.on{background:var(--pos);border-color:var(--pos);color:#fff}
+  .chk:active{transform:scale(.88)}
   .badge{font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
   .badge.ok{background:var(--pos-l);color:var(--pos)} .badge.no{background:var(--neg-l);color:var(--neg)}
   .mes-h .chev{color:var(--text2);transition:transform .2s}
@@ -205,10 +212,11 @@ function renderGastos(){
   if(openMes===undefined){const a=ms.find(m=>key(m)===kHoy);openMes=a?a.id:(ms.length?ms[ms.length-1].id:null);}
   document.getElementById('meses').innerHTML=ms.map(m=>{const t=totMes(m),op=m.id===openMes;
     return `<div class="mes${m.pagado?' paid':''}${op?' open':''}" id="mes_${m.id}">
-      <button class="mes-h" onclick="toggleMes('${m.id}')" aria-expanded="${op}">
+      <div class="mes-h" role="button" tabindex="0" onclick="toggleMes('${m.id}')" onkeydown="if(event.key==='Enter')toggleMes('${m.id}')" aria-expanded="${op}">
+        <button class="chk${m.pagado?' on':''}" onclick="event.stopPropagation();togglePago('${m.id}')" role="checkbox" aria-checked="${m.pagado}" aria-label="${m.pagado?'Pagado':'Sin pagar'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>
         <span class="nm">${MESES[m.k]} ${m.y}</span>
-        <span class="badge ${m.pagado?'ok':'no'}">${m.pagado?'✓ Pagado':'Sin pagar'}</span>
-        <span class="tt" data-tm="${m.id}">${fmt(t)}</span><i class="ti ti-chevron-down chev"></i></button>
+        <span class="tt" data-tm="${m.id}">${fmt(t)}</span><i class="ti ti-chevron-down chev"></i></div>
       <div class="mes-b">
         <div class="hdr"><span>Detalle</span><span>Monto</span><span>C/U</span><span></span></div>
         ${m.lineas.map(l=>`<div class="row">
@@ -219,7 +227,6 @@ function renderGastos(){
         <div class="tot"><span>TOTAL</span><span data-t="${m.id}">${fmt(t)}</span><span data-c="${m.id}">${fmt(t/2)}</span><span></span></div>
         <div class="acts">
           <button class="add" onclick="agregarL('${m.id}')"><i class="ti ti-plus"></i> Línea</button>
-          <button class="paybtn${m.pagado?' ok':''}" onclick="togglePago('${m.id}')"><span class="bx">${m.pagado?'✓':''}</span>${m.pagado?'Pagado':'Marcar pagado'}</button>
         </div>
         <button class="delmes" onclick="borrarMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button>
       </div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
