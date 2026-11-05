@@ -1,0 +1,12 @@
+{
+  "name": "Nuestras apps",
+  "short_name": "Nuestras apps",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1D9E75",
+  "icons": [
+    { "src": "img/icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
