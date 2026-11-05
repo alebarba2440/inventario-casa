@@ -54,6 +54,33 @@
   .mov .n{flex:1;color:var(--text2);font-size:.8rem}
   .mov button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer}
   .hint{font-size:.78rem;color:var(--text2)}
+
+  /* acordeones */
+  .acc{background:var(--surface);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
+  .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:15px 14px;background:none;border:none;font-family:inherit;color:var(--text);font-size:1rem;font-weight:700;cursor:pointer;text-align:left}
+  .acc-h i.ic{color:var(--accent);font-size:1.2rem}
+  .acc-h .sum{margin-left:auto;font-size:.9rem;font-weight:700}
+  .acc-h .chev{color:var(--text2);transition:transform .2s;font-size:1.1rem}
+  .acc.open .acc-h .chev{transform:rotate(180deg)}
+  .acc-b{display:none;padding:0 14px 14px}
+  .acc.open .acc-b{display:block}
+  /* meses */
+  .mes{border:.5px solid var(--border2);border-radius:14px;padding:12px;margin-bottom:10px;background:var(--surface)}
+  .mes-h{position:relative;text-align:center;font-weight:700;font-size:1rem;letter-spacing:.04em;text-transform:uppercase;padding:0 30px 10px;border-bottom:.5px solid var(--border);margin-bottom:10px;cursor:pointer}
+  .mes-h .del{position:absolute;right:0;top:-2px;background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:2px}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .col{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .col .who{font-size:.78rem;font-weight:700;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.04em;text-align:center;cursor:pointer}
+  .col .amt{text-align:center;font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums;padding:6px 4px;border-radius:10px;background:var(--surface2);cursor:pointer}
+  .col .amt small{display:block;font-size:.66rem;font-weight:500;color:var(--text2)}
+  .inrow{display:flex;gap:4px}
+  .inrow input{padding:8px 8px !important;font-size:.9rem !important;min-width:0;flex:1}
+  .pm{width:34px;flex-shrink:0;border:none;border-radius:10px;color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit}
+  .pm.p{background:var(--pos)}.pm.m{background:var(--neg)}
+  .mes-t{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:.5px dashed var(--border2);font-size:.88rem;font-weight:600}
+  .tots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+  .tots div{background:var(--surface2);border-radius:var(--r);padding:10px;text-align:center;font-size:.78rem;color:var(--text2);font-weight:600}
+  .tots b{display:block;font-size:1.05rem;margin-top:2px}
 </style>
 <link rel="stylesheet" href="fondo.css">
 </head>
@@ -64,26 +91,32 @@
   <div class="sync"><div class="dot" id="dot"></div><span id="syncT">Solo local</span></div>
 </div>
 <main>
-  <div class="card">
-    <h2><i class="ti ti-pig-money"></i> Ahorrado</h2>
-    <table>
-      <thead><tr><th>Mes</th><th class="pn" onclick="renameP('j')" id="thJ"></th><th class="pn" onclick="renameP('a')" id="thA"></th><th>Total mes</th></tr></thead>
-      <tbody id="tbReal"></tbody>
-    </table>
-    <div class="neto"><span>NETO (total)</span><b id="neto">$ 0</b></div>
-    <div class="addm"><input type="text" id="newMes" placeholder="Nuevo mes (ej: Enero 2027)"><button class="btn" onclick="addMes()"><i class="ti ti-plus"></i> Mes</button></div>
-    <p class="hint" style="margin-top:8px">Tocá un monto para agregar (+) o sacar (−) plata de ese mes. Tocá el nombre de la columna o del mes para cambiarlo.</p>
-  </div>
+  <section class="acc open" id="accReal">
+    <button class="acc-h" onclick="openAcc('accReal')" aria-expanded="true">
+      <i class="ti ti-pig-money ic"></i> Ahorrado <span class="sum" id="sumReal"></span><i class="ti ti-chevron-down chev"></i>
+    </button>
+    <div class="acc-b">
+      <div id="listReal"></div>
+      <div class="tots"><div><span id="totJN"></span><b id="tJ"></b></div><div><span id="totAN"></span><b id="tA"></b></div></div>
+      <div class="neto"><span>NETO (total)</span><b id="neto">$ 0</b></div>
+      <div class="addm"><input type="text" id="newMes" placeholder="Nuevo mes" style="text-transform:uppercase"><button class="btn" onclick="addMes()"><i class="ti ti-plus"></i> Mes</button></div>
+      <p class="hint" style="margin-top:8px">Escribí el monto y tocá <b class="pos">+</b> si pusiste o <b class="neg">−</b> si sacaste. Tocá el total de cada uno para ver o borrar movimientos, y el nombre del mes para cambiarlo.</p>
+    </div>
+  </section>
 
-  <div class="card">
-    <h2><i class="ti ti-target-arrow"></i> Estimado</h2>
-    <table>
-      <thead><tr><th>Mes</th><th id="thEJ"></th><th id="thEA"></th><th>Total</th></tr></thead>
-      <tbody id="tbEst"></tbody>
-    </table>
-    <div class="neto" style="background:var(--surface2);color:var(--text)"><span>Estimado total</span><b id="estTot">$ 0</b></div>
-    <div class="neto" style="margin-top:6px;background:var(--surface2);color:var(--text)"><span>Real − estimado</span><b id="dif">$ 0</b></div>
-  </div>
+  <section class="acc" id="accEst">
+    <button class="acc-h" onclick="openAcc('accEst')" aria-expanded="false">
+      <i class="ti ti-target-arrow ic"></i> Estimado <span class="sum" id="sumEst"></span><i class="ti ti-chevron-down chev"></i>
+    </button>
+    <div class="acc-b">
+      <table>
+        <thead><tr><th>Mes</th><th id="thEJ"></th><th id="thEA"></th><th>Total</th></tr></thead>
+        <tbody id="tbEst"></tbody>
+      </table>
+      <div class="neto" style="background:var(--surface2);color:var(--text)"><span>Estimado total</span><b id="estTot">$ 0</b></div>
+      <div class="neto" style="margin-top:6px;background:var(--surface2);color:var(--text)"><span>Real − estimado</span><b id="dif">$ 0</b></div>
+    </div>
+  </section>
 </main>
 
 <div class="bg" id="bg" onclick="if(event.target===this)closeSheet()">
@@ -129,41 +162,62 @@ function nextLabel(){
 }
 
 /* ---------- render ---------- */
+function openAcc(id){ // abre uno y cierra el otro
+  document.querySelectorAll('.acc').forEach(el=>{const o=el.id===id&&!el.classList.contains('open');el.classList.toggle('open',o);el.querySelector('.acc-h').setAttribute('aria-expanded',o)});
+}
+function colHTML(m,p){
+  const t=cellTot(m,p),n=m.mov[p].length;
+  return `<div class="col">
+    <div class="who" onclick="renameP('${p}')">${esc(state.names[p])}</div>
+    <div class="amt ${cls(t)}" onclick="openSheet('${m.id}','${p}')">${fmt(t)}<small>${n?n+' mov.':'sin movimientos'}</small></div>
+    <div class="inrow"><input type="number" inputmode="decimal" placeholder="$" id="in_${m.id}_${p}" onkeydown="if(event.key==='Enter')quick('${m.id}','${p}',1)">
+      <button class="pm p" onclick="quick('${m.id}','${p}',1)" aria-label="Puse">+</button><button class="pm m" onclick="quick('${m.id}','${p}',-1)" aria-label="Saqué">−</button></div>
+  </div>`;
+}
 function render(){
-  document.getElementById('thJ').textContent=state.names.j;
-  document.getElementById('thA').textContent=state.names.a;
   document.getElementById('thEJ').textContent=state.names.j;
   document.getElementById('thEA').textContent=state.names.a;
-  document.getElementById('tbReal').innerHTML=state.months.map(m=>{
-    const j=cellTot(m,'j'),a=cellTot(m,'a');
-    return `<tr><td class="lab"><span onclick="renameM('${m.id}')">${esc(m.label)}</span><button class="del" onclick="delMes('${m.id}')" aria-label="Borrar mes"><i class="ti ti-trash"></i></button></td>
-    <td class="cell" onclick="openSheet('${m.id}','j')"><span class="${cls(j)}">${fmt(j)}</span></td>
-    <td class="cell" onclick="openSheet('${m.id}','a')"><span class="${cls(a)}">${fmt(a)}</span></td>
-    <td class="${cls(j+a)}"><b>${fmt(j+a)}</b></td></tr>`}).join('')
-    +(state.months.length?`<tr class="tot"><td>TOTAL</td><td class="${cls(0)}" id="tJ"></td><td id="tA"></td><td id="tT"></td></tr>`:'<tr><td colspan="4" class="hint" style="text-align:center;padding:16px">Todavía no hay meses. Agregá el primero abajo.</td></tr>');
-  document.getElementById('tbEst').innerHTML=state.months.map(m=>`<tr><td class="lab">${esc(m.label)}</td>
+  document.getElementById('totJN').textContent='Total '+state.names.j;
+  document.getElementById('totAN').textContent='Total '+state.names.a;
+  document.getElementById('listReal').innerHTML=state.months.length?state.months.map(m=>{
+    const t=cellTot(m,'j')+cellTot(m,'a');
+    return `<div class="mes">
+      <div class="mes-h" onclick="renameM('${m.id}')">${esc(m.label)}<button class="del" onclick="event.stopPropagation();delMes('${m.id}')" aria-label="Borrar mes"><i class="ti ti-trash"></i></button></div>
+      <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
+      <div class="mes-t"><span>Total del mes</span><span class="${cls(t)}">${fmt(t)}</span></div>
+    </div>`}).join(''):'<p class="hint" style="text-align:center;padding:16px 0">Todavía no hay meses. Agregá el primero abajo.</p>';
+  document.getElementById('tbEst').innerHTML=state.months.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
     <td id="et_${m.id}"></td></tr>`).join('');
   recalc();
 }
+/* carga rápida desde el mes: + puse / − saqué */
+function quick(id,p,sign){
+  const el=document.getElementById('in_'+id+'_'+p),v=parseFloat(el.value);
+  if(!v||v<=0){el.focus();return;}
+  const m=state.months.find(x=>x.id===id),d=new Date();
+  m.mov[p].push({id:uid(),amt:sign*v,note:'',d:d.getDate()+'/'+(d.getMonth()+1)});
+  save();render();
+}
 function colorize(el,n,text){el.textContent=text;el.className=cls(n)}
 function recalc(){
   const tj=sum(state.months.map(m=>cellTot(m,'j'))),ta=sum(state.months.map(m=>cellTot(m,'a')));
   const set=(id,n)=>{const e=document.getElementById(id);if(e){e.textContent=fmt(n);e.className=cls(n)}};
-  set('tJ',tj);set('tA',ta);set('tT',tj+ta);set('neto',tj+ta);
+  set('tJ',tj);set('tA',ta);set('neto',tj+ta);{const e=document.getElementById('sumReal');e.textContent=fmt(tj+ta);e.className='sum '+cls(tj+ta);}
   let est=0;
   state.months.forEach(m=>{const t=(+m.est.j||0)+(+m.est.a||0);est+=t;const e=document.getElementById('et_'+m.id);if(e)e.textContent=fmt(t)});
   document.getElementById('estTot').textContent=fmt(est);
+  document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
 }
 function setEst(id,p,v){state.months.find(m=>m.id===id).est[p]=v===''?0:parseFloat(v);save();recalc()}
 
 /* ---------- meses ---------- */
 const inMes=document.getElementById('newMes');
-function addMes(){const l=inMes.value.trim()||nextLabel();state.months.push(emptyMonth(l));inMes.value='';save();render();}
+function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();state.months.push(emptyMonth(l));inMes.value='';save();render();}
 function delMes(id){const m=state.months.find(x=>x.id===id);if(!confirm('¿Borrar "'+m.label+'" y sus movimientos?'))return;state.months=state.months.filter(x=>x.id!==id);save();render();}
-function renameM(id){const m=state.months.find(x=>x.id===id);const n=prompt('Nombre del mes',m.label);if(n&&n.trim()){m.label=n.trim();save();render();}}
+function renameM(id){const m=state.months.find(x=>x.id===id);const n=prompt('Nombre del mes',m.label);if(n&&n.trim()){m.label=n.trim().toUpperCase();save();render();}}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
 /* ---------- movimientos ---------- */
@@ -225,7 +279,7 @@ async function initFb(){
     db=firebase.firestore();startSync();
   }catch(e){setSync('err','No conectó');}
 }
-inMes.placeholder='Nuevo mes (ej: '+nextLabel()+')';
+inMes.placeholder='Nuevo mes (ej: '+nextLabel().toUpperCase()+')';
 render();initFb();
 </script>
 </body>
