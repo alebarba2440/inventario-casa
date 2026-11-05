@@ -1,6 +1,6 @@
 {
-  "name": "Nuestras apps",
-  "short_name": "Nuestras apps",
+  "name": "JuntOS",
+  "short_name": "JuntOS",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#C0392B",
