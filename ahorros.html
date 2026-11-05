@@ -186,7 +186,7 @@
   <div class="sheet">
     <h3 id="shT"></h3>
     <div id="shTot" style="font-weight:700"></div>
-    <input type="number" inputmode="decimal" id="shAmt" placeholder="Monto">
+    <input type="text" inputmode="numeric" id="shAmt" placeholder="Monto" oninput="miles(this)">
     <input type="text" id="shNote" placeholder="Nota (opcional)">
     <div class="row"><button class="btn add" onclick="addMov(1)"><i class="ti ti-plus"></i> Agregó</button><button class="btn rem" onclick="addMov(-1)"><i class="ti ti-minus"></i> Sacó</button></div>
     <div id="shList"></div>
@@ -213,6 +213,12 @@ const cellTot=(m,p)=>sum(m.mov[p].map(x=>x.amt));
 const fmt=n=>(n<0?'-':'')+'$ '+Math.abs(Math.round(n)).toLocaleString('es-AR');
 /* formato corto para el resumen del mes cerrado: $ 1,25 M */
 const fmtS=n=>Math.abs(n)>=1e6?(n<0?'-':'')+'$ '+(Math.abs(n)/1e6).toLocaleString('es-AR',{maximumFractionDigits:2})+' M':fmt(n);
+/* punto de miles mientras se escribe: 1250000 -> 1.250.000 */
+const fmtN=n=>Math.round(+n||0).toLocaleString('es-AR');
+const numDe=t=>{const c=String(t??'').replace(/\./g,'').replace(',','.').trim();return c===''?0:(parseFloat(c)||0);};
+function miles(el){const c=el.value.replace(/\./g,'');
+  if(/^\d+$/.test(c)){const f=(+c).toLocaleString('es-AR');if(el.value!==f)el.value=f;return +c;}
+  return numDe(el.value);}
 const cls=n=>n>0?'pos':n<0?'neg':'zero';
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
@@ -226,7 +232,7 @@ function colHTML(m,p){
   return `<div class="col ${pc}">
     <div class="who ${pc}" onclick="renameP('${p}')">${esc(state.names[p])}</div>
     <div class="amt ${pc} ${t<0?'neg':''}" onclick="openSheet('${m.id}','${p}')">${fmt(t)}<small>${n?n+' mov.':'sin movimientos'}</small></div>
-    <div class="inrow"><input type="number" inputmode="decimal" placeholder="$" id="in_${m.id}_${p}" onkeydown="if(event.key==='Enter')quick('${m.id}','${p}',1)">
+    <div class="inrow"><input type="text" inputmode="numeric" placeholder="$" oninput="miles(this)" id="in_${m.id}_${p}" onkeydown="if(event.key==='Enter')quick('${m.id}','${p}',1)">
       <button class="pm p" onclick="quick('${m.id}','${p}',1)" aria-label="Puse">+</button><button class="pm m" onclick="quick('${m.id}','${p}',-1)" aria-label="Saqué">−</button></div>
   </div>`;
 }
@@ -321,8 +327,8 @@ function render(){
       <div class="er1"><b>${esc(m.label.replace(/ \d{4}$/,''))}</b><span class="et" id="et_${m.id}"></span>
         <button class="xe" onclick="quitarEst('${m.id}')" aria-label="Quitar mes"><i class="ti ti-trash"></i></button></div>
       <div class="er2">
-        <label class="pj"><span>${esc(state.names.j)}</span><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></label>
-        <label class="pa"><span>${esc(state.names.a)}</span><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></label>
+        <label class="pj"><span>${esc(state.names.j)}</span><input type="text" inputmode="numeric" value="${m.est.j?fmtN(m.est.j):''}" placeholder="0" oninput="setEst('${m.id}','j',this)"></label>
+        <label class="pa"><span>${esc(state.names.a)}</span><input type="text" inputmode="numeric" value="${m.est.a?fmtN(m.est.a):''}" placeholder="0" oninput="setEst('${m.id}','a',this)"></label>
       </div></div>`).join('');
   const ems=estMonths(),grupos=[];
   ems.forEach(m=>{const g=String(Math.floor(monthKey(m,0)/12));let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
@@ -340,7 +346,7 @@ function render(){
 }
 /* carga rápida desde el mes: + puse / − saqué */
 function quick(id,p,sign){
-  const el=document.getElementById('in_'+id+'_'+p),v=parseFloat(el.value);
+  const el=document.getElementById('in_'+id+'_'+p),v=numDe(el.value);
   if(!v||v<=0){el.focus();return;}
   const m=realM(id),d=new Date();
   m.mov[p].push({id:uid(),amt:sign*v,note:'',d:d.getDate()+'/'+(d.getMonth()+1)});
@@ -362,7 +368,7 @@ function recalc(){
   document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
 }
-function setEst(id,p,v){const m=realM(id);m.est[p]=v===''?0:parseFloat(v);m.enEst=true;save();recalc()}
+function setEst(id,p,el){const m=realM(id);m.est[p]=miles(el);m.enEst=true;save();recalc()}
 /* quitar un mes de Estimado (si no tiene ahorro cargado, se borra del todo) */
 function quitarEst(id){
   const m=state.months.find(x=>x.id===id);if(!m)return;
@@ -417,7 +423,7 @@ function drawSheet(){
     <button onclick="delMov('${x.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>`).join('');
 }
 function addMov(sign){
-  const v=parseFloat(document.getElementById('shAmt').value);
+  const v=numDe(document.getElementById('shAmt').value);
   if(!v||v<=0){document.getElementById('shAmt').focus();return;}
   const m=realM(cur.id),d=new Date();
   m.mov[cur.p].push({id:uid(),amt:sign*v,note:document.getElementById('shNote').value.trim(),d:d.getDate()+'/'+(d.getMonth()+1)});

@@ -228,6 +228,9 @@ function ev(x){
   try{const v=Function('"use strict";return ('+s+')')();return isFinite(v)?v:NaN}catch(e){return NaN}
 }
 const n0=x=>{const v=ev(x);return isNaN(v)?0:v};
+/* muestra 1250000 como 1.250.000 (si es un número solo; las sumas como 56+8 quedan como están) */
+const cp=v=>{const c=String(v??'').replace(/\./g,'');return /^\d+$/.test(c)?(+c).toLocaleString('es-AR'):String(v??'');};
+function miles(el){const c=el.value.replace(/\./g,'');if(/^\d+$/.test(c)){const f=(+c).toLocaleString('es-AR');if(el.value!==f)el.value=f;return c;}return el.value;}
 const fmt=(n,m='ARS')=>{if(!isFinite(n))return '—';const d=m==='ARS'?0:2;
   return (n<0?'-':'')+SIM[m]+' '+Math.abs(n).toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:0});};
 const cls=n=>n>0?'pos':n<0?'neg':'zero';
@@ -314,7 +317,7 @@ function borrarViaje(){
 /* ================= edición de filas ================= */
 function item(lista,id){return cur()[lista].find(x=>x.id===id)}
 function setF(lista,id,campo,el){
-  const it=item(lista,id);it[campo]=el.value;
+  const it=item(lista,id);it[campo]=campo==='monto'?miles(el):el.value;
   if(campo==='monto')el.classList.toggle('bad',isNaN(ev(el.value)));
   cambio();
 }
@@ -322,7 +325,7 @@ function toggleExt(lista,id){const it=item(lista,id);it.ext=!it.ext;cambio();ren
 function agregar(lista){cur()[lista].push({id:uid(),label:'',monto:'',ext:cur().moneda!=='ARS'&&lista!=='est'});cambio();render(()=>{
   const a=lista==='real'?'rea':lista==='dia'?'com':lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
 function quitar(lista,id){cur()[lista]=cur()[lista].filter(x=>x.id!==id);cambio();render();}
-function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=el.value;el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
+function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
 function quitarAho(p,id){const v=cur();v.aho[p]=v.aho[p].filter(x=>x.id!==id);if(!v.aho[p].length)v.aho[p].push({id:uid(),monto:''});cambio();render();}
 function autoAlto(t){t.style.height='auto';t.style.height=t.scrollHeight+'px';}
@@ -339,12 +342,12 @@ function filas(v,lista,ph){
   if(!v[lista].length)return '<p class="empty">Sin ítems todavía</p>';
   if(!ext)return `<div class="one"><div class="hdr"><span>Concepto</span><span>Costo ($)</span><span></span></div>`+v[lista].map(it=>`<div class="row">
       <input type="text" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
-      <input type="text" class="m" inputmode="decimal" value="${esc(it.monto)}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
+      <input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
       <button class="x" onclick="quitar('${lista}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>`).join('')+'</div>';
   return v[lista].map(it=>`<div class="it">
       <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
         <button class="x" onclick="quitar('${lista}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-      <div class="l2"><input type="text" class="m" inputmode="decimal" value="${esc(it.monto)}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
+      <div class="l2"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
         <button class="cur${it.ext?' ext':''}" onclick="toggleExt('${lista}','${it.id}')" aria-label="Moneda del costo">${it.ext?S:'$'}</button>
         <span class="conv" data-cv="${lista}:${it.id}"></span></div></div>`).join('');
 }
@@ -376,7 +379,7 @@ function render(after){
 
   const aho=`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
-        ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(x.monto)}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
+        ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
         <div class="ct" data-a="${p}"></div></div>`).join('')}
     </div>${tot('aho','TOTAL DE LOS DOS')}<p class="hint">Montos en pesos.</p>`;
@@ -388,7 +391,7 @@ function render(after){
       <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="Día (ej: Lunes 9)" oninput="setF('com','${it.id}','label',this)">
         <span class="dif" data-d="${it.id}"></span>
         <button class="x" onclick="quitar('com','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-      <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(it.monto)}" placeholder="Gastado: 56+8+50…" oninput="setF('com','${it.id}','monto',this)">
+      <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="Gastado: 56+8+50…" oninput="setF('com','${it.id}','monto',this)">
         ${ext?`<button class="cur${it.ext?' ext':''}" onclick="toggleExt('com','${it.id}')">${it.ext?S:'$'}</button><span class="conv" data-cv="com:${it.id}"></span>`:''}</div></div>`).join('')
     :'<p class="empty">Agregá un día cuando estés de viaje</p>')+`
     <button class="add" onclick="agregar('com')"><i class="ti ti-plus"></i> Día</button>
