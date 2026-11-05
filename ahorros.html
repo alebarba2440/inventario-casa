@@ -136,8 +136,6 @@
       <div id="listReal"></div>
       <div class="tots"><div class="pj"><span id="totJN"></span><b id="tJ"></b></div><div class="pa"><span id="totAN"></span><b id="tA"></b></div></div>
       <div class="neto"><span id="netoL">NETO (total)</span><b id="neto">$ 0</b></div>
-      <div class="addm"><input type="text" id="newMes" placeholder="Nuevo mes" style="text-transform:uppercase"><button class="btn" onclick="addMes()"><i class="ti ti-plus"></i> Mes</button></div>
-      <p class="hint" style="margin-top:8px">Escribí el monto y tocá <b class="pos">+</b> si pusiste o <b class="neg">−</b> si sacaste. Tocá un mes para abrirlo, y el total de cada uno para ver o borrar movimientos.</p>
     </div>
   </section>
 
@@ -190,17 +188,6 @@ const fmtS=n=>Math.abs(n)>=1e6?(n<0?'-':'')+'$ '+(Math.abs(n)/1e6).toLocaleStrin
 const cls=n=>n>0?'pos':n<0?'neg':'zero';
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
-function nextLabel(){
-  const d=new Date();
-  const last=sortedMonths().filter((m,i)=>monthKey(m,i)<1e9).pop();
-  if(last){ // sugerir el mes siguiente al último
-    const m=last.label.match(/^(\p{L}+)\s*(\d{4})?/u);
-    if(m){const i=MESES.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());
-      if(i>=0){let y=m[2]?+m[2]:d.getFullYear(),n=i+1;if(n>11){n=0;y++}return MESES[n]+' '+y;}}
-  }
-  return MESES[d.getMonth()]+' '+d.getFullYear();
-}
-
 /* ---------- render ---------- */
 function openAcc(id){ // abre uno y cierra el otro
   document.querySelectorAll('.acc').forEach(el=>{const o=el.id===id&&!el.classList.contains('open');el.classList.toggle('open',o);el.querySelector('.acc-h').setAttribute('aria-expanded',o)});
@@ -222,28 +209,48 @@ function monthKey(m,i){
     if(k>=0)return (x[2]?+x[2]:new Date().getFullYear())*12+k;}
   return 1e9+i;
 }
-const yearOf=(m,i)=>{const k=monthKey(m,i);return k<1e9?Math.floor(k/12):null;}; // null = sin año: se ve en todos
-let selYear; // año elegido en el menú
-function years(){return [...new Set(state.months.map((m,i)=>yearOf(m,i)).filter(y=>y!==null))].sort((a,b)=>a-b);}
-function setYear(y){selYear=+y;openMes=undefined;render();}
-function monthsOfYear(){return sortedMonths().filter(m=>{const y=yearOf(m,state.months.indexOf(m));return y===null||y===selYear;});}
+const yearOf=(m,i)=>{const k=monthKey(m,i);return k<1e9?Math.floor(k/12):null;};
+let selYear='all'; // 'all' = todos los años
+/* años que se muestran: desde el primero con datos (o el actual) hasta el siguiente al actual, o más si ya hay datos */
+function years(){
+  const hoy=new Date().getFullYear(),ys=state.months.map((m,i)=>yearOf(m,i)).filter(y=>y!==null);
+  const lo=Math.min(hoy,...ys),hi=Math.max(hoy+1,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
+}
+function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;render();}
+/* todos los meses del rango, ordenados. Los que todavía no tienen datos son "virtuales" hasta que se cargue algo */
+function allMonths(){
+  const byKey={};state.months.forEach((m,i)=>{const k=monthKey(m,i);if(k<1e9&&!byKey[k])byKey[k]=m;});
+  const out=[];
+  years().forEach(y=>MESES.forEach((n,k)=>{const key=y*12+k;
+    out.push(byKey[key]||{id:'m'+y+'_'+k,label:n.toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0},virtual:true});}));
+  state.months.forEach((m,i)=>{if(monthKey(m,i)>=1e9)out.push(m);}); // nombres que no son meses: al final
+  return out;
+}
+function monthsOfYear(){return allMonths().filter((m)=>{if(selYear==='all')return true;const x=String(m.label).match(/(\d{4})/);return x&&+x[1]===selYear;});}
+function getM(id){return state.months.find(x=>x.id===id)||allMonths().find(x=>x.id===id);}
+function realM(id){ // si el mes es virtual, lo guarda de verdad
+  let m=state.months.find(x=>x.id===id);if(m)return m;
+  m=allMonths().find(x=>x.id===id);delete m.virtual;state.months.push(m);return m;
+}
 function sortedMonths(){return state.months.map((m,i)=>[monthKey(m,i),i,m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]);}
 let openMes; // mes abierto (uno a la vez)
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 function render(){
   const ys=years(),hoyY=new Date().getFullYear();
-  if(!ys.includes(selYear))selYear=ys.includes(hoyY)?hoyY:(ys.length?ys[ys.length-1]:hoyY);
+  if(selYear!=='all'&&!ys.includes(selYear))selYear='all';
   const sel=document.getElementById('yearSel');
-  sel.innerHTML=(ys.length?ys:[hoyY]).map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
+  sel.innerHTML=`<option value="all"${selYear==='all'?' selected':''}>Todos</option>`+ys.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
+  const yl=selYear==='all'?'':' '+selYear;
   document.getElementById('thEJ').textContent=state.names.j;
   document.getElementById('thEA').textContent=state.names.a;
-  document.getElementById('totJN').textContent='Total '+state.names.j+' '+selYear;
-  document.getElementById('totAN').textContent='Total '+state.names.a+' '+selYear;
+  document.getElementById('totJN').textContent='Total '+state.names.j+yl;
+  document.getElementById('totAN').textContent='Total '+state.names.a+yl;
   const ms=monthsOfYear();
-  if(openMes===undefined){ // al entrar: abierto el mes actual (o el último si no existe)
+  let irA=null;
+  if(openMes===undefined){ // al entrar o al cambiar de año: abierto el mes actual (o el primero del año)
     const d=new Date(),hoy=d.getFullYear()*12+d.getMonth();
-    const act=ms.find((m,i)=>monthKey(m,i)===hoy);openMes=act?act.id:(ms.length?ms[ms.length-1].id:null);}
+    const act=ms.find(m=>monthKey(m,0)===hoy);openMes=act?act.id:(ms.length?ms[0].id:null);irA=openMes;}
   document.getElementById('listReal').innerHTML=ms.length?ms.map(m=>{
     const j=cellTot(m,'j'),a=cellTot(m,'a'),t=j+a,op=m.id===openMes;
     return `<div class="mes${op?' open':''}" id="mes_${m.id}">
@@ -255,22 +262,21 @@ function render(){
       <div class="mes-b">
         <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
         <div class="mes-t"><span>Total del mes</span><b class="${cls(t)}">${fmt(t)}</b></div>
-        <div class="mes-act"><button onclick="renameM('${m.id}')"><i class="ti ti-pencil"></i> Cambiar nombre</button><button onclick="delMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button></div>
       </div>
-    </div>`}).join(''):'<p class="hint" style="text-align:center;padding:16px 0">Todavía no hay meses. Agregá el primero abajo.</p>';
+    </div>`}).join(''):'';
   document.getElementById('tbEst').innerHTML=ms.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
     <td id="et_${m.id}"></td></tr>`).join('');
-  document.getElementById('netoL').textContent='NETO '+selYear;
+  document.getElementById('netoL').textContent=selYear==='all'?'NETO (total)':'NETO '+selYear;
   recalc();
-  document.getElementById('newMes').placeholder='Nuevo mes (ej: '+nextLabel().toUpperCase()+')';
+  if(irA){const el=document.getElementById('mes_'+irA);if(el)requestAnimationFrame(()=>el.scrollIntoView({block:'center'}));}
 }
 /* carga rápida desde el mes: + puse / − saqué */
 function quick(id,p,sign){
   const el=document.getElementById('in_'+id+'_'+p),v=parseFloat(el.value);
   if(!v||v<=0){el.focus();return;}
-  const m=state.months.find(x=>x.id===id),d=new Date();
+  const m=realM(id),d=new Date();
   m.mov[p].push({id:uid(),amt:sign*v,note:'',d:d.getDate()+'/'+(d.getMonth()+1)});
   save();render();
 }
@@ -287,13 +293,9 @@ function recalc(){
   document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
 }
-function setEst(id,p,v){state.months.find(m=>m.id===id).est[p]=v===''?0:parseFloat(v);save();recalc()}
+function setEst(id,p,v){realM(id).est[p]=v===''?0:parseFloat(v);save();recalc()}
 
 /* ---------- meses ---------- */
-const inMes=document.getElementById('newMes');
-function addMes(){const l=(inMes.value.trim()||nextLabel()).toUpperCase();const nm=emptyMonth(l);state.months.push(nm);openMes=nm.id;{const y=yearOf(nm,state.months.length-1);if(y!==null)selYear=y;}inMes.value='';save();render();}
-function delMes(id){const m=state.months.find(x=>x.id===id);if(!confirm('¿Borrar "'+m.label+'" y sus movimientos?'))return;state.months=state.months.filter(x=>x.id!==id);save();render();}
-function renameM(id){const m=state.months.find(x=>x.id===id);const n=prompt('Nombre del mes',m.label);if(n&&n.trim()){m.label=n.trim().toUpperCase();save();render();}}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
 /* ---------- movimientos ---------- */
@@ -301,7 +303,7 @@ let cur=null;
 function openSheet(id,p){cur={id,p};document.getElementById('shAmt').value='';document.getElementById('shNote').value='';drawSheet();document.getElementById('bg').classList.add('show');}
 function closeSheet(){document.getElementById('bg').classList.remove('show');cur=null;}
 function drawSheet(){
-  const m=state.months.find(x=>x.id===cur.id),t=cellTot(m,cur.p);
+  const m=getM(cur.id),t=cellTot(m,cur.p);
   {const h=document.getElementById('shT');h.textContent=m.label+' · '+state.names[cur.p];h.className=cur.p==='j'?'pj':'pa';}
   const e=document.getElementById('shTot');e.textContent='Total: '+fmt(t);e.className=cls(t);
   document.getElementById('shList').innerHTML=m.mov[cur.p].slice().reverse().map(x=>`<div class="mov">
@@ -312,12 +314,12 @@ function drawSheet(){
 function addMov(sign){
   const v=parseFloat(document.getElementById('shAmt').value);
   if(!v||v<=0){document.getElementById('shAmt').focus();return;}
-  const m=state.months.find(x=>x.id===cur.id),d=new Date();
+  const m=realM(cur.id),d=new Date();
   m.mov[cur.p].push({id:uid(),amt:sign*v,note:document.getElementById('shNote').value.trim(),d:d.getDate()+'/'+(d.getMonth()+1)});
   document.getElementById('shAmt').value='';document.getElementById('shNote').value='';
   save();drawSheet();render();
 }
-function delMov(id){const m=state.months.find(x=>x.id===cur.id);m.mov[cur.p]=m.mov[cur.p].filter(x=>x.id!==id);save();drawSheet();render();}
+function delMov(id){const m=getM(cur.id);m.mov[cur.p]=m.mov[cur.p].filter(x=>x.id!==id);save();drawSheet();render();}
 
 /* ---------- guardado + Firebase (misma config que el inventario) ---------- */
 let db=null,timer=null;
@@ -355,7 +357,6 @@ async function initFb(){
     db=firebase.firestore();startSync();
   }catch(e){setSync('err','No conectó');}
 }
-inMes.placeholder='Nuevo mes (ej: '+nextLabel().toUpperCase()+')';
 render();initFb();
 </script>
 </body>
