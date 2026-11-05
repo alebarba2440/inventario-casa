@@ -163,6 +163,17 @@
     main{padding:10px}
   }
   #body{display:flex;flex-direction:column;gap:10px}
+
+  /* ===== PC: resumen del viaje fijo a la izquierda, acordeones a la derecha ===== */
+  @media (min-width:900px){
+    main{max-width:1180px;padding:22px}
+    .bar{max-width:640px}
+    #body{display:grid !important;grid-template-columns:380px minmax(0,1fr);gap:16px;align-items:start}
+    #body>.trip{grid-column:1;grid-row:1 / span 20;position:sticky;top:90px}
+    #body>.acc{grid-column:2}
+    .two .hdr,.two .row{grid-template-columns:1fr 130px 54px 130px 30px}
+    .l2{grid-template-columns:minmax(0,1fr) 60px minmax(0,1fr)}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">

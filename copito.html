@@ -127,6 +127,23 @@
   .two{display:flex;gap:8px}.two .btn{flex:1}
   @media (max-width:380px){.hdr,.row,.tot{grid-template-columns:1fr 86px 64px 24px} main{padding:10px}}
   #meses{display:flex;flex-direction:column;gap:10px}
+
+  /* ===== PC: más ancho, meses y mantenimientos en dos columnas ===== */
+  @media (min-width:900px){
+    main{max-width:1180px;padding:22px}
+    .tabs{max-width:520px;width:100%;margin:0 auto}
+    #tabG>.card{max-width:640px;width:100%;margin:0 auto}
+    #meses{display:block !important;columns:2;column-gap:14px}
+    #meses>.mes{break-inside:avoid;margin-bottom:12px}
+    #tabG>.add{max-width:640px;width:100%;margin:0 auto}
+    #tabM{display:none}
+    #tabM.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+    #tabM>.auto,#tabM>.prox{grid-column:auto}
+    #regs{grid-column:1/-1;display:block !important;columns:2;column-gap:14px}
+    #regs>.reg{break-inside:avoid;margin-bottom:12px}
+    #tabM>.add{grid-column:1/-1;max-width:640px;width:100%;margin:0 auto}
+    .hdr,.row,.tot{grid-template-columns:1fr 110px 96px 28px}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">

@@ -101,6 +101,18 @@
   .sheet p{color:var(--text2);text-align:center;line-height:1.4}
   .sheet .two{display:flex;gap:8px}
   .sheet .two .btn{flex:1}
+
+  /* ===== PC: gastos a la izquierda; ingresos y gráfico a la derecha, todo abierto ===== */
+  @media (min-width:900px){
+    main{max-width:1180px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;align-items:start;padding:22px}
+    .periodo{grid-column:1/-1;max-width:520px;width:100%;justify-self:center}
+    #accGas{grid-column:1;grid-row:2 / span 2}
+    #accIng{grid-column:2;grid-row:2} #accCat{grid-column:2;grid-row:3}
+    .acc .acc-b{display:block !important}
+    .acc .acc-h{cursor:default;pointer-events:none}
+    .acc .acc-h .chev{display:none}
+    .chart{height:300px}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">

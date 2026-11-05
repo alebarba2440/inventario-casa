@@ -139,6 +139,15 @@
   .pj{color:var(--juli)} .pa{color:var(--ale)} .pj.neg,.pa.neg,b.neg{color:var(--neg)}
   th.pj{color:var(--juli)} th.pa{color:var(--ale)}
   td{font-weight:700} td input[type=number]{font-weight:700} .neto b{font-weight:800}
+
+  /* ===== PC: Ahorrado y Estimado uno al lado del otro, los dos abiertos ===== */
+  @media (min-width:900px){
+    main{max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start;padding:22px}
+    .acc .acc-b{display:block !important}
+    .acc .acc-h{cursor:default;pointer-events:none}
+    .acc .acc-h .chev{display:none}
+    .wipe{grid-column:1/-1}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">

@@ -916,6 +916,15 @@
   .fb-export{border:0.5px solid var(--border2);background:var(--surface2);color:var(--text);border-radius:10px;padding:8px 12px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
   .fb-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px}
   .home-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border2);color:var(--accent);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+  /* ===== PC: más ancho, la lista de productos en varias columnas ===== */
+  @media (min-width:900px){
+    .app{max-width:1100px}
+    .content{padding:1.5rem 2rem}
+    #panelCargar,.panel:not(#panelInventario){width:100%;max-width:640px;margin:0 auto}
+    .inv-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem}
+    .nav-bar{max-width:640px;margin:0 auto;width:100%;border-radius:18px 18px 0 0}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">
