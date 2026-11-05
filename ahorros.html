@@ -54,6 +54,7 @@
   .mov .n{flex:1;color:var(--text2);font-size:.8rem}
   .mov button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer}
   .hint{font-size:.78rem;color:var(--text2)}
+  .wipe{margin:8px auto 0;background:none;border:1px dashed var(--neg);color:var(--neg);border-radius:12px;padding:10px 14px;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
 
   /* acordeones */
   .acc{background:var(--surface);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
@@ -161,6 +162,7 @@
       <div class="neto" style="margin-top:6px;background:var(--surface2);color:var(--text)"><span>Real − estimado</span><b id="dif">$ 0</b></div>
     </div>
   </section>
+  <button class="wipe" onclick="borrarTodo()"><i class="ti ti-trash"></i> Borrar todos los datos de Ahorros</button>
 </main>
 
 <div class="bg" id="bg" onclick="if(event.target===this)closeSheet()">
@@ -323,6 +325,15 @@ function recalc(){
 function setEst(id,p,v){realM(id).est[p]=v===''?0:parseFloat(v);save();recalc()}
 
 /* ---------- meses ---------- */
+/* borra todo (para ambos, porque se sincroniza) y antes baja una copia de respaldo */
+function borrarTodo(){
+  const t=prompt('Esto borra TODOS los movimientos y estimados de Ahorros, para los dos.\nAntes se descarga una copia de respaldo.\n\nEscribí BORRAR para confirmar:');
+  if(!t||t.trim().toUpperCase()!=='BORRAR')return;
+  try{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='ahorros-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();}catch(e){}
+  state={names:state.names||{j:'Juli',a:'Ale'},months:[]};openMes=undefined;openYear=undefined;
+  save();render();
+}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
 /* ---------- movimientos ---------- */
