@@ -93,6 +93,21 @@
   .btn.sec{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
   .row-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
   .close{width:100%;margin-top:4px}
+
+  /* brillo que recorre el borde de cada tarjeta (sutil) */
+  @property --giro{syntax:'<angle>';initial-value:0deg;inherits:false}
+  @keyframes recorrer{to{--giro:360deg}}
+  a.card{position:relative;isolation:isolate}
+  a.card::after{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;pointer-events:none;
+    background:conic-gradient(from var(--giro),transparent 0deg,transparent 250deg,color-mix(in srgb,var(--accent) 35%,#fff) 310deg,#fff 330deg,transparent 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
+    animation:recorrer 5s linear infinite;opacity:.85}
+  .grid a.card:nth-child(2)::after{animation-delay:-1s}
+  .grid a.card:nth-child(3)::after{animation-delay:-2s}
+  .grid a.card:nth-child(4)::after{animation-delay:-3s}
+  .grid a.card:nth-child(5)::after{animation-delay:-4s}
+  @media (prefers-reduced-motion:reduce){a.card::after{display:none}}
 </style>
 <link rel="stylesheet" href="fondo.css">
 </head>
