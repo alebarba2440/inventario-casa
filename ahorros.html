@@ -20,7 +20,7 @@
   body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
   .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
   .top a{color:var(--accent);font-size:1.4rem;text-decoration:none;display:flex}
-  .top h1{font-size:1.06rem;color:var(--accent);font-weight:700;flex:1}
+  .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
   .sync{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:5px}
   .dot{width:8px;height:8px;border-radius:50%;background:#aaa}.dot.on{background:var(--pos)}.dot.err{background:var(--neg)}
   main{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
@@ -62,7 +62,7 @@
   .acc-h .sum{margin-left:auto;font-size:.9rem;font-weight:800}
   .yhead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 0}
   .yhead h2{font-size:1.35rem;font-weight:800;letter-spacing:.05em}
-  .year{font-family:inherit;font-size:1rem;font-weight:800;color:var(--accent-dark);background:var(--accent-light);border:1px solid var(--accent);border-radius:999px;padding:7px 14px;cursor:pointer;outline:none}
+  .year{font-family:inherit;font-size:.92rem;font-weight:800;color:var(--accent-dark);background:var(--accent-light);border:1px solid var(--accent);border-radius:999px;padding:4px 10px;cursor:pointer;outline:none}
   .year:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   .acc-h .chev{color:var(--text2);transition:transform .2s;font-size:1.1rem}
   .acc.open .acc-h .chev{transform:rotate(180deg)}
@@ -122,14 +122,12 @@
 <body>
 <div class="top">
   <a href="index.html" aria-label="Inicio"><i class="ti ti-home"></i></a>
-  <h1>Ahorros</h1>
+  <h1>AHORROS</h1>
+  <select id="yearSel" class="year" onchange="setYear(this.value)" aria-label="Año"></select>
+  <span style="flex:1"></span>
   <div class="sync"><div class="dot" id="dot"></div><span id="syncT">Solo local</span></div>
 </div>
 <main>
-  <div class="yhead">
-    <h2>AHORROS</h2>
-    <select id="yearSel" class="year" onchange="setYear(this.value)" aria-label="Año"></select>
-  </div>
   <section class="acc open" id="accReal">
     <button class="acc-h" onclick="openAcc('accReal')" aria-expanded="true">
       <i class="ti ti-pig-money ic"></i> Ahorrado <span class="sum" id="sumReal"></span><i class="ti ti-chevron-down chev"></i>
