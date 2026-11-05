@@ -4,6 +4,8 @@ html{background:var(--bg) !important;min-height:100%}
 body{background:transparent !important}
 html::before{
   content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:url("img/solos.webp") center bottom / contain no-repeat;
+  background:url("img/solos.webp") center center no-repeat;
+  /* grande y centrada: en el celu ocupa casi toda la pantalla, en la compu se limita por la altura */
+  background-size:min(120vw, 64vh) auto;
   opacity:var(--fondo-opacidad);
 }
