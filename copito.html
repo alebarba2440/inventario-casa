@@ -97,17 +97,26 @@
   .pr.ok{background:var(--pos-l)} .pr.ok b{color:var(--pos)}
   .pr.cerca{background:var(--warn-l)} .pr.cerca b{color:var(--warn)}
   .pr.venc{background:var(--neg-l)} .pr.venc b{color:var(--neg)}
-  .reg{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .reg{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--border2);border-radius:16px;overflow:hidden}
+  .reg.ok{border-left-color:var(--pos)} .reg.cerca{border-left-color:var(--warn)} .reg.venc{border-left-color:var(--neg)}
+  .reg-h{width:100%;display:flex;align-items:center;gap:8px;padding:12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .reg-h .rt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .reg-h .rt b{font-size:.95rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .reg-h .rt small{font-size:.76rem;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .reg-h .chev{color:var(--text2);transition:transform .2s}
+  .reg.open .reg-h .chev{transform:rotate(180deg)}
+  .badge.cerca{background:var(--warn-l);color:var(--warn)} .badge.venc{background:var(--neg-l);color:var(--neg)}
+  .reg-b{display:none;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:2px 12px 12px}
+  .reg.open .reg-b{display:grid}
   .reg .f{display:flex;flex-direction:column;gap:3px;min-width:0}
-  .reg .f.w{grid-column:1/-1}
+  .reg .f.w,.reg .w{grid-column:1/-1}
   .reg .f>span{font-size:.68rem;font-weight:800;color:var(--text2);text-transform:uppercase}
-  .reg input{width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:8px 9px;font-size:.9rem;font-weight:700;outline:none}
+  .reg input{display:block;width:100%;max-width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:8px 9px;font-size:.9rem;font-weight:700;outline:none;-webkit-appearance:none;appearance:none}
+  .reg input[type=date]{min-height:38px;line-height:1.2;text-align:left}
+  .reg input[type=date]::-webkit-date-and-time-value{text-align:left}
   .reg input:focus{border-color:var(--accent)}
   .reg input.n{text-align:right;font-variant-numeric:tabular-nums}
   .reg .tipo{font-size:1rem;font-weight:800}
-  .reg .estado{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .reg .estado .badge{font-size:.75rem}
-  .reg.prx{border-left:5px solid var(--accent)}
 
   .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
   .bgm.show{display:flex}
@@ -284,32 +293,43 @@ function renderMant(){
   document.getElementById('kmAct').value=D.auto.km?fkm(n0(D.auto.km)):'';
   document.getElementById('kmFecha').textContent=D.auto.kmFecha?'Actualizado el '+fFecha(D.auto.kmFecha):'';
   const regs=D.mant.slice().sort((a,b)=>n0(a.km)-n0(b.km));
-  document.getElementById('regs').innerHTML=regs.map(r=>{const e=estado(r);return `<div class="reg${e?' prx':''}">
-      <label class="f w"><span>Tipo de servicio</span><input class="tipo" value="${esc(r.tipo)}" placeholder="ej: Servicio completo" oninput="setR('${r.id}','tipo',this)"></label>
-      <label class="f"><span>Fecha</span><input type="date" value="${esc(r.fecha)}" onchange="setR('${r.id}','fecha',this,true)"></label>
-      <label class="f"><span>Km</span><input class="n" inputmode="numeric" value="${r.km?fkm(n0(r.km)):''}" placeholder="0" onchange="setR('${r.id}','km',this,true)"></label>
-      <label class="f w"><span>Comentarios</span><input value="${esc(r.com)}" placeholder="Qué se hizo" oninput="setR('${r.id}','com',this)"></label>
-      <label class="f"><span>Taller</span><input value="${esc(r.taller)}" oninput="setR('${r.id}','taller',this)"></label>
-      <label class="f"><span>Costo</span><input class="n" inputmode="decimal" value="${r.costo?fmt(n0(r.costo)).replace('$ ',''):''}" placeholder="$ 0" oninput="setR('${r.id}','costo',this)"></label>
-      <label class="f"><span>Próximo (km)</span><input class="n" inputmode="numeric" value="${r.proxKm?fkm(n0(r.proxKm)):''}" placeholder="—" onchange="setR('${r.id}','proxKm',this,true)"></label>
-      <label class="f"><span>Próximo (fecha)</span><input type="date" value="${esc(r.proxFecha)}" onchange="setR('${r.id}','proxFecha',this,true)"></label>
-      <div class="estado">${e?`<span class="badge ${e.c==='ok'?'ok':e.c==='cerca'?'':'no'}" style="${e.c==='cerca'?'background:var(--warn-l);color:var(--warn)':''}">${e.t}</span>`:'<span></span>'}
-        <button class="x" onclick="borrarR('${r.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div></div>`}).join('');
+  document.getElementById('regs').innerHTML=regs.map(r=>{const e=estado(r),op=r.id===openReg;
+    const badge=e?`<span class="badge ${e.c}">${e.t}</span>`:'';
+    return `<div class="reg${op?' open':''}${e?' '+e.c:''}" id="reg_${r.id}">
+      <button class="reg-h" onclick="toggleReg('${r.id}')" aria-expanded="${op}">
+        <span class="rt"><b data-rt="${r.id}">${esc(r.tipo)||'<i style="color:var(--text2)">Sin título</i>'}</b>
+          <small>${r.fecha?fFecha(r.fecha):'Sin fecha'} · ${r.km?fkm(n0(r.km))+' km':'— km'}${r.costo?' · '+fmt(n0(r.costo)):''}</small></span>
+        ${badge}<i class="ti ti-chevron-down chev"></i></button>
+      <div class="reg-b">
+        <label class="f w"><span>Qué se hizo</span><input class="tipo" value="${esc(r.tipo)}" placeholder="ej: Cambio de aceite y filtro" oninput="setR('${r.id}','tipo',this)"></label>
+        <label class="f"><span>Fecha</span><input type="date" value="${esc(r.fecha)}" onchange="setR('${r.id}','fecha',this,true)"></label>
+        <label class="f"><span>Km</span><input class="n" inputmode="numeric" value="${r.km?fkm(n0(r.km)):''}" placeholder="0" onchange="setR('${r.id}','km',this,true)"></label>
+        <label class="f w"><span>Comentarios</span><input value="${esc(r.com)}" placeholder="Detalle" oninput="setR('${r.id}','com',this)"></label>
+        <label class="f"><span>Taller</span><input value="${esc(r.taller)}" oninput="setR('${r.id}','taller',this)"></label>
+        <label class="f"><span>Costo</span><input class="n" inputmode="decimal" value="${r.costo?fmt(n0(r.costo)).replace('$ ',''):''}" placeholder="$ 0" onchange="setR('${r.id}','costo',this,true)"></label>
+        <label class="f"><span>Próximo (km)</span><input class="n" inputmode="numeric" value="${r.proxKm?fkm(n0(r.proxKm)):''}" placeholder="—" onchange="setR('${r.id}','proxKm',this,true)"></label>
+        <label class="f"><span>Próximo (fecha)</span><input type="date" value="${esc(r.proxFecha)}" onchange="setR('${r.id}','proxFecha',this,true)"></label>
+        <button class="delmes w" onclick="borrarR('${r.id}')"><i class="ti ti-trash"></i> Borrar este mantenimiento</button>
+      </div></div>`}).join('');
   renderProx();
 }
 function renderProx(){
   const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||(n0(a.r.proxKm)||9e9)-(n0(b.r.proxKm)||9e9)});
-  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}"><span>${esc(x.r.tipo||'Servicio')}${x.r.proxKm?` · a los ${fkm(n0(x.r.proxKm))} km`:''}</span><b>${x.e.t}</b></div>`).join('')
+  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}"><span>${esc(x.r.tipo||'Mantenimiento')}${x.r.proxKm?` · a los ${fkm(n0(x.r.proxKm))} km`:''}</span><b>${x.e.t}</b></div>`).join('')
     :'<p style="color:var(--text2);font-size:.88rem">Cargá "Próximo (km)" o "Próximo (fecha)" en un mantenimiento para verlo acá.</p>';
 }
 function setKm(el){const v=el.value.replace(/\D/g,'');D.auto.km=v;D.auto.kmFecha=new Date().toISOString().slice(0,10);
   document.getElementById('kmFecha').textContent='Actualizado el '+fFecha(D.auto.kmFecha);guardar();
   clearTimeout(setKm.t);setKm.t=setTimeout(()=>{const a=document.activeElement;renderMant();document.getElementById('kmAct').focus();},700);}
+let openReg=null;
+function toggleReg(id){openReg=openReg===id?null:id;
+  document.querySelectorAll('.reg').forEach(el=>{const o=el.id==='reg_'+openReg;el.classList.toggle('open',o);el.querySelector('.reg-h').setAttribute('aria-expanded',o)});}
 function setR(id,campo,el,re){const r=D.mant.find(x=>x.id===id);
   r[campo]=['km','proxKm','costo'].includes(campo)?el.value.replace(/[^\d,]/g,'').replace(',','.'):el.value;
-  guardar();if(re)renderMant();else renderProx();}
+  if(campo==='tipo'){const t=document.querySelector(`[data-rt="${id}"]`);if(t)t.textContent=el.value||'Sin título';}
+  guardar();if(re){renderMant();const f=document.querySelector(`#reg_${id} [onchange*="'${campo}'"]`);}else renderProx();}
 function agregarReg(){const r={id:uid(),fecha:new Date().toISOString().slice(0,10),km:D.auto.km||'',tipo:'',com:'',taller:'',costo:'',proxKm:'',proxFecha:''};
-  D.mant.push(r);guardar();renderMant();const t=document.querySelectorAll('.reg .tipo');const el=[...t].find(x=>x.closest('.reg').innerHTML.includes(r.id));if(el){el.scrollIntoView({block:'center'});el.focus();}}
+  D.mant.push(r);openReg=r.id;guardar();renderMant();const t=document.querySelectorAll('.reg .tipo');const el=[...t].find(x=>x.closest('.reg').innerHTML.includes(r.id));if(el){el.scrollIntoView({block:'center'});el.focus();}}
 function borrarR(id){const r=D.mant.find(x=>x.id===id);confirmar('Borrar mantenimiento',`¿Borrar "${r.tipo||'este registro'}"?`,()=>{D.mant=D.mant.filter(x=>x.id!==id);guardar();renderMant();});}
 
 /* ================= confirmar ================= */
