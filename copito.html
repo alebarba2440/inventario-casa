@@ -221,7 +221,7 @@ function renderGastos(){
         <div class="hdr"><span>Detalle</span><span>Monto</span><span>C/U</span><span></span></div>
         ${m.lineas.map(l=>`<div class="row">
           <input type="text" value="${esc(l.d)}" placeholder="Detalle" oninput="setL('${m.id}','${l.id}','d',this)">
-          <input type="text" class="m${isNaN(ev(l.m))?' bad':''}" inputmode="decimal" value="${esc(l.m)}" placeholder="0" oninput="setL('${m.id}','${l.id}','m',this)">
+          <input type="text" class="m${isNaN(ev(l.m))?' bad':''}" inputmode="decimal" value="${esc(conPuntos(l.m))}" placeholder="0" oninput="setL('${m.id}','${l.id}','m',this)">
           <span class="cu" data-cu="${l.id}">${fmt(n0(l.m)/2)}</span>
           <button class="x" onclick="borrarL('${m.id}','${l.id}')" aria-label="Borrar línea"><i class="ti ti-trash"></i></button></div>`).join('')}
         <div class="tot"><span>TOTAL</span><span data-t="${m.id}">${fmt(t)}</span><span data-c="${m.id}">${fmt(t/2)}</span><span></span></div>
@@ -243,8 +243,14 @@ function resumen(){
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 const mesDe=id=>D.meses.find(m=>m.id===id);
+/* muestra 315797 como 315.797 (si es un número solo; las sumas como 56+8 quedan como están) */
+function conPuntos(v){const s=String(v??'').replace(/\./g,'');return /^\d+$/.test(s)?(+s).toLocaleString('es-AR'):String(v??'');}
 function setL(mid,lid,campo,el){
-  const m=mesDe(mid),l=m.lineas.find(x=>x.id===lid);l[campo]=el.value;
+  const m=mesDe(mid),l=m.lineas.find(x=>x.id===lid);
+  if(campo==='m'){const crudo=el.value.replace(/\./g,'');
+    if(/^\d+$/.test(crudo)){const f=(+crudo).toLocaleString('es-AR');if(el.value!==f){el.value=f;el.setSelectionRange(f.length,f.length);}l.m=crudo;}
+    else l.m=el.value;}
+  else l[campo]=el.value;
   if(campo==='m'){el.classList.toggle('bad',isNaN(ev(el.value)));
     document.querySelector(`[data-cu="${lid}"]`).textContent=fmt(n0(el.value)/2);
     const t=totMes(m);document.querySelector(`[data-t="${mid}"]`).textContent=fmt(t);document.querySelector(`[data-c="${mid}"]`).textContent=fmt(t/2);
