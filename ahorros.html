@@ -143,7 +143,7 @@
     <div class="acc-b">
       <div id="listReal"></div>
       <div class="tots"><div class="pj"><span id="totJN"></span><b id="tJ"></b></div><div class="pa"><span id="totAN"></span><b id="tA"></b></div></div>
-      <div class="neto"><span id="netoL">NETO (total)</span><b id="neto">$ 0</b></div>
+      <div class="neto"><span id="netoL">TOTAL:</span><b id="neto">$ 0</b></div>
     </div>
   </section>
 
@@ -303,7 +303,7 @@ function render(){
         <div class="anio-b">${tabla(G.ms)}</div></div>`}).join('');
   } else est=tabla(ms);
   document.getElementById('estList').innerHTML=est;
-  document.getElementById('netoL').textContent=selYear==='all'?'NETO (total)':'NETO '+selYear;
+  document.getElementById('netoL').textContent=selYear==='all'?'TOTAL:':'TOTAL '+selYear+':';
   recalc();
   if(irA){const el=document.getElementById('mes_'+irA);if(el)requestAnimationFrame(()=>el.scrollIntoView({block:'center'}));}
 }
