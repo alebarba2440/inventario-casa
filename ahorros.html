@@ -94,6 +94,15 @@
   .mes.open .mes-h .rs{display:none}
   .mes.open .mes-h .chev{transform:rotate(180deg)}
   .mes-b{display:none;padding:12px}
+  .anio{border:1px solid var(--accent);border-radius:16px;margin-bottom:10px;overflow:hidden;background:var(--surface)}
+  .anio-h{width:100%;display:flex;align-items:center;gap:8px;padding:14px 12px;background:var(--accent-light);border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .anio-h .nm{font-weight:800;font-size:1.1rem;color:var(--accent-dark);flex:1}
+  .anio-h .rs{display:flex;gap:8px;font-size:.74rem;white-space:nowrap;font-weight:600} .anio-h .rs b{font-weight:800;margin-left:2px}
+  .anio-h .chev{color:var(--accent-dark);transition:transform .2s}
+  .anio.open .anio-h .chev{transform:rotate(180deg)}
+  .anio-b{display:none;padding:10px 8px 2px}
+  .anio.open .anio-b{display:block}
+  tr.ysep td{font-weight:800;color:var(--accent-dark);background:var(--accent-light);text-align:left !important;padding:6px 8px;font-size:.85rem}
   .mes.open .mes-b{display:block}
   .mes-act{display:flex;justify-content:center;gap:18px;margin-top:10px}
   .mes-act button{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:4px}
@@ -216,7 +225,7 @@ function years(){
   const hoy=new Date().getFullYear(),ys=state.months.map((m,i)=>yearOf(m,i)).filter(y=>y!==null);
   const lo=Math.min(hoy,...ys),hi=Math.max(hoy+1,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
 }
-function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;render();}
+function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;openYear=undefined;render();}
 /* todos los meses del rango, ordenados. Los que todavía no tienen datos son "virtuales" hasta que se cargue algo */
 function allMonths(){
   const byKey={};state.months.forEach((m,i)=>{const k=monthKey(m,i);if(k<1e9&&!byKey[k])byKey[k]=m;});
@@ -234,6 +243,9 @@ function realM(id){ // si el mes es virtual, lo guarda de verdad
 }
 function sortedMonths(){return state.months.map((m,i)=>[monthKey(m,i),i,m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]);}
 let openMes; // mes abierto (uno a la vez)
+let openYear; // año abierto en "Todos" (uno a la vez)
+function toggleYear(g){openYear=openYear===g?null:g;
+  document.querySelectorAll('.anio').forEach(el=>{const o=el.id==='anio_'+openYear;el.classList.toggle('open',o);el.querySelector('.anio-h').setAttribute('aria-expanded',o)});}
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 function render(){
@@ -251,23 +263,36 @@ function render(){
   if(openMes===undefined){ // al entrar o al cambiar de año: abierto el mes actual (o el primero del año)
     const d=new Date(),hoy=d.getFullYear()*12+d.getMonth();
     const act=ms.find(m=>monthKey(m,0)===hoy);openMes=act?act.id:(ms.length?ms[0].id:null);irA=openMes;}
-  document.getElementById('listReal').innerHTML=ms.length?ms.map(m=>{
+  const mesHTML=m=>{
     const j=cellTot(m,'j'),a=cellTot(m,'a'),t=j+a,op=m.id===openMes;
     return `<div class="mes${op?' open':''}" id="mes_${m.id}">
       <button class="mes-h" onclick="toggleMes('${m.id}')" aria-expanded="${op}">
         <span class="nm">${esc(m.label)}</span>
-        <span class="rs"><span class="pj">${esc(state.names.j)}:<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${esc(state.names.a)}:<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>
+        ${resumen(j,a)}
         <i class="ti ti-chevron-down chev"></i>
       </button>
       <div class="mes-b">
         <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
         <div class="mes-t"><span>Total del mes</span><b class="${cls(t)}">${fmt(t)}</b></div>
       </div>
-    </div>`}).join(''):'';
-  document.getElementById('tbEst').innerHTML=ms.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
+    </div>`};
+  const resumen=(j,a)=>`<span class="rs"><span class="pj">${esc(state.names.j)}:<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${esc(state.names.a)}:<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>`;
+  let html;
+  if(selYear==='all'){ // un acordeón por año, con sus meses adentro
+    const grupos=[];ms.forEach(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'Otros';let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
+    if(openYear===undefined){const om=ms.find(m=>m.id===openMes),x=om&&String(om.label).match(/(\d{4})/);openYear=x?x[1]:(grupos[0]&&grupos[0].g);}
+    html=grupos.map(G=>{const j=sum(G.ms.map(m=>cellTot(m,'j'))),a=sum(G.ms.map(m=>cellTot(m,'a'))),op=G.g===openYear;
+      return `<div class="anio${op?' open':''}" id="anio_${G.g}">
+        <button class="anio-h" onclick="toggleYear('${G.g}')" aria-expanded="${op}"><span class="nm">${G.g}</span>${resumen(j,a)}<i class="ti ti-chevron-down chev"></i></button>
+        <div class="anio-b">${G.ms.map(mesHTML).join('')}</div></div>`}).join('');
+  } else html=ms.map(mesHTML).join('');
+  document.getElementById('listReal').innerHTML=html;
+  let lastY=null;
+  document.getElementById('tbEst').innerHTML=ms.map(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'Otros';
+    const sep=selYear==='all'&&g!==lastY?`<tr class="ysep"><td colspan="4">${g}</td></tr>`:'';lastY=g;return sep+`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
-    <td id="et_${m.id}"></td></tr>`).join('');
+    <td id="et_${m.id}"></td></tr>`}).join('');
   document.getElementById('netoL').textContent=selYear==='all'?'NETO (total)':'NETO '+selYear;
   recalc();
   if(irA){const el=document.getElementById('mes_'+irA);if(el)requestAnimationFrame(()=>el.scrollIntoView({block:'center'}));}
