@@ -231,8 +231,9 @@ function allMonths(){
   const byKey={};state.months.forEach((m,i)=>{const k=monthKey(m,i);if(k<1e9&&!byKey[k])byKey[k]=m;});
   const out=[];
   years().forEach(y=>MESES.forEach((n,k)=>{const key=y*12+k;
+    if(byKey[key])byKey[key].label=n.toUpperCase()+' '+y; // nombre prolijo: "NOVIEMBRE 2026" aunque se haya cargado "noviembre"
     out.push(byKey[key]||{id:'m'+y+'_'+k,label:n.toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0},virtual:true});}));
-  state.months.forEach((m,i)=>{if(monthKey(m,i)>=1e9)out.push(m);}); // nombres que no son meses: al final
+  // los registros viejos cuyo nombre no es un mes no se muestran (quedan guardados, no se borran)
   return out;
 }
 function monthsOfYear(){return allMonths().filter((m)=>{if(selYear==='all')return true;const x=String(m.label).match(/(\d{4})/);return x&&+x[1]===selYear;});}
