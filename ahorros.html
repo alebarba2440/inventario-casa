@@ -95,6 +95,8 @@
   .mes.open .mes-h .nm{font-size:1rem !important}
   .mes-h .rs{font-size:.72rem !important;gap:6px !important}
   .mes-h .rs b{margin-left:2px !important}
+  .mes-h .rs{gap:12px !important;font-size:.82rem !important}
+  .mes-h .rs .pj b{color:var(--juli)} .mes-h .rs .pa b{color:var(--ale)} .mes-h .rs b.neg{color:var(--neg) !important}
   @media (max-width:380px){main{padding:10px}.acc-b{padding:0 8px 12px}.mes-h .nm{font-size:.8rem !important}.mes-h .rs{font-size:.68rem !important}}
   /* tabla de estimado: que entre en el celu */
   #accEst table.est{table-layout:fixed;font-size:.8rem}
@@ -312,7 +314,7 @@ function render(){
     return `<div class="mes${op?' open':''}" id="mes_${m.id}">
       <button class="mes-h" onclick="toggleMes('${m.id}')" aria-expanded="${op}">
         <span class="nm">${esc(m.label)}</span>
-        ${resumen(j,a)}
+        ${resumen(j,a,true)}
         <i class="ti ti-chevron-down chev"></i>
       </button>
       <div class="mes-b">
@@ -320,7 +322,8 @@ function render(){
         <div class="mes-t"><span>Total del mes</span><b class="${cls(t)}">${fmt(t)}</b></div>
       </div>
     </div>`};
-  const resumen=(j,a)=>`<span class="rs"><span class="pj">${esc(state.names.j)}:<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${esc(state.names.a)}:<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>`;
+  // con nombres (año) o solo los montos con su color (mes)
+  const resumen=(j,a,sinNombres)=>`<span class="rs"><span class="pj">${sinNombres?'':esc(state.names.j)+':'}<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${sinNombres?'':esc(state.names.a)+':'}<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>`;
   let html;
   if(selYear==='all'){ // un acordeón por año, con sus meses adentro
     const grupos=[];ms.forEach(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'Otros';let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
