@@ -925,6 +925,20 @@
     .inv-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.75rem}
     .nav-bar{max-width:640px;margin:0 auto;width:100%;border-radius:18px 18px 0 0}
   }
+
+  /* ===== igual que las demás secciones ===== */
+  .top-header-title{font-size:1.1rem !important;font-weight:800 !important;letter-spacing:.05em !important;text-transform:uppercase}
+  .action-btn{font-weight:700 !important}
+  .nav-btn{font-weight:700 !important}
+  .alerts-header-left{font-weight:800 !important}
+  .submit-btn{font-weight:800 !important}
+  .card label,.field-label{font-weight:700}
+  @media (min-width:900px){
+    .app{max-width:none !important}
+    .content{padding:22px !important}
+    #panelInventario{width:100%;max-width:1180px;margin:0 auto}
+    .camera-fab{right:calc(50% - 320px - 70px) !important}
+  }
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">
@@ -933,7 +947,7 @@
 <div class="app">
   <div class="top-header">
     <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
-    <div class="top-header-title" id="topTitle"><i class="ti ti-stack-2" id="topIcon"></i><span id="topLabel">Cargar</span></div>
+    <div class="top-header-title" id="topTitle"><i class="ti ti-stack-2" id="topIcon" style="display:none"></i><span id="topLabel">INVENTARIO</span></div>
   </div>
   <div class="content" id="mainContent">
     <div class="panel active" id="panelCargar">
@@ -1306,7 +1320,7 @@
     document.getElementById('panelCargar').classList.toggle('active', isC);
     document.getElementById('panelInventario').classList.toggle('active', !isC);
     document.getElementById('topIcon').className = isC ? 'ti ti-stack-2' : 'ti ti-list-check';
-    document.getElementById('topLabel').textContent = isC ? 'Cargar' : 'Inventario';
+    document.getElementById('topLabel').textContent = 'INVENTARIO';
     const fab = document.getElementById('cameraFab');
     if (fab) fab.style.display = isC ? 'flex' : 'none';
     if (!isC) render();
