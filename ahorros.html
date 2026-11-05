@@ -220,10 +220,11 @@ function monthKey(m,i){
 }
 const yearOf=(m,i)=>{const k=monthKey(m,i);return k<1e9?Math.floor(k/12):null;};
 let selYear='all'; // 'all' = todos los años
-/* años que se muestran: desde el primero con datos (o el actual) hasta el siguiente al actual, o más si ya hay datos */
+/* años que se muestran: desde el primero con datos hasta el año actual */
 function years(){
   const hoy=new Date().getFullYear(),ys=state.months.map((m,i)=>yearOf(m,i)).filter(y=>y!==null);
-  const lo=Math.min(hoy,...ys),hi=Math.max(hoy+1,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
+  // un año nuevo aparece recién el 1 de enero
+  const lo=Math.min(hoy,...ys),hi=Math.max(hoy,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
 }
 function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;openYear=undefined;render();}
 /* todos los meses del rango, ordenados. Los que todavía no tienen datos son "virtuales" hasta que se cargue algo */
