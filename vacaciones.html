@@ -84,7 +84,7 @@
   .cur{height:36px;border-radius:10px;border:1.5px solid var(--c);background:none;color:var(--c);font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer}
   .cur.ext{background:var(--c);color:#fff}
   .conv{text-align:right;font-size:.85rem;font-weight:800;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .x{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .x{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:32px;flex-shrink:0;padding:0}
   .tot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:11px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--c) calc(var(--tint)*100%),transparent);font-weight:800}
   .tot .v{text-align:right;font-variant-numeric:tabular-nums}
   .tot .v small{display:block;font-size:.78rem;color:var(--text2)}
@@ -124,8 +124,13 @@
   .dif{text-align:right;font-weight:800;font-size:.85rem;font-variant-numeric:tabular-nums}
 
   /* ruta */
-  .ruta textarea{width:100%;min-height:220px;background:var(--surface2);border:1px solid transparent;border-radius:var(--r);padding:12px;font-size:.95rem;line-height:1.5;outline:none;resize:vertical}
-  .ruta textarea:focus{border-color:var(--c)}
+  .rl{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:.5px solid var(--border)}
+  .rl:first-child{border-top:none}
+  .rn{flex-shrink:0;width:24px;height:24px;margin-top:7px;border-radius:50%;background:var(--c);color:#fff;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .rl textarea{flex:1;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 10px;font-size:.93rem;font-weight:600;line-height:1.4;outline:none;resize:none;overflow:hidden}
+  .rl textarea:focus{border-color:var(--c)}
+  .rl .x{margin-top:8px}
+  h5.sub{font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--c);margin:2px 0 8px;display:flex;align-items:center;gap:6px}
 
   /* vacío */
   .vacio{text-align:center;padding:30px 16px;color:var(--text2)}
@@ -231,13 +236,15 @@ const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 /* ================= estado ================= */
 let viajes=rd(LS,[]);if(!Array.isArray(viajes))viajes=[];
 let selId=rd(LS_SEL,null);
+function normalizar(v){if(v&&!Array.isArray(v.ruta))v.ruta=String(v.ruta||'').split('\n').map(t=>t.trim()).filter(Boolean).map(texto=>({id:uid(),texto}));return v;}
+viajes.forEach(normalizar);
 const cur=()=>viajes.find(v=>v.id===selId)||null;
 function nuevoViaje(lugar,moneda,cot,nota){
   const it=label=>({id:uid(),label,monto:'',ext:false});
   return{id:'v2_'+uid(),ver:2,creado:Date.now(),lugar,moneda,cot,nota,
     est:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],
     aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},
-    exc:[],dia:[it('Desayuno'),it('Almuerzo'),it('Cena')],real:[],com:[],ruta:''};
+    exc:[],dia:[it('Desayuno'),it('Almuerzo'),it('Cena')],real:[],com:[],ruta:[]};
 }
 let openAcc='est';
 
@@ -312,12 +319,15 @@ function setF(lista,id,campo,el){
 }
 function toggleExt(lista,id){const it=item(lista,id);it.ext=!it.ext;cambio();render();}
 function agregar(lista){cur()[lista].push({id:uid(),label:'',monto:'',ext:cur().moneda!=='ARS'&&lista!=='est'});cambio();render(()=>{
-  const a=lista==='real'?'rea':lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
+  const a=lista==='real'?'rea':lista==='dia'?'com':lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
 function quitar(lista,id){cur()[lista]=cur()[lista].filter(x=>x.id!==id);cambio();render();}
 function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=el.value;el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
 function quitarAho(p,id){const v=cur();v.aho[p]=v.aho[p].filter(x=>x.id!==id);if(!v.aho[p].length)v.aho[p].push({id:uid(),monto:''});cambio();render();}
-function setRuta(el){cur().ruta=el.value;cambio(false);}
+function autoAlto(t){t.style.height='auto';t.style.height=t.scrollHeight+'px';}
+function setLinea(id,el){cur().ruta.find(x=>x.id===id).texto=el.value;autoAlto(el);cambio(false);}
+function agregarLinea(){cur().ruta.push({id:uid(),texto:''});cambio(false);render(()=>{const t=document.querySelectorAll('.rl textarea');if(t.length)t[t.length-1].focus();});}
+function quitarLinea(id){const v=cur();v.ruta=v.ruta.filter(x=>x.id!==id);cambio(false);render();}
 function cambio(re=true){const v=cur();guardar(v);if(re)recalc();}
 function toggleAcc(k){openAcc=openAcc===k?null:k;
   document.querySelectorAll('.acc').forEach(a=>{const o=a.id==='acc-'+openAcc;a.classList.toggle('open',o);a.querySelector('.acc-h').setAttribute('aria-expanded',o)});}
@@ -370,26 +380,31 @@ function render(after){
         <div class="ct" data-a="${p}"></div></div>`).join('')}
     </div>${tot('aho','TOTAL DE LOS DOS')}<p class="hint">Montos en pesos.</p>`;
 
-  const com=(v.com.length?v.com.map(it=>`<div class="it">
+  const com=`<h5 class="sub"><i class="ti ti-sun"></i> Presupuesto por día</h5>`+filas(v,'dia','Desayuno, almuerzo…')+
+    `<div class="tot"><span>PRESUPUESTO DIARIO</span><span class="v"><span data-t="dia"></span><small data-tx="dia"></small></span></div>`+addB('dia','Concepto')+
+    `<h5 class="sub" style="margin-top:18px"><i class="ti ti-calendar"></i> Lo gastado cada día</h5>`+
+    (v.com.length?v.com.map(it=>`<div class="it">
       <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="Día (ej: Lunes 9)" oninput="setF('com','${it.id}','label',this)">
         <span class="dif" data-d="${it.id}"></span>
         <button class="x" onclick="quitar('com','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
       <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(it.monto)}" placeholder="Gastado: 56+8+50…" oninput="setF('com','${it.id}','monto',this)">
         ${ext?`<button class="cur${it.ext?' ext':''}" onclick="toggleExt('com','${it.id}')">${it.ext?S:'$'}</button><span class="conv" data-cv="com:${it.id}"></span>`:''}</div></div>`).join('')
     :'<p class="empty">Agregá un día cuando estés de viaje</p>')+`
-    <div class="tot"><span>Presupuesto diario</span><span class="v" data-t="dia1"></span></div>
-    ${tot('comG','Total gastado')}${tot('comD','DIFERENCIA')}
     <button class="add" onclick="agregar('com')"><i class="ti ti-plus"></i> Día</button>
-    <p class="hint">Cada día se compara con el total de "Gastos por día". Verde: te sobró; rojo: te pasaste.</p>`;
+    ${tot('comG','Total gastado')}${tot('comD','DIFERENCIA')}
+    <p class="hint">Cada día se compara con el presupuesto diario. Verde: te sobró; rojo: te pasaste.</p>`;
 
   body.innerHTML=trip+
     acc('est','a-est','calculator','Gastos estimados',filas(v,'est','Concepto')+tot('est','TOTAL')+addB('est','Gasto')+hintMon)+
     acc('aho','a-aho','pig-money','Plata ahorrada',aho)+
     acc('exc','a-exc','ticket','Excursiones posibles',filas(v,'exc','Excursión')+tot('exc','TOTAL')+addB('exc','Excursión'))+
-    acc('dia','a-dia','sun','Gastos por día',filas(v,'dia','Concepto')+tot('dia','TOTAL POR DÍA')+addB('dia','Concepto'))+
     acc('rea','a-rea','receipt','Gastos realizados',filas(v,'real','Gasto')+tot('real','TOTAL GASTADO')+addB('real','Gasto'))+
     acc('com','a-com','tools-kitchen-2','Comida por día',com)+
-    acc('ruta','a-ruta','map-2','Ruta',`<div class="ruta"><textarea placeholder="Día 1: llegada, check in…&#10;Día 2: playa…" oninput="setRuta(this)">${esc(v.ruta)}</textarea></div>`);
+    acc('ruta','a-ruta','map-2','Ruta',`<div class="ruta">${v.ruta.length?v.ruta.map((r,i)=>`<div class="rl"><span class="rn">${i+1}</span>
+        <textarea rows="1" placeholder="ej: Lunes 9 — Praia do Amor, cena en…" oninput="setLinea('${r.id}',this)">${esc(r.texto)}</textarea>
+        <button class="x" onclick="quitarLinea('${r.id}')" aria-label="Borrar línea"><i class="ti ti-trash"></i></button></div>`).join('')
+      :'<p class="empty">Todavía no hay líneas</p>'}</div><button class="add" onclick="agregarLinea()"><i class="ti ti-plus"></i> Línea</button>`);
+  document.querySelectorAll('.rl textarea').forEach(autoAlto);
   document.querySelectorAll('.row input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
   recalc();
   if(typeof after==='function')after();
@@ -404,9 +419,8 @@ function recalc(){
   // totales
   const T={est:K.est,exc:K.exc,dia:K.dia,real:K.real,aho:K.aho,comG:K.comG,comD:K.comD};
   Object.entries(T).forEach(([k,n])=>{put(`[data-t="${k}"]`,fmt(n),n,k==='comD');put(`[data-tx="${k}"]`,ext?fmt(aExt(v,n),m):'',0,false);});
-  put('[data-t="dia1"]',fmt(K.dia)+(ext?' · '+fmt(aExt(v,K.dia),m):''),0,false);
   // encabezados de acordeones
-  const H={est:K.est,aho:K.aho,exc:K.exc,dia:K.dia,rea:K.real,com:K.comD};
+  const H={est:K.est,aho:K.aho,exc:K.exc,rea:K.real,com:K.comD};
   Object.entries(H).forEach(([k,n])=>put(`[data-h="${k}"]`,fmt(n),n,false));
   put('[data-h="ruta"]','',0,false);
   // ahorro por persona
@@ -429,7 +443,7 @@ function guardar(v){
 function startSync(){
   db.collection(COL).onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
-    const r=[];snap.docs.forEach(d=>{try{const v=JSON.parse(d.data().json);if(v&&v.id&&v.ver===2)r.push(v)}catch(e){}});
+    const r=[];snap.docs.forEach(d=>{try{const v=JSON.parse(d.data().json);if(v&&v.id&&v.ver===2)r.push(normalizar(v))}catch(e){}});
     if(!r.length){viajes.forEach(v=>guardar(v));if(!viajes.length)render();return}
     viajes=r;wr(LS,viajes);
     if(!cur())selId=viajes.length?viajes.slice().sort((a,b)=>(b.creado||0)-(a.creado||0))[0].id:null;
