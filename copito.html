@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Copito">
+<link rel="apple-touch-icon" href="img/apple-touch.png?v=6">
+<link rel="icon" type="image/png" href="img/icono.png?v=6">
+<title>Copito</title>
+<script src="tema.js"></script>
+<script src="firebase-config.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--pos:#1D9E75;--neg:#E24B4A;--warn:#D97706;
+        --bg:#f5f5f0;--surface:#fff;--surface2:#f5f5f0;--border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);--text:#1a1a1a;--text2:#666;--r:12px;
+        --pos-l:#E1F5EE;--neg-l:#FDECEC;--warn-l:#FEF3C7}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--pos-l:rgba(29,158,117,.18);--neg-l:rgba(226,75,74,.18);--warn-l:rgba(217,119,6,.2)}}
+  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--pos-l:rgba(29,158,117,.18);--neg-l:rgba(226,75,74,.18);--warn-l:rgba(217,119,6,.2)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+  .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
+  main{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
+  input,select,textarea{font-family:inherit;color:var(--text)}
+  .pos{color:var(--pos)}.neg{color:var(--neg)}.zero{color:var(--text2)}.warn{color:var(--warn)}
+
+  /* pestañas */
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px}
+  .tabs button{border:none;background:none;border-radius:999px;padding:11px 8px;font-family:inherit;font-size:.95rem;font-weight:800;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .tabs button.on{background:var(--accent);color:#fff}
+  .tab{display:none;flex-direction:column;gap:10px}
+  .tab.on{display:flex}
+
+  /* resumen arriba */
+  .card{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:14px}
+  .res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .res div{background:var(--surface2);border-radius:var(--r);padding:9px 10px}
+  .res small{display:block;font-size:.72rem;color:var(--text2);font-weight:700}
+  .res b{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums}
+
+  /* meses (acordeón) */
+  .mes{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--neg);border-radius:16px;overflow:hidden}
+  .mes.paid{border-left-color:var(--pos)}
+  .mes-h{width:100%;display:flex;align-items:center;gap:8px;padding:13px 12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .mes-h .nm{font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;flex:1;min-width:0}
+  .mes-h .tt{font-weight:800;font-variant-numeric:tabular-nums;font-size:.92rem}
+  .badge{font-size:.7rem;font-weight:800;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .badge.ok{background:var(--pos-l);color:var(--pos)} .badge.no{background:var(--neg-l);color:var(--neg)}
+  .mes-h .chev{color:var(--text2);transition:transform .2s}
+  .mes.open .mes-h .chev{transform:rotate(180deg)}
+  .mes-b{display:none;padding:0 12px 12px}
+  .mes.open .mes-b{display:block}
+  .hdr,.row{display:grid;grid-template-columns:1fr 84px 78px 24px;gap:5px;align-items:center}
+  .hdr{font-size:.7rem;font-weight:800;color:var(--text2);text-transform:uppercase;padding:4px 2px 6px}
+  .hdr span:nth-child(2),.hdr span:nth-child(3){text-align:right}
+  .row{padding:5px 0;border-top:.5px solid var(--border)}
+  .row input{width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 7px;font-size:.84rem;font-weight:700;outline:none}
+  .row input:focus{border-color:var(--accent)}
+  .row input.m{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .row input.bad{border-color:var(--neg)}
+  .cu{text-align:right;font-weight:800;font-size:.8rem;color:var(--text2);font-variant-numeric:tabular-nums}
+  .x{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:32px;padding:0}
+  .tot{display:grid;grid-template-columns:1fr 84px 78px 24px;white-space:nowrap;font-size:.9rem;gap:6px;align-items:center;margin-top:6px;padding:10px 0 2px;border-top:2px solid var(--border2);font-weight:800}
+  .tot span:nth-child(2),.tot span:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+  .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .add{flex:1;border:1.5px dashed var(--accent);background:none;color:var(--accent);border-radius:var(--r);padding:10px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .paybtn{flex:1;border:none;border-radius:var(--r);padding:10px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--neg-l);color:var(--neg)}
+  .paybtn.ok{background:var(--pos);color:#fff}
+  .paybtn .bx{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.85rem}
+  .delmes{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;margin:10px auto 0;display:flex;align-items:center;gap:4px}
+  .btn{border:none;border-radius:var(--r);padding:12px 16px;font-family:inherit;font-size:.95rem;font-weight:800;cursor:pointer;color:#fff;background:var(--accent);display:flex;align-items:center;justify-content:center;gap:6px;width:100%}
+  .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+  .btn.danger{background:var(--neg)}
+
+  /* mantenimiento */
+  .auto h2{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px}
+  .auto h2 i{color:var(--accent)}
+  .auto input.modelo{width:100%;background:none;border:none;font-size:1rem;font-weight:800;outline:none;padding:2px 0}
+  .kmact{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .kmact label{font-size:.8rem;font-weight:800;color:var(--text2)}
+  .kmact input{flex:1;min-width:0;background:var(--accent-light);color:var(--accent-dark);border:1px solid var(--accent);border-radius:999px;padding:9px 14px;font-size:1.1rem;font-weight:800;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+  .kmact span{font-weight:800;color:var(--accent-dark)}
+  .kmfecha{font-size:.75rem;color:var(--text2);margin-top:4px;text-align:right}
+  .prox h3{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .prox h3 i{color:var(--accent)}
+  .pr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-top:6px;font-size:.9rem;font-weight:700}
+  .pr b{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pr.ok{background:var(--pos-l)} .pr.ok b{color:var(--pos)}
+  .pr.cerca{background:var(--warn-l)} .pr.cerca b{color:var(--warn)}
+  .pr.venc{background:var(--neg-l)} .pr.venc b{color:var(--neg)}
+  .reg{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .reg .f{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .reg .f.w{grid-column:1/-1}
+  .reg .f>span{font-size:.68rem;font-weight:800;color:var(--text2);text-transform:uppercase}
+  .reg input{width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:8px 9px;font-size:.9rem;font-weight:700;outline:none}
+  .reg input:focus{border-color:var(--accent)}
+  .reg input.n{text-align:right;font-variant-numeric:tabular-nums}
+  .reg .tipo{font-size:1rem;font-weight:800}
+  .reg .estado{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .reg .estado .badge{font-size:.75rem}
+  .reg.prx{border-left:5px solid var(--accent)}
+
+  .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .bgm.show{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px}
+  .sheet h3{font-size:1.1rem;text-align:center}.sheet p{color:var(--text2);text-align:center}
+  .two{display:flex;gap:8px}.two .btn{flex:1}
+  @media (max-width:380px){.hdr,.row,.tot{grid-template-columns:1fr 86px 64px 24px} main{padding:10px}}
+</style>
+<link rel="stylesheet" href="fondo.css">
+<link rel="stylesheet" href="comun.css">
+</head>
+<body>
+<div class="top">
+  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
+  <h1>COPITO</h1>
+</div>
+
+<main>
+  <div class="tabs">
+    <button id="tbG" class="on" onclick="tab('g')"><i class="ti ti-receipt"></i> Gastos</button>
+    <button id="tbM" onclick="tab('m')"><i class="ti ti-tool"></i> Mantenimiento</button>
+  </div>
+
+  <section class="tab on" id="tabG">
+    <div class="card"><div class="res">
+      <div><small>Este mes</small><b id="rMes">$ 0</b></div>
+      <div><small>C/U este mes</small><b id="rCu">$ 0</b></div>
+      <div><small>Meses sin pagar</small><b id="rPend">0</b></div>
+      <div><small>Falta pagar</small><b id="rFalta" class="neg">$ 0</b></div>
+    </div></div>
+    <div id="meses"></div>
+    <button class="add" onclick="agregarMes()" style="flex:none"><i class="ti ti-calendar-plus"></i> Agregar mes</button>
+  </section>
+
+  <section class="tab" id="tabM">
+    <div class="card auto">
+      <h2><i class="ti ti-car"></i><input class="modelo" id="modelo" oninput="D.auto.modelo=this.value;guardar()"></h2>
+      <div class="kmact"><label for="kmAct">Km actuales</label><input id="kmAct" inputmode="numeric" oninput="setKm(this)"><span>km</span></div>
+      <div class="kmfecha" id="kmFecha"></div>
+    </div>
+    <div class="card prox"><h3><i class="ti ti-alert-circle"></i> Próximos</h3><div id="prox"></div></div>
+    <div id="regs" style="display:flex;flex-direction:column;gap:10px"></div>
+    <button class="add" onclick="agregarReg()" style="flex:none"><i class="ti ti-plus"></i> Agregar mantenimiento</button>
+  </section>
+</main>
+
+<div class="bgm" id="dlg" onclick="if(event.target===this)cerrar()">
+  <div class="sheet"><h3 id="dT"></h3><p id="dM"></p>
+    <div class="two"><button class="btn ghost" onclick="cerrar()">Cancelar</button><button class="btn danger" id="dOk">Eliminar</button></div></div>
+</div>
+
+<script>
+/* ================= utilidades ================= */
+const LS='copito_v1';
+const MESES=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+function ev(x){let s=String(x??'').trim();if(!s)return 0;s=s.replace(/\.(?=\d{3}(\D|$))/g,'').replace(/,/g,'.');
+  if(!/^[0-9+\-*/().\s]+$/.test(s))return NaN;try{const v=Function('"use strict";return ('+s+')')();return isFinite(v)?v:NaN}catch(e){return NaN}}
+const n0=x=>{const v=ev(x);return isNaN(v)?0:v};
+const fmt=n=>(n<0?'-':'')+'$ '+Math.abs(Math.round(n)).toLocaleString('es-AR');
+const fkm=n=>Math.round(n).toLocaleString('es-AR');
+const fFecha=f=>{if(!f)return '';const [y,m,d]=f.split('-');return `${+d}/${+m}/${y}`};
+const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
+const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+/* ================= datos iniciales (de la planilla) ================= */
+function semilla(){
+  const L=(...p)=>p.map(([d,m])=>({id:uid(),d,m:m==null?'':String(m)}));
+  const vacio=()=>L(['CUOTA X18'],['SEGURO'],['NAFTA Prom'],['SERVIS YPF BOX'],['COCHERA'],['CUOTA SOCIO ARG']);
+  const mes=(y,k,lineas)=>({id:`m${y}_${k}`,y,k,pagado:false,lineas});
+  return{
+    meses:[
+      mes(2026,7,L(['CUOTA X18',316000],['SEGURO',57900],['NAFTA Prom',80000],['COCHERA'],['CUOTA SOCIO ARG',13500])),
+      mes(2026,8,L(['CUOTA X18',316000],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['COCHERA'],['CUOTA SOCIO ARG',15500])),
+      mes(2026,9,L(['CUOTA X18',315794],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['COCHERA'],['CUOTA SOCIO ARG',15500])),
+      mes(2026,10,L(['CUOTA X18',315797],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['CUOTA SOCIO ARG',15500],['TAZAS',36000])),
+      mes(2026,11,vacio()),mes(2027,0,vacio()),mes(2027,1,vacio()),mes(2027,2,vacio()),mes(2027,3,vacio())],
+    auto:{modelo:'CLIO MÍO 5P CONFORT ABS ABCP 2014',km:'216000',kmFecha:'2026-11-01'},
+    mant:[
+      {id:uid(),fecha:'2022-11-08',km:'177000',tipo:'Distribución',com:'Kit correas, tensores y bomba de agua',taller:'Yulín - Crespo',costo:'103536',proxKm:'235000',proxFecha:''},
+      {id:uid(),fecha:'2024-09-12',km:'206732',tipo:'Servicio completo',com:'Aceite y filtro',taller:'Marcos Puz',costo:'78450',proxKm:'',proxFecha:''},
+      {id:uid(),fecha:'2024-10-08',km:'207250',tipo:'ARB',com:'Alineación, rotación y balanceo',taller:'Niki Imhoff',costo:'32000',proxKm:'217250',proxFecha:''},
+      {id:uid(),fecha:'2026-07-22',km:'213000',tipo:'RTV',com:'Revisión técnica vehicular',taller:'Cintar Santa Fe',costo:'77000',proxKm:'',proxFecha:'2027-07-22'},
+      {id:uid(),fecha:'2026-07-31',km:'213500',tipo:'Servicio completo',com:'Servicio Premium',taller:'YPF BOXES',costo:'108000',proxKm:'223500',proxFecha:''}]
+  };
+}
+let D=rd(LS,null);if(!D||!Array.isArray(D.meses))D=semilla();
+let tabAct=rd('copito_tab','g'),openMes;
+
+/* ================= pestañas ================= */
+function tab(t){tabAct=t;wr('copito_tab',t);
+  document.getElementById('tbG').classList.toggle('on',t==='g');document.getElementById('tbM').classList.toggle('on',t==='m');
+  document.getElementById('tabG').classList.toggle('on',t==='g');document.getElementById('tabM').classList.toggle('on',t==='m');}
+
+/* ================= GASTOS ================= */
+const key=m=>m.y*12+m.k;
+const ordenados=()=>D.meses.slice().sort((a,b)=>key(a)-key(b));
+const totMes=m=>m.lineas.reduce((a,l)=>a+n0(l.m),0);
+function renderGastos(){
+  const ms=ordenados(),hoy=new Date(),kHoy=hoy.getFullYear()*12+hoy.getMonth();
+  if(openMes===undefined){const a=ms.find(m=>key(m)===kHoy);openMes=a?a.id:(ms.length?ms[ms.length-1].id:null);}
+  document.getElementById('meses').innerHTML=ms.map(m=>{const t=totMes(m),op=m.id===openMes;
+    return `<div class="mes${m.pagado?' paid':''}${op?' open':''}" id="mes_${m.id}">
+      <button class="mes-h" onclick="toggleMes('${m.id}')" aria-expanded="${op}">
+        <span class="nm">${MESES[m.k]} ${m.y}</span>
+        <span class="badge ${m.pagado?'ok':'no'}">${m.pagado?'✓ Pagado':'Sin pagar'}</span>
+        <span class="tt" data-tm="${m.id}">${fmt(t)}</span><i class="ti ti-chevron-down chev"></i></button>
+      <div class="mes-b">
+        <div class="hdr"><span>Detalle</span><span>Monto</span><span>C/U</span><span></span></div>
+        ${m.lineas.map(l=>`<div class="row">
+          <input type="text" value="${esc(l.d)}" placeholder="Detalle" oninput="setL('${m.id}','${l.id}','d',this)">
+          <input type="text" class="m${isNaN(ev(l.m))?' bad':''}" inputmode="decimal" value="${esc(l.m)}" placeholder="0" oninput="setL('${m.id}','${l.id}','m',this)">
+          <span class="cu" data-cu="${l.id}">${fmt(n0(l.m)/2)}</span>
+          <button class="x" onclick="borrarL('${m.id}','${l.id}')" aria-label="Borrar línea"><i class="ti ti-trash"></i></button></div>`).join('')}
+        <div class="tot"><span>TOTAL</span><span data-t="${m.id}">${fmt(t)}</span><span data-c="${m.id}">${fmt(t/2)}</span><span></span></div>
+        <div class="acts">
+          <button class="add" onclick="agregarL('${m.id}')"><i class="ti ti-plus"></i> Línea</button>
+          <button class="paybtn${m.pagado?' ok':''}" onclick="togglePago('${m.id}')"><span class="bx">${m.pagado?'✓':''}</span>${m.pagado?'Pagado':'Marcar pagado'}</button>
+        </div>
+        <button class="delmes" onclick="borrarMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button>
+      </div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
+  resumen();
+}
+function resumen(){
+  const ms=ordenados(),hoy=new Date(),kHoy=hoy.getFullYear()*12+hoy.getMonth(),act=ms.find(m=>key(m)===kHoy);
+  const t=act?totMes(act):0;
+  document.getElementById('rMes').textContent=fmt(t);document.getElementById('rCu').textContent=fmt(t/2);
+  const pend=ms.filter(m=>!m.pagado&&totMes(m)>0);
+  document.getElementById('rPend').textContent=pend.length;
+  document.getElementById('rFalta').textContent=fmt(pend.reduce((a,m)=>a+totMes(m),0));
+}
+function toggleMes(id){openMes=openMes===id?null:id;
+  document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
+const mesDe=id=>D.meses.find(m=>m.id===id);
+function setL(mid,lid,campo,el){
+  const m=mesDe(mid),l=m.lineas.find(x=>x.id===lid);l[campo]=el.value;
+  if(campo==='m'){el.classList.toggle('bad',isNaN(ev(el.value)));
+    document.querySelector(`[data-cu="${lid}"]`).textContent=fmt(n0(el.value)/2);
+    const t=totMes(m);document.querySelector(`[data-t="${mid}"]`).textContent=fmt(t);document.querySelector(`[data-c="${mid}"]`).textContent=fmt(t/2);
+    document.querySelector(`[data-tm="${mid}"]`).textContent=fmt(t);resumen();}
+  guardar();
+}
+function agregarL(mid){const m=mesDe(mid),l={id:uid(),d:'',m:''};m.lineas.push(l);guardar();renderGastos();
+  const r=document.querySelectorAll(`#mes_${mid} .row input:not(.m)`);if(r.length)r[r.length-1].focus();}
+function borrarL(mid,lid){const m=mesDe(mid);m.lineas=m.lineas.filter(x=>x.id!==lid);guardar();renderGastos();}
+function togglePago(mid){const m=mesDe(mid);m.pagado=!m.pagado;guardar();renderGastos();}
+function agregarMes(){
+  const ms=ordenados(),ult=ms[ms.length-1],hoy=new Date();
+  let y=ult?ult.y:hoy.getFullYear(),k=ult?ult.k+1:hoy.getMonth();if(k>11){k=0;y++}
+  const lineas=(ult?ult.lineas:[]).map(l=>({id:uid(),d:l.d,m:''})); // mismos conceptos que el mes anterior, montos vacíos
+  const m={id:`m${y}_${k}_${uid()}`,y,k,pagado:false,lineas:lineas.length?lineas:[{id:uid(),d:'',m:''}]};
+  D.meses.push(m);openMes=m.id;guardar();renderGastos();
+  document.getElementById('mes_'+m.id).scrollIntoView({block:'center',behavior:'smooth'});
+}
+function borrarMes(mid){const m=mesDe(mid);confirmar('Borrar mes',`¿Borrar ${MESES[m.k]} ${m.y} con sus gastos?`,()=>{D.meses=D.meses.filter(x=>x.id!==mid);guardar();renderGastos();});}
+
+/* ================= MANTENIMIENTO ================= */
+function estado(r){
+  const km=n0(D.auto.km),pk=n0(r.proxKm),hoy=new Date().toISOString().slice(0,10);
+  if(pk){const f=pk-km;if(f<0)return{c:'venc',t:`Pasado por ${fkm(-f)} km`};if(f<=1500)return{c:'cerca',t:`Faltan ${fkm(f)} km`};return{c:'ok',t:`Faltan ${fkm(f)} km`};}
+  if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:`Venció el ${fFecha(r.proxFecha)}`};
+    const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`El ${fFecha(r.proxFecha)} (${dias} días)`};}
+  return null;
+}
+function renderMant(){
+  document.getElementById('modelo').value=D.auto.modelo||'';
+  document.getElementById('kmAct').value=D.auto.km?fkm(n0(D.auto.km)):'';
+  document.getElementById('kmFecha').textContent=D.auto.kmFecha?'Actualizado el '+fFecha(D.auto.kmFecha):'';
+  const regs=D.mant.slice().sort((a,b)=>n0(a.km)-n0(b.km));
+  document.getElementById('regs').innerHTML=regs.map(r=>{const e=estado(r);return `<div class="reg${e?' prx':''}">
+      <label class="f w"><span>Tipo de servicio</span><input class="tipo" value="${esc(r.tipo)}" placeholder="ej: Servicio completo" oninput="setR('${r.id}','tipo',this)"></label>
+      <label class="f"><span>Fecha</span><input type="date" value="${esc(r.fecha)}" onchange="setR('${r.id}','fecha',this,true)"></label>
+      <label class="f"><span>Km</span><input class="n" inputmode="numeric" value="${r.km?fkm(n0(r.km)):''}" placeholder="0" onchange="setR('${r.id}','km',this,true)"></label>
+      <label class="f w"><span>Comentarios</span><input value="${esc(r.com)}" placeholder="Qué se hizo" oninput="setR('${r.id}','com',this)"></label>
+      <label class="f"><span>Taller</span><input value="${esc(r.taller)}" oninput="setR('${r.id}','taller',this)"></label>
+      <label class="f"><span>Costo</span><input class="n" inputmode="decimal" value="${r.costo?fmt(n0(r.costo)).replace('$ ',''):''}" placeholder="$ 0" oninput="setR('${r.id}','costo',this)"></label>
+      <label class="f"><span>Próximo (km)</span><input class="n" inputmode="numeric" value="${r.proxKm?fkm(n0(r.proxKm)):''}" placeholder="—" onchange="setR('${r.id}','proxKm',this,true)"></label>
+      <label class="f"><span>Próximo (fecha)</span><input type="date" value="${esc(r.proxFecha)}" onchange="setR('${r.id}','proxFecha',this,true)"></label>
+      <div class="estado">${e?`<span class="badge ${e.c==='ok'?'ok':e.c==='cerca'?'':'no'}" style="${e.c==='cerca'?'background:var(--warn-l);color:var(--warn)':''}">${e.t}</span>`:'<span></span>'}
+        <button class="x" onclick="borrarR('${r.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div></div>`}).join('');
+  renderProx();
+}
+function renderProx(){
+  const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||(n0(a.r.proxKm)||9e9)-(n0(b.r.proxKm)||9e9)});
+  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}"><span>${esc(x.r.tipo||'Servicio')}${x.r.proxKm?` · a los ${fkm(n0(x.r.proxKm))} km`:''}</span><b>${x.e.t}</b></div>`).join('')
+    :'<p style="color:var(--text2);font-size:.88rem">Cargá "Próximo (km)" o "Próximo (fecha)" en un mantenimiento para verlo acá.</p>';
+}
+function setKm(el){const v=el.value.replace(/\D/g,'');D.auto.km=v;D.auto.kmFecha=new Date().toISOString().slice(0,10);
+  document.getElementById('kmFecha').textContent='Actualizado el '+fFecha(D.auto.kmFecha);guardar();
+  clearTimeout(setKm.t);setKm.t=setTimeout(()=>{const a=document.activeElement;renderMant();document.getElementById('kmAct').focus();},700);}
+function setR(id,campo,el,re){const r=D.mant.find(x=>x.id===id);
+  r[campo]=['km','proxKm','costo'].includes(campo)?el.value.replace(/[^\d,]/g,'').replace(',','.'):el.value;
+  guardar();if(re)renderMant();else renderProx();}
+function agregarReg(){const r={id:uid(),fecha:new Date().toISOString().slice(0,10),km:D.auto.km||'',tipo:'',com:'',taller:'',costo:'',proxKm:'',proxFecha:''};
+  D.mant.push(r);guardar();renderMant();const t=document.querySelectorAll('.reg .tipo');const el=[...t].find(x=>x.closest('.reg').innerHTML.includes(r.id));if(el){el.scrollIntoView({block:'center'});el.focus();}}
+function borrarR(id){const r=D.mant.find(x=>x.id===id);confirmar('Borrar mantenimiento',`¿Borrar "${r.tipo||'este registro'}"?`,()=>{D.mant=D.mant.filter(x=>x.id!==id);guardar();renderMant();});}
+
+/* ================= confirmar ================= */
+function confirmar(t,msg,cb){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=msg;
+  document.getElementById('dOk').onclick=()=>{cerrar();cb()};document.getElementById('dlg').classList.add('show');}
+function cerrar(){document.getElementById('dlg').classList.remove('show')}
+
+/* ================= guardado compartido (Firebase) =================
+   Se guarda en la colección "ahorros", documento "copito", para usar las mismas reglas que ya funcionan. */
+let db=null,timer=null;
+function guardar(){wr(LS,D);if(!db)return;clearTimeout(timer);
+  timer=setTimeout(()=>db.collection('ahorros').doc('copito').set({json:JSON.stringify(D),ts:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{}),600);}
+function startSync(){
+  db.collection('ahorros').doc('copito').onSnapshot(doc=>{
+    if(doc.metadata.hasPendingWrites)return;
+    if(!doc.exists){guardar();return}
+    try{const d=JSON.parse(doc.data().json);if(d&&Array.isArray(d.meses)){D=d;wr(LS,D);
+      const a=document.activeElement;if(!(a&&a.tagName==='INPUT')){renderGastos();renderMant();}}}catch(e){}
+  },()=>{});
+}
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function initFb(){const c=window.getFbConfig&&window.getFbConfig();if(!c)return;
+  try{if(typeof firebase==='undefined'){await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');}
+    if(!firebase.apps.length)firebase.initializeApp(c);db=firebase.firestore();startSync();}catch(e){}}
+
+tab(tabAct);renderGastos();renderMant();initFb();
+</script>
+</body>
+</html>
