@@ -1364,18 +1364,40 @@
   ============================================================ */
   async function abrirScanner() {
     document.getElementById('scannerModal').classList.add('open');
+    const F = Html5QrcodeSupportedFormats;
+    // Solo los códigos de productos: así reconoce mucho más rápido que buscando todos los tipos
+    const formatos = [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF];
+    const alLeer = (decodedText) => {
+      if (decodedText && !scannerActive) {
+        scannerActive = true;
+        if (navigator.vibrate) navigator.vibrate(60);
+        try { html5QrCode.stop(); } catch(e) {}
+        cerrarScanner();
+        processBarcode(decodedText);
+        setTimeout(() => { scannerActive = false; }, 2000);
+      }
+    };
+    const config = {
+      fps: 25,
+      // recuadro ancho y bajo, como un código de barras
+      qrbox: (w, h) => ({ width: Math.floor(w * 0.88), height: Math.floor(Math.min(h * 0.42, w * 0.5)) }),
+      disableFlip: true
+    };
     try {
-      html5QrCode = new Html5Qrcode("scanner-container");
-      await html5QrCode.start({ facingMode: "environment" }, { fps: 20, qrbox: { width: 280, height: 180 } },
-        (decodedText) => {
-          if (decodedText && !scannerActive) {
-            scannerActive = true;
-            html5QrCode.stop();
-            cerrarScanner();
-            processBarcode(decodedText);
-            setTimeout(() => { scannerActive = false; }, 2000);
-          }
-        }, () => {});
+      html5QrCode = new Html5Qrcode("scanner-container", {
+        formatsToSupport: formatos,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // usa el lector nativo del celu si existe (Android)
+        verbose: false
+      });
+      try {
+        // cámara trasera en buena resolución y con enfoque continuo
+        await html5QrCode.start({ facingMode: "environment" }, Object.assign({}, config, {
+          videoConstraints: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: "continuous" }] }
+        }), alLeer, () => {});
+      } catch (e1) {
+        // si el celu no acepta esa configuración, arranca con la básica
+        await html5QrCode.start({ facingMode: "environment" }, config, alLeer, () => {});
+      }
     } catch(e) {
       document.getElementById('scanner-container').innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error</div>`;
       toast("Error al iniciar cámara");
