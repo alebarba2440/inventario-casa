@@ -24,6 +24,14 @@
   .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
   main{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
   .card{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:14px}
+  .acc{background:var(--surface);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
+  .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:15px 14px;background:none;border:none;font-family:inherit;color:var(--text);font-size:1rem;font-weight:700;cursor:pointer;text-align:left}
+  .acc-h i.ic{color:var(--accent);font-size:1.2rem}
+  .acc-h .sum{margin-left:auto;font-size:.92rem;font-weight:800;font-variant-numeric:tabular-nums}
+  .acc-h .chev{color:var(--text2);transition:transform .2s;font-size:1.1rem}
+  .acc.open .acc-h .chev{transform:rotate(180deg)}
+  .acc-b{display:none;padding:0 14px 14px}
+  .acc.open .acc-b{display:block}
   .card h2{font-size:.95rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
   .card h2 i{color:var(--accent);font-size:1.15rem}
   .num{font-variant-numeric:tabular-nums;font-weight:800}
@@ -110,17 +118,20 @@
     <button class="icon-btn" onclick="abrir('opts')" aria-label="Opciones"><i class="ti ti-dots-vertical"></i></button>
   </div>
 
-  <div class="card">
-    <h2><i class="ti ti-receipt"></i> Gastos del mes <span style="margin-left:auto" class="num" id="totGastos"></span></h2>
+  <section class="acc open" id="accGas">
+    <button class="acc-h" onclick="openAcc('accGas')" aria-expanded="true"><i class="ti ti-receipt ic"></i> Gastos del mes <span class="sum" id="totGastos"></span><i class="ti ti-chevron-down chev"></i></button>
+    <div class="acc-b">
     <div class="actions">
       <button class="btn grow" onclick="agregarGasto()"><i class="ti ti-plus"></i> Gasto</button>
       <button class="btn ghost" onclick="copiarMesAnterior()"><i class="ti ti-copy"></i> Copiar mes ant.</button>
     </div>
     <div id="lista"></div>
-  </div>
+    </div>
+  </section>
 
-  <div class="card">
-    <h2><i class="ti ti-wallet"></i> Ingresos</h2>
+  <section class="acc" id="accIng">
+    <button class="acc-h" onclick="openAcc('accIng')" aria-expanded="false"><i class="ti ti-wallet ic"></i> Ingresos <span class="sum" id="sumRest"></span><i class="ti ti-chevron-down chev"></i></button>
+    <div class="acc-b">
     <div class="ing">
       <label>Sueldo<input type="text" id="sueldo" inputmode="numeric" placeholder="0"></label>
       <label>SAC<input type="text" id="aguinaldo" inputmode="numeric" placeholder="0"></label>
@@ -132,13 +143,16 @@
     <div class="big rest"><span>Restante</span><b id="restante">$ 0</b></div>
     <div class="semanas"><span>Dividir en</span><select id="dividir"><option value="4">4 semanas</option><option value="5">5 semanas</option></select></div>
     <div class="big sem"><span>Gasto semanal</span><b id="semanal">$ 0</b></div>
-  </div>
+    </div>
+  </section>
 
-  <div class="card">
-    <h2><i class="ti ti-chart-donut-3"></i> Por categoría</h2>
+  <section class="acc" id="accCat">
+    <button class="acc-h" onclick="openAcc('accCat')" aria-expanded="false"><i class="ti ti-chart-donut-3 ic"></i> Por categoría <i class="ti ti-chevron-down chev" style="margin-left:auto"></i></button>
+    <div class="acc-b">
     <div class="chart"><canvas id="grafico"></canvas></div>
     <div id="comp"></div>
-  </div>
+    </div>
+  </section>
 </main>
 
 <!-- Opciones -->
@@ -163,6 +177,11 @@
 </div>
 
 <script>
+/* ---------- acordeones: uno abierto a la vez ---------- */
+function openAcc(id){
+  document.querySelectorAll('.acc').forEach(el=>{const o=el.id===id&&!el.classList.contains('open');el.classList.toggle('open',o);el.querySelector('.acc-h').setAttribute('aria-expanded',o)});
+  if(id==='accCat'&&chart)requestAnimationFrame(()=>chart.resize());
+}
 /* ---------- ventanas ---------- */
 function abrir(id){document.getElementById(id).classList.add('show')}
 function cerrar(id){document.getElementById(id).classList.remove('show')}
@@ -283,6 +302,7 @@ function totales(){
   set('totGastos',fmt(gas));set('totIng',fmt(ing));set('totGas2',fmt(gas));set('pagado',fmt(pag));set('falta',fmt(gas-pag));
   const r=document.getElementById('restante');r.textContent=fmt(rest);r.style.color=rest<0?'var(--neg)':'';
   set('semanal',fmt(rest/(parseInt(selDiv.value)||4)));
+  {const e=document.getElementById('sumRest');e.textContent='Restante '+fmt(rest);e.style.color=rest<0?'var(--neg)':'var(--accent-dark)';}
   grafico();comparacion();
 }
 function comparacion(){
