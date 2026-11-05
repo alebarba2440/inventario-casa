@@ -73,6 +73,7 @@
   .tot span:nth-child(2),.tot span:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
   .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
   .add{flex:1;border:1.5px dashed var(--accent);background:none;color:var(--accent);border-radius:var(--r);padding:10px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .add.copy{border-color:var(--text2);color:var(--text2)}
   .paybtn{flex:1;border:none;border-radius:var(--r);padding:10px;font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--neg-l);color:var(--neg)}
   .paybtn.ok{background:var(--pos);color:#fff}
   .paybtn .bx{width:20px;height:20px;border-radius:6px;border:2px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.85rem}
@@ -82,14 +83,15 @@
   .btn.danger{background:var(--neg)}
 
   /* mantenimiento */
-  .auto h2{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:8px}
+  .auto{text-align:center}
+  .auto h2{font-size:1rem;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px}
   .auto h2 i{color:var(--accent)}
-  .auto input.modelo{width:100%;background:none;border:none;font-size:1rem;font-weight:800;outline:none;padding:2px 0}
-  .kmact{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .auto input.modelo{width:100%;text-align:center;background:none;border:none;font-size:1rem;font-weight:800;outline:none;padding:2px 0}
+  .kmact{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
   .kmact label{font-size:.8rem;font-weight:800;color:var(--text2)}
-  .kmact input{flex:1;min-width:0;background:var(--accent-light);color:var(--accent-dark);border:1px solid var(--accent);border-radius:999px;padding:9px 14px;font-size:1.1rem;font-weight:800;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+  .kmact input{flex:0 0 auto;width:118px;min-width:0;background:var(--accent-light);color:var(--accent-dark);border:1px solid var(--accent);border-radius:999px;padding:7px 12px;font-size:1rem;font-weight:800;text-align:center;outline:none;font-variant-numeric:tabular-nums}
   .kmact span{font-weight:800;color:var(--accent-dark)}
-  .kmfecha{font-size:.75rem;color:var(--text2);margin-top:4px;text-align:right}
+  .kmfecha{font-size:.75rem;color:var(--text2);margin-top:6px;text-align:center}
   .prox h3{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
   .prox h3 i{color:var(--accent)}
   .pr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-top:6px;font-size:.9rem;font-weight:700}
@@ -145,8 +147,6 @@
     <div class="card"><div class="res">
       <div><small>Este mes</small><b id="rMes">$ 0</b></div>
       <div><small>C/U este mes</small><b id="rCu">$ 0</b></div>
-      <div><small>Meses sin pagar</small><b id="rPend">0</b></div>
-      <div><small>Falta pagar</small><b id="rFalta" class="neg">$ 0</b></div>
     </div></div>
     <div id="meses"></div>
     <button class="add" onclick="agregarMes()" style="flex:none"><i class="ti ti-calendar-plus"></i> Agregar mes</button>
@@ -237,6 +237,7 @@ function renderGastos(){
         <div class="tot"><span>TOTAL</span><span data-t="${m.id}">${fmt(t)}</span><span data-c="${m.id}">${fmt(t/2)}</span><span></span></div>
         <div class="acts">
           <button class="add" onclick="agregarL('${m.id}')"><i class="ti ti-plus"></i> Línea</button>
+          ${anterior(m)?`<button class="add copy" onclick="copiarAnterior('${m.id}')"><i class="ti ti-copy"></i> Copiar mes anterior</button>`:''}
         </div>
         <button class="delmes" onclick="borrarMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button>
       </div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
@@ -247,8 +248,6 @@ function resumen(){
   const t=act?totMes(act):0;
   document.getElementById('rMes').textContent=fmt(t);document.getElementById('rCu').textContent=fmt(t/2);
   const pend=ms.filter(m=>!m.pagado&&totMes(m)>0);
-  document.getElementById('rPend').textContent=pend.length;
-  document.getElementById('rFalta').textContent=fmt(pend.reduce((a,m)=>a+totMes(m),0));
 }
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
@@ -278,6 +277,14 @@ function agregarMes(){
   const m={id:`m${y}_${k}_${uid()}`,y,k,pagado:false,lineas:lineas.length?lineas:[{id:uid(),d:'',m:''}]};
   D.meses.push(m);openMes=m.id;guardar();renderGastos();
   document.getElementById('mes_'+m.id).scrollIntoView({block:'center',behavior:'smooth'});
+}
+function anterior(m){return ordenados().filter(x=>key(x)<key(m)).pop()||null;}
+/* copia las líneas del mes anterior con sus importes */
+function copiarAnterior(mid){
+  const m=mesDe(mid),a=anterior(m);if(!a)return;
+  const hacer=()=>{m.lineas=a.lineas.map(l=>({id:uid(),d:l.d,m:l.m}));guardar();renderGastos();};
+  if(m.lineas.some(l=>n0(l.m)))confirmar('Copiar mes anterior',`${MESES[m.k]} ya tiene importes. ¿Reemplazarlos por los de ${MESES[a.k]} ${a.y}?`,hacer,'Reemplazar');
+  else hacer();
 }
 function borrarMes(mid){const m=mesDe(mid);confirmar('Borrar mes',`¿Borrar ${MESES[m.k]} ${m.y} con sus gastos?`,()=>{D.meses=D.meses.filter(x=>x.id!==mid);guardar();renderGastos();});}
 
@@ -334,7 +341,8 @@ function agregarReg(){const r={id:uid(),fecha:new Date().toISOString().slice(0,1
 function borrarR(id){const r=D.mant.find(x=>x.id===id);confirmar('Borrar mantenimiento',`¿Borrar "${r.tipo||'este registro'}"?`,()=>{D.mant=D.mant.filter(x=>x.id!==id);guardar();renderMant();});}
 
 /* ================= confirmar ================= */
-function confirmar(t,msg,cb){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=msg;
+function confirmar(t,msg,cb,ok){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=msg;
+  const b=document.getElementById('dOk');b.textContent=ok||'Eliminar';b.className='btn '+(ok?'':'danger');
   document.getElementById('dOk').onclick=()=>{cerrar();cb()};document.getElementById('dlg').classList.add('show');}
 function cerrar(){document.getElementById('dlg').classList.remove('show')}
 
