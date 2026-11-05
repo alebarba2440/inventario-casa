@@ -3,7 +3,7 @@
   "short_name": "Nuestras apps",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#F7B2B2",
   "theme_color": "#1D9E75",
   "icons": [
     { "src": "img/icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
