@@ -34,7 +34,7 @@
   .gear .dot{display:none !important;position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#aaa;border:2px solid var(--surface)}
   .gear .dot.on{background:var(--ok)} .gear .dot.err{background:var(--err)}
 
-  a.card{display:flex;align-items:center;gap:16px;background:var(--surface);border:2px solid var(--accent);
+  a.card{display:flex;align-items:center;gap:16px;background:var(--surface);border:2px solid var(--border);
          border-radius:20px;padding:12px 16px 12px 12px;text-decoration:none;color:var(--text);
          box-shadow:0 1px 2px rgba(0,0,0,.04);transition:transform .12s ease, box-shadow .12s ease}
   a.card:hover{box-shadow:0 6px 18px rgba(0,0,0,.08)}
@@ -99,10 +99,10 @@
   @keyframes recorrer{to{--giro:360deg}}
   a.card{position:relative;isolation:isolate}
   a.card::after{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;pointer-events:none;
-    background:conic-gradient(from var(--giro),transparent 0deg,transparent 250deg,color-mix(in srgb,var(--accent) 35%,#fff) 310deg,#fff 330deg,transparent 360deg);
+    background:conic-gradient(from var(--giro),transparent 0deg,transparent 200deg,color-mix(in srgb,var(--accent) 40%,transparent) 260deg,var(--accent) 330deg,var(--accent) 345deg,transparent 360deg);
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
     mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0);
-    animation:recorrer 5s linear infinite;opacity:.85}
+    animation:recorrer 4s linear infinite}
   .grid a.card:nth-child(2)::after{animation-delay:-1s}
   .grid a.card:nth-child(3)::after{animation-delay:-2s}
   .grid a.card:nth-child(4)::after{animation-delay:-3s}
