@@ -53,6 +53,8 @@
   .mov .n{flex:1;color:var(--text2);font-size:.8rem}
   .mov button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer}
   .hint{font-size:.78rem;color:var(--text2)}
+  .delmes{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;margin:10px auto 0;display:flex;align-items:center;gap:4px}
+  .restore{width:100%;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);padding:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
   .er{padding:8px 2px;border-top:.5px solid var(--border)}
   .er:first-child{border-top:none;padding-top:2px}
   .er1{display:flex;align-items:center;gap:8px}
@@ -276,6 +278,7 @@ function allMonths(){
   const out=[];
   years().forEach(y=>MESES.forEach((n,k)=>{const key=y*12+k;
     if(byKey[key])byKey[key].label=n.toUpperCase()+' '+y; // nombre prolijo: "NOVIEMBRE 2026" aunque se haya cargado "noviembre"
+    if(byKey[key]&&byKey[key].oculto)return; // mes borrado de Ahorrado
     out.push(byKey[key]||{id:'m'+y+'_'+k,label:n.toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0},virtual:true});}));
   // los registros viejos cuyo nombre no es un mes no se muestran (quedan guardados, no se borran)
   return out;
@@ -320,6 +323,7 @@ function render(){
       <div class="mes-b">
         <div class="cols">${colHTML(m,'j')}${colHTML(m,'a')}</div>
         <div class="mes-t"><span>Total del mes</span><b class="${cls(t)}">${fmt(t)}</b></div>
+        <button class="delmes" onclick="borrarMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button>
       </div>
     </div>`};
   // con nombres (año) o solo los montos con su color (mes)
@@ -333,6 +337,8 @@ function render(){
         <button class="anio-h" onclick="toggleYear('${G.g}')" aria-expanded="${op}"><span class="nm">${G.g}</span>${resumen(j,a)}<i class="ti ti-chevron-down chev"></i></button>
         <div class="anio-b">${G.ms.map(mesHTML).join('')}</div></div>`}).join('');
   } else html=ms.map(mesHTML).join('');
+  const ocultos=state.months.filter(m=>m.oculto&&(selYear==='all'||yearOf(m,0)===selYear));
+  if(html&&ocultos.length)html+=`<button class="restore" onclick="restaurarMeses()"><i class="ti ti-arrow-back-up"></i> Volver a mostrar meses borrados (${ocultos.length})</button>`;
   document.getElementById('listReal').innerHTML=html||`<p class="hint" style="text-align:center;padding:14px 0">Todavía no hay ahorro cargado en ${selYear}.</p>`;
   /* estimado: meses agregados a mano, separados por año (un acordeón por año) */
   const tabla=list=>list.map(m=>`<div class="er">
@@ -419,6 +425,14 @@ function borrarTodo(){
   state={names:state.names||{j:'Juli',a:'Ale'},months:[]};openMes=undefined;openYear=undefined;
   save();render();
 }
+/* borrar un mes de Ahorrado (por ejemplo, un mes en el que no ahorraron) */
+function borrarMes(id){
+  const m=getM(id);if(!m)return;
+  const n=(m.mov.j||[]).length+(m.mov.a||[]).length;
+  if(!confirm(n?`${m.label} tiene ${n} movimiento(s). ¿Borrarlo igual? Se pierden esos movimientos.`:`¿Borrar ${m.label} de Ahorrado?`))return;
+  const r=realM(id);r.mov={j:[],a:[]};r.oculto=true;openMes=null;save();render();
+}
+function restaurarMeses(){state.months.forEach(m=>{if(m.oculto&&(selYear==='all'||yearOf(m,0)===selYear))delete m.oculto;});save();render();}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
 /* ---------- movimientos ---------- */
