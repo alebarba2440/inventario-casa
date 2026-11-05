@@ -53,7 +53,7 @@
   .mov .n{flex:1;color:var(--text2);font-size:.8rem}
   .mov button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer}
   .hint{font-size:.78rem;color:var(--text2)}
-  .wipe{margin:8px auto 0;background:none;border:1px dashed var(--neg);color:var(--neg);border-radius:12px;padding:10px 14px;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .wipe{display:none !important;margin:8px auto 0;background:none;border:1px dashed var(--neg);color:var(--neg);border-radius:12px;padding:10px 14px;font-family:inherit;font-size:.85rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
 
   /* acordeones */
   .acc{background:var(--surface);border:.5px solid var(--border);border-radius:16px;overflow:hidden}
@@ -131,10 +131,8 @@
 </head>
 <body>
 <div class="top">
-  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9v11a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V9"/></svg></a>
-  <h1>AHORROS</h1>
-  <select id="yearSel" class="year" onchange="setYear(this.value)" aria-label="Año"></select>
-  <span style="flex:1"></span>
+  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
+  <div class="tcenter"><h1>AHORROS</h1><select id="yearSel" class="year" onchange="setYear(this.value)" aria-label="Año"></select></div>
   <div class="sync"><div class="dot" id="dot"></div><span id="syncT">Solo local</span></div>
 </div>
 <main>

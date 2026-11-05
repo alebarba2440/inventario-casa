@@ -1,15 +1,25 @@
 /* Elementos comunes a las 3 apps */
 
-/* Botón para volver al inicio */
-.home-link{width:40px;height:40px;flex-shrink:0;border-radius:13px;background:var(--accent);color:#fff;
-  display:flex;align-items:center;justify-content:center;text-decoration:none;
-  box-shadow:0 2px 6px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.25);
-  transition:transform .12s ease,box-shadow .12s ease}
-.home-link svg{width:22px;height:22px;display:block}
-.home-link:hover{box-shadow:0 4px 12px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.25)}
-.home-link:active{transform:scale(.92)}
-.home-link:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-.home-link.fixed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 7px);left:10px;z-index:50}
+/* Botón para volver al inicio: solo la casita rellena, sin fondo, a la izquierda */
+.home-link{width:40px;height:40px;flex-shrink:0;color:var(--accent);background:none;border:none;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;border-radius:10px;
+  transition:transform .12s ease,opacity .12s ease}
+.home-link svg{width:28px;height:28px;display:block}
+.home-link:active{transform:scale(.88);opacity:.8}
+.home-link:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.home-link.fixed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:8px;z-index:50}
+
+/* Barras de arriba (Inventario, Ahorros, Vacaciones): mismo alto, título en el centro, casita a la izquierda */
+.top-header{position:relative}
+.top{position:sticky !important;top:0}
+.top,.top-header{display:flex;align-items:center;justify-content:center;
+  min-height:calc(env(safe-area-inset-top,0px) + 67px) !important;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 56px 12px !important}
+.top .home-link,.top-header .home-link{position:absolute;left:8px;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.top h1{flex:0 0 auto !important;text-align:center;margin:0}
+/* en Ahorros el título queda centrado y el selector de año va pegado a su derecha */
+.tcenter{position:relative;display:inline-block}
+.tcenter .year{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%)}
 
 /* El estado de sincronización no se muestra (se puede revisar en Ajustes del inicio) */
 .sync,#syncDot,#syncLabel{display:none !important}
