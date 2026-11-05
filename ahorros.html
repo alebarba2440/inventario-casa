@@ -84,7 +84,7 @@
   .mes-h .rs b{margin-left:2px !important}
   @media (max-width:380px){main{padding:10px}.acc-b{padding:0 8px 12px}.mes-h .nm{font-size:.8rem !important}.mes-h .rs{font-size:.68rem !important}}
   /* tabla de estimado: que entre en el celu */
-  #accEst table{table-layout:fixed;font-size:.8rem}
+  #accEst table.est{table-layout:fixed;font-size:.8rem}
   #accEst th:nth-child(1){width:34%} #accEst th:nth-child(2),#accEst th:nth-child(3){width:23%} #accEst th:nth-child(4){width:20%}
   #accEst td.lab{white-space:normal;font-size:.76rem;line-height:1.2}
   #accEst td input[type=number]{min-width:0;width:100%;padding:7px 6px;font-size:.82rem}
@@ -103,7 +103,7 @@
   .anio.open .anio-h .chev{transform:rotate(180deg)}
   .anio-b{display:none;padding:10px 8px 2px}
   .anio.open .anio-b{display:block}
-  tr.ysep td{font-weight:800;color:var(--accent-dark);background:var(--accent-light);text-align:left !important;padding:6px 8px;font-size:.85rem}
+  .anio-est .anio-b{padding:6px 8px 8px}
   .mes.open .mes-b{display:block}
   .mes-act{display:flex;justify-content:center;gap:18px;margin-top:10px}
   .mes-act button{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;display:flex;align-items:center;gap:4px}
@@ -154,10 +154,7 @@
       <i class="ti ti-target-arrow ic"></i> Estimado <span class="sum" id="sumEst"></span><i class="ti ti-chevron-down chev"></i>
     </button>
     <div class="acc-b">
-      <table>
-        <thead><tr><th>Mes</th><th id="thEJ" class="pj"></th><th id="thEA" class="pa"></th><th>Total</th></tr></thead>
-        <tbody id="tbEst"></tbody>
-      </table>
+      <div id="estList"></div>
       <div class="neto" style="background:var(--surface2);color:var(--text)"><span>Estimado total</span><b id="estTot">$ 0</b></div>
       <div class="neto" style="margin-top:6px;background:var(--surface2);color:var(--text)"><span>Real − estimado</span><b id="dif">$ 0</b></div>
     </div>
@@ -228,7 +225,7 @@ function years(){
   // un año nuevo aparece recién el 1 de enero
   const lo=Math.min(hoy,...ys),hi=Math.max(hoy,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
 }
-function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;openYear=undefined;render();}
+function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;openYear=undefined;openYearEst=undefined;render();}
 /* todos los meses del rango, ordenados. Los que todavía no tienen datos son "virtuales" hasta que se cargue algo */
 function allMonths(){
   const byKey={};state.months.forEach((m,i)=>{const k=monthKey(m,i);if(k<1e9&&!byKey[k])byKey[k]=m;});
@@ -248,6 +245,9 @@ function realM(id){ // si el mes es virtual, lo guarda de verdad
 function sortedMonths(){return state.months.map((m,i)=>[monthKey(m,i),i,m]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]);}
 let openMes; // mes abierto (uno a la vez)
 let openYear; // año abierto en "Todos" (uno a la vez)
+let openYearEst; // año abierto en Estimado
+function toggleYearEst(g){openYearEst=openYearEst===g?null:g;
+  document.querySelectorAll('.anio-est').forEach(el=>{const o=el.id==='anioE_'+openYearEst;el.classList.toggle('open',o);el.querySelector('.anio-h').setAttribute('aria-expanded',o)});}
 function toggleYear(g){openYear=openYear===g?null:g;
   document.querySelectorAll('.anio').forEach(el=>{const o=el.id==='anio_'+openYear;el.classList.toggle('open',o);el.querySelector('.anio-h').setAttribute('aria-expanded',o)});}
 function toggleMes(id){openMes=openMes===id?null:id;
@@ -258,8 +258,6 @@ function render(){
   const sel=document.getElementById('yearSel');
   sel.innerHTML=`<option value="all"${selYear==='all'?' selected':''}>Todos</option>`+ys.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
   const yl=selYear==='all'?'':' '+selYear;
-  document.getElementById('thEJ').textContent=state.names.j;
-  document.getElementById('thEA').textContent=state.names.a;
   document.getElementById('totJN').textContent='Total '+state.names.j+yl;
   document.getElementById('totAN').textContent='Total '+state.names.a+yl;
   const ms=monthsOfYear();
@@ -291,12 +289,22 @@ function render(){
         <div class="anio-b">${G.ms.map(mesHTML).join('')}</div></div>`}).join('');
   } else html=ms.map(mesHTML).join('');
   document.getElementById('listReal').innerHTML=html;
-  let lastY=null;
-  document.getElementById('tbEst').innerHTML=ms.map(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'Otros';
-    const sep=selYear==='all'&&g!==lastY?`<tr class="ysep"><td colspan="4">${g}</td></tr>`:'';lastY=g;return sep+`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
+  /* estimado: tabla de meses; en "Todos", una tabla por año dentro de su acordeón */
+  const tabla=list=>`<table class="est"><thead><tr><th>Mes</th><th class="pj">${esc(state.names.j)}</th><th class="pa">${esc(state.names.a)}</th><th>Total</th></tr></thead><tbody>`+
+    list.map(m=>`<tr><td class="lab" style="text-transform:uppercase">${esc(m.label)}</td>
     <td><input type="number" inputmode="decimal" value="${m.est.j||''}" placeholder="0" oninput="setEst('${m.id}','j',this.value)"></td>
     <td><input type="number" inputmode="decimal" value="${m.est.a||''}" placeholder="0" oninput="setEst('${m.id}','a',this.value)"></td>
-    <td id="et_${m.id}"></td></tr>`}).join('');
+    <td id="et_${m.id}"></td></tr>`).join('')+'</tbody></table>';
+  let est;
+  if(selYear==='all'){
+    const grupos=[];ms.forEach(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'';let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
+    if(openYearEst===undefined)openYearEst=String(new Date().getFullYear());
+    est=grupos.map(G=>{const op=G.g===openYearEst;
+      return `<div class="anio anio-est${op?' open':''}" id="anioE_${G.g}">
+        <button class="anio-h" onclick="toggleYearEst('${G.g}')" aria-expanded="${op}"><span class="nm">${G.g}</span><span class="rs" id="eyr_${G.g}"></span><i class="ti ti-chevron-down chev"></i></button>
+        <div class="anio-b">${tabla(G.ms)}</div></div>`}).join('');
+  } else est=tabla(ms);
+  document.getElementById('estList').innerHTML=est;
   document.getElementById('netoL').textContent=selYear==='all'?'NETO (total)':'NETO '+selYear;
   recalc();
   if(irA){const el=document.getElementById('mes_'+irA);if(el)requestAnimationFrame(()=>el.scrollIntoView({block:'center'}));}
@@ -318,6 +326,9 @@ function recalc(){
   set('neto',tj+ta);{const e=document.getElementById('sumReal');e.textContent=fmt(tj+ta);e.className='sum '+cls(tj+ta);}
   let est=0;
   ms.forEach(m=>{const t=(+m.est.j||0)+(+m.est.a||0);est+=t;const e=document.getElementById('et_'+m.id);if(e)e.textContent=fmt(t)});
+  document.querySelectorAll('[id^="eyr_"]').forEach(e=>{const g=e.id.slice(4),gm=ms.filter(m=>String(m.label).includes(g));
+    const j=sum(gm.map(m=>+m.est.j||0)),a=sum(gm.map(m=>+m.est.a||0));
+    e.innerHTML=`<span class="pj">${esc(state.names.j)}:<b>${fmtS(j)}</b></span><span class="pa">${esc(state.names.a)}:<b>${fmtS(a)}</b></span>`;});
   document.getElementById('estTot').textContent=fmt(est);
   document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
