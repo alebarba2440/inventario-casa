@@ -109,24 +109,21 @@
   .grid a.card:nth-child(5)::after{animation-delay:-4s}
   @media (prefers-reduced-motion:reduce){a.card::after{display:none}}
 
-  /* ===== Animación de inicio: ella llega corriendo y después sigue el GIF del beso ===== */
-  #intro{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .5s}
+  /* ===== Animación de inicio: ustedes dos, corazoncitos, "JuntOS" y "El arte de construir" ===== */
+  #intro{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;transition:opacity .5s;padding:20px}
   #intro.fin{opacity:0;pointer-events:none}
-  #intro .esc{position:relative;width:min(82vw,400px);aspect-ratio:520/768}
-  #intro .capa{position:absolute;inset:0}
-  #intro .capa img{position:absolute;inset:0;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
-  #intro .el{z-index:2}
-  #intro .ella{z-index:1;animation:ellaLlega 1.6s cubic-bezier(.3,.7,.4,1) both}
-  #intro .ella .paso{position:absolute;inset:0;transform-origin:45% 95%;animation:ellaPasos .27s ease-in-out 6 both}
-  #intro .polvo{position:absolute;left:14%;bottom:6%;width:9%;aspect-ratio:1;border-radius:50%;background:var(--border2);opacity:0;animation:polvo .5s ease-out 3 both}
-  #intro .gif{position:absolute;inset:0;z-index:3;background:url(img/intro-sprite.webp?v=2) 0 0/1400% 100% no-repeat;opacity:0}
-  #intro.beso .gif{opacity:1;animation:gif 2.1s steps(13) both}
-  #intro.beso .capa,#intro.beso .polvo{visibility:hidden}
+  #intro .esc{position:relative;width:min(70vw,330px);aspect-ratio:506/678}
+  #intro .esc>img{position:absolute;inset:0;width:100%;height:100%;z-index:2;animation:aparece .8s cubic-bezier(.3,1.5,.5,1) both;user-select:none;-webkit-user-drag:none}
+  #intro .cor{position:absolute;left:50%;top:45%;width:var(--s,26px);z-index:var(--z,1);opacity:0;animation:vuela 2.2s cubic-bezier(.2,.7,.3,1) var(--d,.8s) both}
+  #intro .tit{font-size:clamp(2.4rem,11vw,3.2rem);font-weight:500;letter-spacing:.02em;line-height:1.1;margin-top:8px;display:flex}
+  #intro .tit span{display:inline-block;opacity:0;animation:letra .45s cubic-bezier(.3,1.6,.5,1) both}
+  #intro .tit .os{font-weight:900;color:var(--accent)}
+  #intro .sub{font-size:1.05rem;color:var(--text2);font-weight:600;letter-spacing:.06em;opacity:0;animation:sube .6s ease-out 2.75s both}
   #intro .saltar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-size:.8rem;color:var(--text2);opacity:.7}
-  @keyframes ellaLlega{0%{transform:translateX(-140%)}100%{transform:translateX(0)}}
-  @keyframes ellaPasos{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5%) rotate(4deg)}}
-  @keyframes polvo{0%{opacity:0;transform:scale(.3)}30%{opacity:.55}100%{opacity:0;transform:scale(1.5) translateX(-70%)}}
-  @keyframes gif{from{background-position:0 0}to{background-position:100% 0}}
+  @keyframes aparece{0%{opacity:0;transform:scale(.6) translateY(20px)}100%{opacity:1;transform:none}}
+  @keyframes vuela{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}12%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1) rotate(var(--r,0deg))}}
+  @keyframes letra{0%{opacity:0;transform:translateY(18px) scale(.4)}100%{opacity:1;transform:none}}
+  @keyframes sube{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){#intro{display:none}}
 </style>
 <link rel="stylesheet" href="fondo.css">
@@ -134,12 +131,9 @@
 </head>
 <body>
 <div id="intro" onclick="finIntro()">
-  <div class="esc">
-    <div class="capa el"><img src="img/intro-el.webp" alt=""></div>
-    <div class="capa ella"><div class="paso"><img src="img/intro-ella.webp" alt=""></div></div>
-    <span class="polvo"></span>
-    <div class="gif"></div>
-  </div>
+  <div class="esc"><img src="img/intro-juntos.webp" alt=""><svg class="cor" style="--x:-3px;--y:-283px;--s:46px;--d:1.03s;--r:2deg;--z:3" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:64px;--y:-222px;--s:38px;--d:1.04s;--r:9deg;--z:1" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:97px;--y:-186px;--s:31px;--d:0.84s;--r:4deg;--z:1" viewBox="0 0 24 24"><path fill="#f7a1b5" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:183px;--y:-193px;--s:23px;--d:1.11s;--r:-5deg;--z:3" viewBox="0 0 24 24"><path fill="#ff3d6e" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:212px;--y:-115px;--s:41px;--d:1.14s;--r:9deg;--z:1" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:200px;--y:-106px;--s:23px;--d:0.77s;--r:26deg;--z:1" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:153px;--y:-28px;--s:36px;--d:0.95s;--r:7deg;--z:3" viewBox="0 0 24 24"><path fill="#f7a1b5" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:179px;--y:79px;--s:42px;--d:0.93s;--r:-30deg;--z:1" viewBox="0 0 24 24"><path fill="#ff3d6e" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:145px;--y:119px;--s:30px;--d:0.99s;--r:5deg;--z:1" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:102px;--y:213px;--s:44px;--d:0.90s;--r:18deg;--z:3" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:64px;--y:156px;--s:24px;--d:1.09s;--r:-24deg;--z:1" viewBox="0 0 24 24"><path fill="#f7a1b5" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:7px;--y:239px;--s:34px;--d:0.79s;--r:-29deg;--z:1" viewBox="0 0 24 24"><path fill="#ff3d6e" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-56px;--y:120px;--s:28px;--d:1.31s;--r:-27deg;--z:3" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-138px;--y:211px;--s:34px;--d:1.00s;--r:6deg;--z:1" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-184px;--y:130px;--s:30px;--d:0.95s;--r:-11deg;--z:1" viewBox="0 0 24 24"><path fill="#f7a1b5" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-228px;--y:95px;--s:46px;--d:1.30s;--r:-22deg;--z:3" viewBox="0 0 24 24"><path fill="#ff3d6e" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-157px;--y:-1px;--s:23px;--d:1.03s;--r:1deg;--z:1" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-211px;--y:-53px;--s:36px;--d:1.06s;--r:16deg;--z:1" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-172px;--y:-149px;--s:34px;--d:0.82s;--r:-4deg;--z:3" viewBox="0 0 24 24"><path fill="#f7a1b5" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-99px;--y:-170px;--s:40px;--d:0.93s;--r:26deg;--z:1" viewBox="0 0 24 24"><path fill="#ff3d6e" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-111px;--y:-189px;--s:41px;--d:1.14s;--r:-24deg;--z:1" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cor" style="--x:-67px;--y:-215px;--s:36px;--d:0.90s;--r:19deg;--z:3" viewBox="0 0 24 24"><path fill="#ff6b8a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
+  <div class="tit"><span style="animation-delay:1.70s">J</span><span style="animation-delay:1.82s">u</span><span style="animation-delay:1.94s">n</span><span style="animation-delay:2.06s">t</span><span class="os" style="animation-delay:2.18s">O</span><span class="os" style="animation-delay:2.30s">S</span></div>
+  <div class="sub">El Arte de Construir</div>
   <span class="saltar">Tocá para saltar</span>
 </div>
 <script>
@@ -148,16 +142,9 @@
   if(visto){el.remove();return}
   try{sessionStorage.setItem('intro_ok','1')}catch(e){}
   window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);};
-  // espera a que estén cargadas las imágenes para que no arranque a medias
-  const urls=['img/intro-el.webp','img/intro-ella.webp','img/intro-sprite.webp?v=2'];
-  const anims=()=>el.getAnimations({subtree:true});
-  anims().forEach(a=>a.pause());
-  Promise.all(urls.map(u=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=u;}))).then(()=>{
-    anims().forEach(a=>a.play());
-    setTimeout(()=>el.classList.add('beso'),1650);   // llegó: arranca el beso
-    setTimeout(finIntro,1650+2100+1000);              // el beso dura 2,1 s y queda el abrazo un ratito
-  });
-  setTimeout(finIntro,9000); // por si algo no carga
+  const anims=()=>el.getAnimations({subtree:true});anims().forEach(a=>a.pause());
+  const img=new Image();img.onload=img.onerror=()=>{anims().forEach(a=>a.play());setTimeout(finIntro,4600);};img.src='img/intro-juntos.webp';
+  setTimeout(finIntro,8000);
 })();
 </script>
 <div class="wrap">
