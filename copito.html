@@ -408,7 +408,7 @@ async function exportarPDF(){
       doc.setFillColor(...acc);doc.rect(0,0,W,38,'F');
       if(img)doc.addImage(img.data,'PNG',MX-2,19-img.h/2,img.w,img.h);
       doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(20);
-      doc.text('Mantenimiento',MX+44,21.5);
+      doc.text('Mantenimiento',MX+38,21.5);
       doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.text('Generado el '+hoy,W-MX,33,{align:'right'});
     };
     let y;
@@ -503,7 +503,7 @@ const mezcla=(rgb,a)=>rgb.map(c=>Math.round(255-(255-c)*a));
 /* la imagen de Copito como PNG con fondo transparente, sin círculo; devuelve su tamaño en mm para el header */
 function imagenPNG(src){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
     const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);
-    const h=34,w=h*im.width/im.height;ok({data:cv.toDataURL('image/png'),w,h});}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=src;});}
+    const h=28,w=h*im.width/im.height;ok({data:cv.toDataURL('image/png'),w,h});}catch(e){ok(null)}};im.onerror=()=>ok(null);im.src=src;});}
 
 /* ================= confirmar ================= */
 function confirmar(t,msg,cb,ok){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=msg;
