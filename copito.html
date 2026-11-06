@@ -291,12 +291,12 @@ function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 const mesDe=id=>D.meses.find(m=>m.id===id);
 /* muestra 315797 como 315.797 (si es un número solo; las sumas como 56+8 quedan como están) */
-function conPuntos(v){const s=String(v??'').replace(/\./g,'');return /^\d+$/.test(s)?(+s).toLocaleString('es-AR'):String(v??'');}
+function conPuntos(v){const s=String(v??'').replace(/\./g,'');return /^\d+$/.test(s)?(+s).toLocaleString('es-AR'):ptsTexto(v);}
 function setL(mid,lid,campo,el){
   const m=mesDe(mid),l=m.lineas.find(x=>x.id===lid);
   if(campo==='m'){const crudo=el.value.replace(/\./g,'');
     if(/^\d+$/.test(crudo)){const f=(+crudo).toLocaleString('es-AR');if(el.value!==f){el.value=f;el.setSelectionRange(f.length,f.length);}l.m=crudo;}
-    else l.m=el.value;}
+    else l.m=ptsCampo(el);}
   else l[campo]=el.value;
   if(campo==='m'){el.classList.toggle('bad',isNaN(ev(el.value)));
     document.querySelector(`[data-cu="${lid}"]`).textContent=fmt(n0(el.value)/2);

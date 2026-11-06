@@ -287,8 +287,8 @@ function ev(x){
 }
 const n0=x=>{const v=ev(x);return isNaN(v)?0:v};
 /* muestra 1250000 como 1.250.000 (si es un número solo; las sumas como 56+8 quedan como están) */
-const cp=v=>{const c=String(v??'').replace(/\./g,'');return /^\d+$/.test(c)?(+c).toLocaleString('es-AR'):String(v??'');};
-function miles(el){const c=el.value.replace(/\./g,'');if(/^\d+$/.test(c)){const f=(+c).toLocaleString('es-AR');if(el.value!==f)el.value=f;return c;}return el.value;}
+const cp=v=>{const c=String(v??'').replace(/\./g,'');return /^\d+$/.test(c)?(+c).toLocaleString('es-AR'):ptsTexto(v);};
+function miles(el){const c=el.value.replace(/\./g,'');if(/^\d+$/.test(c)){const f=(+c).toLocaleString('es-AR');if(el.value!==f)el.value=f;return c;}return ptsCampo(el);}
 const fmt=(n,m='ARS')=>{if(!isFinite(n))return '—';const d=m==='ARS'?0:2;
   return (n<0?'-':'')+SIM[m]+' '+Math.abs(n).toLocaleString('es-AR',{maximumFractionDigits:d,minimumFractionDigits:0});};
 const cls=n=>n>0?'pos':n<0?'neg':'zero';

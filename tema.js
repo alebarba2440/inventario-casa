@@ -75,3 +75,24 @@
     cb = alConfirmar; bg.classList.add('show');
   };
 })();
+
+/* Separador de miles dentro de cuentas: "2000+1500" se muestra "2.000+1.500".
+   ptsTexto(texto) devuelve el texto con puntos; ptsCampo(input) lo arregla en el campo sin mover el cursor. */
+window.ptsTexto = function (t) {
+  return String(t ?? '').replace(/(^|[^\d,.])(\d[\d.]*)/g, (m, pre, num) => {
+    const d = num.replace(/\./g, '');
+    return pre + (d.length > 3 ? (+d).toLocaleString('es-AR') : d);
+  });
+};
+window.ptsCampo = function (el) {
+  const v = el.value, pos = el.selectionStart ?? v.length;
+  const nuevo = window.ptsTexto(v);
+  if (nuevo === v) return v;
+  // mantener el cursor después de la misma cantidad de caracteres que no son puntos
+  const antes = v.slice(0, pos).replace(/\./g, '').length;
+  let i = 0, c = 0;
+  while (i < nuevo.length && c < antes) { if (nuevo[i] !== '.') c++; i++; }
+  el.value = nuevo;
+  try { el.setSelectionRange(i, i); } catch (e) {}
+  return nuevo;
+};
