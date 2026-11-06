@@ -54,18 +54,21 @@
     if (on.includes('togglePago')) return 'pagado';
     if (cl.contains('pq-si') || cl.contains('danger') || b.id === 'dOk' || (cl.contains('confirm-ok') && cl.contains('del'))) return 'borrar';
     if (cl.contains('pq-no') || cl.contains('ghost') || cl.contains('confirm-cancel') || cl.contains('close-btn') || /^(cancelar|cerrar)$/.test(txt)) return 'cancelar';
-    if (cl.contains('add') || b.querySelector('.ti-plus,.ti-circle-plus,.ti-circle-plus-filled,.ti-calendar-plus') || /^\+/.test(txt)) return 'agregar';
-    if (/^(guardar|aceptar|listo|confirmar|crear|agregar|reemplazar|ok)$/.test(txt) || cl.contains('confirm-ok') || cl.contains('pri')) return 'aceptar';
+    if (cl.contains('add') || b.querySelector('.ti-plus,.ti-circle-plus,.ti-circle-plus-filled,.ti-calendar-plus') || /^\+/.test(txt) || /^agregar\b/.test(txt)) return 'agregar';
+    if (/^(guardar|aceptar|listo|confirmar|crear|agregar|reemplazar|ok)\b/.test(txt) || cl.contains('confirm-ok') || cl.contains('pri')) return 'aceptar';
     if (b.closest('.desliz')) return 'tick';
     return null;
   }
+  // preparar el audio apenas el dedo toca la pantalla (antes del click), así el primer sonido no se pierde
+  document.addEventListener('pointerdown', () => { if (activo()) ac(); }, { capture: true, passive: true });
+  document.addEventListener('touchstart', () => { if (activo()) ac(); }, { capture: true, passive: true });
   document.addEventListener('click', e => {
     const n = cual(e.target); if (!n) return;
     sonido(n);
     // al cambiar de página, esperar un instante para que el sonido se escuche
     const a = e.target.closest('a[href]');
     if (a && (n === 'entrar' || n === 'volver') && activo() && !e.defaultPrevented && !a.target) {
-      e.preventDefault(); const href = a.href; setTimeout(() => { location.href = href; }, 140);
+      e.preventDefault(); const href = a.href; setTimeout(() => { location.href = href; }, 230);
     }
   }, true);
 })();
