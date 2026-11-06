@@ -116,6 +116,20 @@
   .row input.bad{border-color:var(--neg)}
   .cur{height:36px;border-radius:10px;border:1.5px solid var(--c);background:none;color:var(--c);font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer}
   .cur.ext{background:var(--c);color:#fff}
+  /* monto en pesos = celeste, en moneda extranjera = verde */
+  .cur.pes{border-color:#0284C7;color:#0284C7}
+  .cur.ext{border-color:#16A34A;background:#16A34A;color:#fff}
+  .it input.m.mp{background:#E0F2FE;color:#075985}
+  .it input.m.mx{background:#DCFCE7;color:#166534}
+  .it input.m.mp::placeholder{color:#0284C7;opacity:.7;font-weight:700}
+  .it input.m.mx::placeholder{color:#16A34A;opacity:.8;font-weight:700}
+  :root[data-theme="dark"] .it input.m.mp{background:rgba(2,132,199,.22);color:#7dd3fc}
+  :root[data-theme="dark"] .it input.m.mx{background:rgba(22,163,74,.22);color:#86efac}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .it input.m.mp{background:rgba(2,132,199,.22);color:#7dd3fc}:root:not([data-theme="light"]) .it input.m.mx{background:rgba(22,163,74,.22);color:#86efac}}
+  /* títulos de las secciones reales: más marcados y con etiqueta REAL */
+  .acc.real>.acc-h{background:var(--c);color:#fff}
+  .acc.real>.acc-h i,.acc.real>.acc-h .sum{color:#fff !important}
+  .rtag{font-size:.62rem;font-weight:900;letter-spacing:.08em;background:rgba(255,255,255,.25);border-radius:6px;padding:2px 6px;margin-left:2px}
   .conv{text-align:center;font-size:.85rem;font-weight:800;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .x{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:32px;flex-shrink:0;padding:0}
   .tot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:11px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--c) calc(var(--tint)*100%),transparent);font-weight:800}
@@ -454,8 +468,8 @@ function filas(v,lista,ph,modo){
       <div class="l1"><input type="text" data-lb="${it.id}" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
         ${lista==='dias'?`<span class="dif" data-dd="${it.id}"></span>`:''}
         <button class="x" onclick="quitar('${lista}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-      <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it[mc]))}" placeholder="${real?'Real':'0'}" oninput="setF('${lista}','${it.id}','${mc}',this)">
-        ${ext?`<button class="cur${it[ec]?' ext':''}" onclick="toggleExt('${lista}','${it.id}','${ec}')" aria-label="Moneda">${it[ec]?S:'$'}</button>
+      <div class="l2${ext?'':' noext'}"><input type="text" class="m ${ext&&it[ec]?'mx':'mp'}" inputmode="decimal" value="${esc(cp(it[mc]))}" placeholder="${ext&&it[ec]?NOM[v.moneda]:'Pesos'}" oninput="setF('${lista}','${it.id}','${mc}',this)">
+        ${ext?`<button class="cur${it[ec]?' ext':' pes'}" onclick="toggleExt('${lista}','${it.id}','${ec}')" aria-label="Moneda">${it[ec]?S:'$'}</button>
         <span class="conv" data-cv="${lista}:${it.id}:${modo}"></span>`:''}</div>
       ${real?`<div class="vs"><span>Estimado <b data-ve="${lista}:${it.id}"></b></span><span>Diferencia <b data-vd="${lista}:${it.id}"></b></span></div>`:''}
     </div>`).join('');
@@ -491,7 +505,7 @@ function render(after){
   const hint=ext?`<p class="hint">Tocá <b>$</b> / <b>${S}</b> para elegir la moneda de cada monto; al lado aparece convertido. Podés sumar: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
   const cmp=l=>R?`<div class="cmp"><span>Estimado <b data-t="e_${l}"></b></span><span>Diferencia <b data-d="${l}"></b></span></div>`:'';
   const M=R?'r':'e';
-  const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl,ic,R?tR:tE,
+  const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl+(R?' real':''),ic,R?tR+'<span class="rtag">REAL</span>':tE,
     filas(v,l,ph,M)+totRow(R?'TOTAL REAL':'TOTAL ESTIMADO',M+'_'+l)+cmp(l)+addB(l,txt)+(extra||''));
   const aho=`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
@@ -509,8 +523,8 @@ function render(after){
         ${d.items.map(it=>`<div class="it">
           <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="Concepto" oninput="setConc('${d.id}','${it.id}','label',this)">
             <button class="x" onclick="quitarConc('${d.id}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-          <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="0" oninput="setConc('${d.id}','${it.id}','monto',this)">
-            ${ext?`<button class="cur${it.ext?' ext':''}" onclick="extConc('${d.id}','${it.id}')">${it.ext?S:'$'}</button><span class="conv" data-cc="${d.id}:${it.id}"></span>`:''}</div></div>`).join('')}
+          <div class="l2${ext?'':' noext'}"><input type="text" class="m ${ext&&it.ext?'mx':'mp'}" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="${ext&&it.ext?NOM[v.moneda]:'Pesos'}" oninput="setConc('${d.id}','${it.id}','monto',this)">
+            ${ext?`<button class="cur${it.ext?' ext':' pes'}" onclick="extConc('${d.id}','${it.id}')">${it.ext?S:'$'}</button><span class="conv" data-cc="${d.id}:${it.id}"></span>`:''}</div></div>`).join('')}
         <button class="add" onclick="agregarConc('${d.id}')"><i class="ti ti-plus"></i> Concepto</button>
         <div class="tot"><span>TOTAL DEL DÍA</span><span class="v"><span data-dt2="${d.id}"></span><small data-dx="${d.id}"></small></span></div>
         <div class="cmp"><span>Estimado <b data-t="e_diario"></b></span><span>Diferencia <b data-dd2="${d.id}"></b></span></div>
@@ -524,7 +538,7 @@ function render(after){
   body.innerHTML=trip+
     sec('gastos','a-est','calculator','Gastos estimados','Gastos reales','Concepto','Gasto',hint)+
     sec('exc','a-exc','ticket','Excursiones estimadas','Excursiones reales','Excursión','Excursión')+
-    (R?acc('dias','a-com','sun','Gasto diario real',dias)
+    (R?acc('dias','a-com real','sun','Gasto diario real<span class="rtag">REAL</span>',dias)
       :acc('diario','a-com','sun','Gasto diario estimado',
         `<label class="ndias"><span>Días de viaje</span><input type="text" inputmode="numeric" value="${esc(v.diasViaje||'')}" placeholder="0" oninput="setDiasViaje(this)"></label>`+
         filas(v,'diario','Desayuno, almuerzo…','e')+totRow('POR DÍA','e_diario')+
