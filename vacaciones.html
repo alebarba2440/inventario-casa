@@ -534,13 +534,16 @@ function recalc(){
     const dd=document.querySelector(`[data-vd="${l}:${id}"]`);if(dd){dd.textContent=String(it.rmonto??'').trim()?fmt(d):'—';dd.className=String(it.rmonto??'').trim()?cls(d):'zero';}});
   LISTAS.forEach(l=>['e','r'].forEach(t=>{const n=K[t+'_'+l];put(`[data-t="${t}_${l}"]`,fmt(n),0,false);put(`[data-tx="${t}_${l}"]`,ext?fmt(aExt(v,n),m):'',0,false);}));
   LISTAS.forEach(l=>{const d=K['e_'+l]-K['r_'+l];put(`[data-d="${l}"]`,fmt(d),d,true);put(`[data-h="${l}"]`,fmt(K[M+'_'+l]),0,false);});
-  put('[data-t="dias"]',fmt(K.dias),0,false);put('[data-tx="dias"]',ext?fmt(aExt(v,K.dias),m):'',0,false);
-  put('[data-t="diasEst"]',fmt(K.diasEst),0,false);put('[data-d="dias"]',fmt(K.diasEst-K.dias),K.diasEst-K.dias,true);
-  put('[data-h="dias"]',fmt(K.dias),0,false);
+  // en "Gasto diario real" todo se muestra en la moneda elegida con el botón (R$ / $); la otra queda chica abajo
+  const verExt=ext&&diaMon!=='ARS'&&cotOf(v),fD=n=>verExt?fmt(aExt(v,n),m):fmt(n),fO=n=>ext&&cotOf(v)?(verExt?fmt(n):fmt(aExt(v,n),m)):'';
+  put('[data-t="dias"]',fD(K.dias),0,false);put('[data-tx="dias"]',fO(K.dias),0,false);
+  put('[data-t="diasEst"]',fD(K.diasEst),0,false);put('[data-d="dias"]',fD(K.diasEst-K.dias),K.diasEst-K.dias,true);
+  document.querySelectorAll('#acc-dias [data-t="e_diario"]').forEach(e=>e.textContent=fD(K.e_diario));
+  put('[data-h="dias"]',(ext&&diaMon!=='ARS'&&cotOf(v))?fmt(aExt(v,K.dias),m):fmt(K.dias),0,false);
   v.dias.forEach(d=>{const t=K.dia[d.id],x=K.e_diario-t;
     const enExt=ext&&diaMon!=='ARS'&&cotOf(v),fd=n=>enExt?fmt(aExt(v,n),m):fmt(n);
-    put(`[data-dt="${d.id}"]`,fd(t),0,false);put(`[data-dt2="${d.id}"]`,fmt(t),0,false);put(`[data-dx="${d.id}"]`,ext?fmt(aExt(v,t),m):'',0,false);
-    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+fd(x),x,true);put(`[data-dd2="${d.id}"]`,fmt(x),x,true);});
+    put(`[data-dt="${d.id}"]`,fd(t),0,false);put(`[data-dt2="${d.id}"]`,fD(t),0,false);put(`[data-dx="${d.id}"]`,fO(t),0,false);
+    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+fd(x),x,true);put(`[data-dd2="${d.id}"]`,fD(x),x,true);});
   document.querySelectorAll('[data-cc]').forEach(e=>{const [did,cid]=e.dataset.cc.split(':'),d=v.dias.find(x=>x.id===did),it=d&&d.items.find(x=>x.id===cid);if(!it)return;
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);put('[data-h="aho"]',fmt(K.aho),0,false);
