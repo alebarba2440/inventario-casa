@@ -77,6 +77,9 @@
   .dia.open .dia-h .chev{transform:rotate(180deg)}
   .dia-b{display:none;padding:10px 12px 12px}
   .dia.open .dia-b{display:block}
+  .dmon{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px;font-size:.78rem;font-weight:700;color:var(--text2)}
+  .dmon button{border:1.5px solid var(--c);background:none;color:var(--c);border-radius:999px;padding:4px 12px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer}
+  .dmon button.on{background:var(--c);color:#fff}
   .fd{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
   .fd span{font-size:.7rem;font-weight:800;color:var(--text2);text-transform:uppercase}
   .fd input{width:100%;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 10px;font-size:.95rem;font-weight:800;outline:none;color:var(--text)}
@@ -398,6 +401,8 @@ function quitar(lista,id){const v=cur(),it=item(lista,id);
   else borrar();
 }
 let openDia;
+let diaMon=rd('dia_mon','ext'); // 'ext' = moneda del viaje (ej. R$), 'ARS' = pesos
+function setDiaMon(m){diaMon=m;wr('dia_mon',m);document.querySelectorAll('.dmon button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));recalc();}
 const dia=id=>cur().dias.find(d=>d.id===id);
 function agregarDia(){const v=cur(),e=v.moneda!=='ARS';
   // el día nuevo arranca con los mismos conceptos del gasto diario estimado
@@ -491,7 +496,8 @@ function render(after){
         <div class="cmp"><span>Estimado <b data-t="e_diario"></b></span><span>Diferencia <b data-dd2="${d.id}"></b></span></div>
         <button class="delmes" onclick="quitarDia('${d.id}')"><i class="ti ti-trash"></i> Borrar día</button>
       </div></div>`};
-  const dias=(v.dias.length?v.dias.map(diaHTML).join(''):'<p class="empty">Agregá un día cuando estén de viaje</p>')+
+  const dmon=ext?`<div class="dmon"><span>Ver los días en</span><button data-m="ext" class="${diaMon!=='ARS'?'on':''}" onclick="setDiaMon('ext')">${S}</button><button data-m="ARS" class="${diaMon==='ARS'?'on':''}" onclick="setDiaMon('ARS')">$</button></div>`:'';
+  const dias=dmon+(v.dias.length?v.dias.map(diaHTML).join(''):'<p class="empty">Agregá un día cuando estén de viaje</p>')+
     `<button class="add" onclick="agregarDia()"><i class="ti ti-calendar-plus"></i> Día</button>`+
     totRow('TOTAL GASTADO','dias')+
     `<div class="cmp"><span>Estimado (${v.dias.length} día${v.dias.length===1?'':'s'}) <b data-t="diasEst"></b></span><span>Diferencia <b data-d="dias"></b></span></div>
@@ -522,8 +528,9 @@ function recalc(){
   put('[data-t="diasEst"]',fmt(K.diasEst),0,false);put('[data-d="dias"]',fmt(K.diasEst-K.dias),K.diasEst-K.dias,true);
   put('[data-h="dias"]',fmt(K.dias),0,false);
   v.dias.forEach(d=>{const t=K.dia[d.id],x=K.e_diario-t;
-    put(`[data-dt="${d.id}"]`,fmt(t),0,false);put(`[data-dt2="${d.id}"]`,fmt(t),0,false);put(`[data-dx="${d.id}"]`,ext?fmt(aExt(v,t),m):'',0,false);
-    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+fmt(x),x,true);put(`[data-dd2="${d.id}"]`,fmt(x),x,true);});
+    const enExt=ext&&diaMon!=='ARS'&&cotOf(v),fd=n=>enExt?fmt(aExt(v,n),m):fmt(n);
+    put(`[data-dt="${d.id}"]`,fd(t),0,false);put(`[data-dt2="${d.id}"]`,fmt(t),0,false);put(`[data-dx="${d.id}"]`,ext?fmt(aExt(v,t),m):'',0,false);
+    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+fd(x),x,true);put(`[data-dd2="${d.id}"]`,fmt(x),x,true);});
   document.querySelectorAll('[data-cc]').forEach(e=>{const [did,cid]=e.dataset.cc.split(':'),d=v.dias.find(x=>x.id===did),it=d&&d.items.find(x=>x.id===cid);if(!it)return;
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);put('[data-h="aho"]',fmt(K.aho),0,false);
