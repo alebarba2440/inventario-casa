@@ -108,6 +108,9 @@
   @property --giro{syntax:'<angle>';initial-value:0deg;inherits:false}
   @keyframes recorrer{to{--giro:360deg}}
   a.card{position:relative;isolation:isolate}
+  /* cada sección con su tinte suave */
+  a.card[href="inventario.html"]{--t:#16A34A}a.card[href="ahorros.html"]{--t:#DB2777}a.card[href="vacaciones.html"]{--t:#0284C7}a.card[href="copito.html"]{--t:#EA580C}a.card[href="gastos.html"]{--t:#7C3AED}
+  a.card{background:linear-gradient(135deg,color-mix(in srgb,var(--t,var(--accent)) 11%,var(--surface)),var(--surface) 75%)}
   a.card::after{content:"";position:absolute;inset:-2px;border-radius:inherit;padding:2px;pointer-events:none;
     background:conic-gradient(from var(--giro),transparent 0deg,transparent 200deg,color-mix(in srgb,var(--accent) 40%,transparent) 260deg,var(--accent) 330deg,var(--accent) 345deg,transparent 360deg);
     -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;
