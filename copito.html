@@ -41,7 +41,7 @@
   .res b{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums}
 
   /* meses (acordeón) */
-  .mes{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--neg);border-radius:16px;overflow:hidden}
+  .mes{scroll-margin-top:calc(env(safe-area-inset-top,0px) + 85px);background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--neg);border-radius:16px;overflow:hidden}
   .mes.paid{border-left-color:var(--pos)}
   .mes-h{width:100%;display:flex;align-items:center;gap:8px;padding:13px 12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
   .mes-h .nm{font-weight:800;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;flex:1;min-width:0}
@@ -250,7 +250,7 @@ function renderGastos(){
   const ms=ordenados(),hoy=new Date(),kHoy=hoy.getFullYear()*12+hoy.getMonth();
   if(openMes===undefined){const a=ms.find(m=>key(m)===kHoy);openMes=a?a.id:(ms.length?ms[ms.length-1].id:null);}
   const anios=[...new Set(ms.map(m=>m.y))].sort((a,b)=>b-a);
-  if(!aniosAb){aniosAb=new Set(rd('copito_anios',[hoy.getFullYear()]));if(!anios.some(y=>aniosAb.has(y))&&anios.length)aniosAb.add(anios[0]);}
+  if(!aniosAb){aniosAb=new Set(rd('copito_anios',[]));aniosAb.add(hoy.getFullYear());if(!anios.some(y=>aniosAb.has(y))&&anios.length)aniosAb.add(anios[0]);}
   const htmlMes=m=>{const t=totMes(m),op=m.id===openMes;
     return `<div class="mes${m.pagado?' paid':''}${op?' open':''}" id="mes_${m.id}">
       <div class="mes-h" role="button" tabindex="0" onclick="toggleMes('${m.id}')" onkeydown="if(event.key==='Enter')toggleMes('${m.id}')" aria-expanded="${op}">
@@ -416,6 +416,11 @@ async function initFb(){const c=window.getFbConfig&&window.getFbConfig();if(!c)r
     if(!firebase.apps.length)firebase.initializeApp(c);db=firebase.firestore();startSync();}catch(e){}}
 
 tab(tabAct);renderGastos();renderMant();initFb();
+/* al entrar, siempre deja abierto y a la vista el mes actual */
+function irMesActual(){const el=openMes&&document.getElementById('mes_'+openMes);if(el&&tabAct==='g')setTimeout(()=>el.scrollIntoView({block:'start',behavior:'smooth'}),150);}
+irMesActual();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){const h=new Date(),k=h.getFullYear()*12+h.getMonth(),a=D.meses.find(m=>key(m)===k);
+  if(a){openMes=a.id;aniosAb&&aniosAb.add(a.y);renderGastos();irMesActual();}}});
 </script>
 </body>
 </html>
