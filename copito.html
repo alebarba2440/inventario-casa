@@ -274,7 +274,7 @@ function renderGastos(){
       </div></div>`};
   document.getElementById('meses').innerHTML=anios.map(y=>{const lm=ms.filter(m=>m.y===y),ab=aniosAb.has(y),tot=lm.reduce((a,m)=>a+totMes(m),0),pag=lm.filter(m=>m.pagado).length;
     return `<div class="anio${ab?' open':''}" data-y="${y}"><button class="anio-h" onclick="toggleAnio(${y})" aria-expanded="${ab}">
-      <span class="ay">${y}</span><span class="ap">${pag}/${lm.length} pagados</span><span class="at">${fmt(tot)}</span><i class="ti ti-chevron-down chev"></i></button>
+      <span class="ay">${y}</span><span class="ap">${pag}/${lm.length} pagados</span><i class="ti ti-chevron-down chev"></i></button>
       <div class="anio-b">${lm.map(htmlMes).join('')}</div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
   resumen();
 }
