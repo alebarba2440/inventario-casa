@@ -341,7 +341,7 @@ const q=document.getElementById('q'),res=document.getElementById('res');
 function listar(){
   const t=q.value.trim().toLowerCase();
   const l=viajes.slice().sort((a,b)=>(b.creado||0)-(a.creado||0)).filter(v=>!t||v.lugar.toLowerCase().includes(t)||(v.nota||'').toLowerCase().includes(t));
-  res.innerHTML=l.length?l.map(v=>`<button class="${v.id===selId?'sel':''}" onmousedown="event.preventDefault()" onclick="elegir('${v.id}')"><i class="ti ti-map-pin"></i>${esc(v.lugar)}<small>${SIM[v.moneda]}</small></button>`).join('')
+  res.innerHTML=l.length?l.map(v=>`<button class="${v.id===selId?'sel':''}" onmousedown="event.preventDefault()" onclick="elegir('${v.id}')">${esc(v.lugar)}<small>${SIM[v.moneda]}</small></button>`).join('')
     :`<div class="none">${viajes.length?'No hay coincidencias':'Todavía no hay vacaciones. Tocá + para agregar.'}</div>`;
   res.classList.add('show');
 }
