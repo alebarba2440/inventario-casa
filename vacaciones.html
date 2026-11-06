@@ -66,6 +66,9 @@
   .tabs button.on{background:var(--accent);color:#fff}
   .cmp{display:flex;justify-content:space-between;gap:8px;margin-top:6px;padding:0 4px;font-size:.8rem;color:var(--text2);font-weight:700}
   .cmp b{font-weight:800;color:var(--text)}
+  .cmp b.pos{color:var(--pos)} .cmp b.neg{color:var(--neg)}
+  .vs{display:flex;justify-content:space-between;gap:8px;margin-top:5px;padding:0 2px;font-size:.76rem;color:var(--text2);font-weight:700}
+  .vs b{font-weight:800;color:var(--text)} .vs b.pos{color:var(--pos)} .vs b.neg{color:var(--neg)} .vs b.zero{color:var(--text2)}
   /* acordeones con color propio */
   .acc{--c:var(--accent);background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--c);border-radius:16px;overflow:hidden}
   .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:14px;background:color-mix(in srgb,var(--c) calc(var(--tint)*100%),transparent);border:none;font-family:inherit;color:var(--text);font-size:1rem;font-weight:800;cursor:pointer;text-align:left}
@@ -258,39 +261,50 @@ const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 /* ================= estado ================= */
 let viajes=rd(LS,[]);if(!Array.isArray(viajes))viajes=[];
 let selId=rd(LS_SEL,null);
+const LISTAS=['gastos','exc','diario']; // mismas filas en Estimado y en Real
+/* cada fila tiene el monto estimado (monto/ext) y el real (rmonto/rext) */
 function normalizar(v){
   if(!v)return v;
   if(!Array.isArray(v.ruta))v.ruta=String(v.ruta||'').split('\n').map(t=>t.trim()).filter(Boolean).map(texto=>({id:uid(),texto}));
-  if(!v.v3){ // pasar al formato con pestañas Estimado / Real
-    v.e_gastos=v.est||[];v.e_exc=v.exc||[];v.e_com=v.dia||[];
-    v.r_gastos=v.real||[];v.r_exc=[];v.r_com=v.com||[];
-    delete v.est;delete v.exc;delete v.dia;delete v.real;delete v.com;v.v3=true;
+  if(!v.v3){v.e_gastos=v.est||[];v.e_exc=v.exc||[];v.e_com=v.dia||[];v.r_gastos=v.real||[];v.r_exc=[];v.r_com=v.com||[];
+    delete v.est;delete v.exc;delete v.dia;delete v.real;delete v.com;v.v3=true;}
+  if(!v.v4){ // juntar Estimado y Real en una sola lista por sección
+    const unir=(est,rea)=>{const out=(est||[]).map(x=>({id:x.id||uid(),label:x.label||'',monto:x.monto||'',ext:!!x.ext,rmonto:'',rext:!!x.ext}));
+      (rea||[]).forEach(r=>{const m=out.find(o=>o.label.trim().toLowerCase()===String(r.label||'').trim().toLowerCase()&&!o.rmonto);
+        if(m){m.rmonto=r.monto||'';m.rext=!!r.ext;}else out.push({id:r.id||uid(),label:r.label||'',monto:'',ext:!!r.ext,rmonto:r.monto||'',rext:!!r.ext});});
+      return out;};
+    v.gastos=unir(v.e_gastos,v.r_gastos);v.exc=unir(v.e_exc,v.r_exc);v.diario=unir(v.e_com,[]);
+    v.dias=(v.r_com||[]).map(x=>({id:x.id||uid(),label:x.label||'',monto:x.monto||'',ext:!!x.ext}));
+    ['e_gastos','e_exc','e_com','r_gastos','r_exc','r_com'].forEach(k=>delete v[k]);v.v4=true;
   }
-  ['e_gastos','e_exc','e_com','r_gastos','r_exc','r_com'].forEach(k=>{if(!Array.isArray(v[k]))v[k]=[]});
+  [...LISTAS,'dias'].forEach(k=>{if(!Array.isArray(v[k]))v[k]=[]});
   if(!v.aho)v.aho={j:[],a:[]};
   return v;
 }
 viajes.forEach(normalizar);
 const cur=()=>viajes.find(v=>v.id===selId)||null;
 function nuevoViaje(lugar,moneda,cot,nota){
-  const it=label=>({id:uid(),label,monto:'',ext:false});
-  return{id:'v2_'+uid(),ver:2,v3:true,creado:Date.now(),lugar,moneda,cot,nota,
-    e_gastos:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],e_exc:[],e_com:[it('Desayuno'),it('Almuerzo'),it('Cena')],
-    r_gastos:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],r_exc:[],r_com:[],
+  const ext=moneda!=='ARS',it=(label,e)=>({id:uid(),label,monto:'',ext:e,rmonto:'',rext:e});
+  return{id:'v2_'+uid(),ver:2,v3:true,v4:true,creado:Date.now(),lugar,moneda,cot,nota,
+    gastos:[it('Viaje + seguro',false),it('Alojamiento',false),it('Transfers',false)],exc:[],
+    diario:[it('Desayuno',ext),it('Almuerzo',ext),it('Cena',ext)],dias:[],
     aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ruta:[]};
 }
 let tab=rd('viaje_tab','e');if(tab!=='e'&&tab!=='r')tab='e';
-let openAcc=tab+'_gastos';
-const SECC=['gastos','exc','com'];
+let openAcc='gastos';
 
 /* ================= cálculos ================= */
 function cotOf(v){return v.moneda==='ARS'?1:(n0(v.cot)||0)}
-function enPesos(v,it){const m=n0(it.monto);return it.ext&&v.moneda!=='ARS'?m*cotOf(v):m}
-function totLista(v,lista){return (v[lista]||[]).reduce((a,it)=>a+enPesos(v,it),0)}
+const campos=modo=>modo==='r'?['rmonto','rext']:['monto','ext'];
+function enPesos(v,it,modo){const [m,e]=campos(modo),x=n0(it[m]);return it[e]&&v.moneda!=='ARS'?x*cotOf(v):x}
+function totLista(v,lista,modo){return (v[lista]||[]).reduce((a,it)=>a+enPesos(v,it,modo),0)}
 function aExt(v,ars){const c=cotOf(v);return c?ars/c:NaN}
 function calcular(v){
   const K={};
-  ['e','r'].forEach(t=>{K[t]=0;SECC.forEach(sc=>{const x=totLista(v,t+'_'+sc);K[t+'_'+sc]=x;K[t]+=x;});});
+  LISTAS.forEach(l=>{K['e_'+l]=totLista(v,l,'e');K['r_'+l]=totLista(v,l,'r');});
+  K.dias=totLista(v,'dias','e');K.diasEst=K.e_diario*v.dias.length;
+  K.e=K.e_gastos+K.e_exc;               // estimado del viaje (el diario se compara día por día)
+  K.r=K.r_gastos+K.r_exc+K.dias;        // lo gastado de verdad
   K.ahJ=v.aho.j.reduce((a,x)=>a+n0(x.monto),0);K.ahA=v.aho.a.reduce((a,x)=>a+n0(x.monto),0);K.aho=K.ahJ+K.ahA;
   K.bal=K.aho-K.e;K.rest=K.aho-K.r;
   return K;
@@ -307,8 +321,8 @@ function listar(){
 }
 q.addEventListener('focus',listar);q.addEventListener('input',listar);
 q.addEventListener('blur',()=>setTimeout(()=>res.classList.remove('show'),120));
-function elegir(id){selId=id;wr(LS_SEL,id);q.value='';res.classList.remove('show');q.blur();openAcc=tab+'_gastos';render();}
-function setTab(t){tab=t;wr('viaje_tab',t);openAcc=t+'_gastos';render();}
+function elegir(id){selId=id;wr(LS_SEL,id);q.value='';res.classList.remove('show');q.blur();openAcc='gastos';render();}
+function setTab(t){tab=t;wr('viaje_tab',t);openAcc='gastos';render();}
 
 /* ================= crear / editar ================= */
 let editando=false,monSel='ARS';
@@ -329,8 +343,9 @@ function guardarForm(){
   const lugar=document.getElementById('fLugar').value.trim();
   if(!lugar){document.getElementById('fLugar').focus();return;}
   const cot=document.getElementById('fCot').value.trim(),nota=document.getElementById('fNota').value.trim();
-  if(editando){const v=cur();Object.assign(v,{lugar,moneda:monSel,cot,nota});if(monSel==='ARS')['e_gastos','e_exc','e_com','r_gastos','r_exc','r_com'].forEach(l=>v[l].forEach(it=>it.ext=false));guardar(v);}
-  else{const v=nuevoViaje(lugar,monSel,cot,nota);viajes.push(v);selId=v.id;wr(LS_SEL,selId);openAcc=tab+'_gastos';guardar(v);}
+  if(editando){const v=cur();Object.assign(v,{lugar,moneda:monSel,cot,nota});
+    if(monSel==='ARS')[...LISTAS,'dias'].forEach(l=>v[l].forEach(it=>{it.ext=false;it.rext=false}));guardar(v);}
+  else{const v=nuevoViaje(lugar,monSel,cot,nota);viajes.push(v);selId=v.id;wr(LS_SEL,selId);openAcc='gastos';guardar(v);}
   cerrar('form');render();
 }
 function borrarViaje(){
@@ -348,45 +363,49 @@ function borrarViaje(){
 /* ================= edición de filas ================= */
 function item(lista,id){return cur()[lista].find(x=>x.id===id)}
 function setF(lista,id,campo,el){
-  const it=item(lista,id);it[campo]=campo==='monto'?miles(el):el.value;
-  if(campo==='monto')el.classList.toggle('bad',isNaN(ev(el.value)));
+  const it=item(lista,id);it[campo]=(campo==='monto'||campo==='rmonto')?miles(el):el.value;
+  if(campo==='monto'||campo==='rmonto')el.classList.toggle('bad',isNaN(ev(el.value)));
+  if(campo==='label')document.querySelectorAll(`[data-lb="${id}"]`).forEach(x=>{if(x!==el)x.value=el.value});
   cambio();
 }
-function toggleExt(lista,id){const it=item(lista,id);it.ext=!it.ext;cambio();render();}
-function agregar(lista){cur()[lista].push({id:uid(),label:'',monto:'',ext:cur().moneda!=='ARS'&&!lista.endsWith('gastos')});cambio();render(()=>{
-  const a=lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
-function quitar(lista,id){cur()[lista]=cur()[lista].filter(x=>x.id!==id);cambio();render();}
+function toggleExt(lista,id,campo){const it=item(lista,id);it[campo]=!it[campo];cambio();render();}
+function agregar(lista){const v=cur(),e=v.moneda!=='ARS'&&lista!=='gastos';
+  v[lista].push(lista==='dias'?{id:uid(),label:'',monto:'',ext:e}:{id:uid(),label:'',monto:'',ext:e,rmonto:'',rext:e});cambio();
+  render(()=>{const r=document.querySelectorAll(`#acc-${lista} .it input:not(.m),#acc-${lista} .row input:not(.m)`);if(r.length)r[r.length-1].focus();});}
+function quitar(lista,id){const v=cur(),it=item(lista,id);
+  const borrar=()=>{v[lista]=v[lista].filter(x=>x.id!==id);cambio();render();};
+  if(lista!=='dias'&&(n0(it.monto)||n0(it.rmonto))){document.getElementById('dT').textContent='Borrar';
+    document.getElementById('dM').textContent=`"${it.label||'Este ítem'}" se borra de Estimado y de Real.`;
+    document.getElementById('dOk').onclick=()=>{cerrar('dlg');borrar()};abrir('dlg');}
+  else borrar();
+}
 function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
 function quitarAho(p,id){const v=cur();v.aho[p]=v.aho[p].filter(x=>x.id!==id);if(!v.aho[p].length)v.aho[p].push({id:uid(),monto:''});cambio();render();}
-function autoAlto(t){t.style.height='auto';t.style.height=t.scrollHeight+'px';}
-function setLinea(id,el){cur().ruta.find(x=>x.id===id).texto=el.value;autoAlto(el);cambio(false);}
-function agregarLinea(){cur().ruta.push({id:uid(),texto:''});cambio(false);render(()=>{const t=document.querySelectorAll('.rl textarea');if(t.length)t[t.length-1].focus();});}
-function quitarLinea(id){const v=cur();v.ruta=v.ruta.filter(x=>x.id!==id);cambio(false);render();}
 function cambio(re=true){const v=cur();guardar(v);if(re)recalc();}
 function toggleAcc(k){openAcc=openAcc===k?null:k;
   document.querySelectorAll('.acc').forEach(a=>{const o=a.id==='acc-'+openAcc;a.classList.toggle('open',o);a.querySelector('.acc-h').setAttribute('aria-expanded',o)});}
 
 /* ================= dibujar ================= */
-function filas(v,lista,ph){
-  const ext=v.moneda!=='ARS',S=SIM[v.moneda];
+/* modo 'e' = estimado, 'r' = real (misma fila, otro monto) */
+function filas(v,lista,ph,modo){
+  const ext=v.moneda!=='ARS',S=SIM[v.moneda],[mc,ec]=campos(modo),real=modo==='r'&&lista!=='dias';
   if(!v[lista].length)return '<p class="empty">Sin ítems todavía</p>';
-  if(!ext)return `<div class="one"><div class="hdr"><span>Concepto</span><span>Costo ($)</span><span></span></div>`+v[lista].map(it=>`<div class="row">
-      <input type="text" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
-      <input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
-      <button class="x" onclick="quitar('${lista}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>`).join('')+'</div>';
   return v[lista].map(it=>`<div class="it">
-      <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
+      <div class="l1"><input type="text" data-lb="${it.id}" value="${esc(it.label)}" placeholder="${ph}" oninput="setF('${lista}','${it.id}','label',this)">
+        ${lista==='dias'?`<span class="dif" data-dd="${it.id}"></span>`:''}
         <button class="x" onclick="quitar('${lista}','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-      <div class="l2"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="0" oninput="setF('${lista}','${it.id}','monto',this)">
-        <button class="cur${it.ext?' ext':''}" onclick="toggleExt('${lista}','${it.id}')" aria-label="Moneda del costo">${it.ext?S:'$'}</button>
-        <span class="conv" data-cv="${lista}:${it.id}"></span></div></div>`).join('');
+      <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it[mc]))}" placeholder="${real?'Real':'0'}" oninput="setF('${lista}','${it.id}','${mc}',this)">
+        ${ext?`<button class="cur${it[ec]?' ext':''}" onclick="toggleExt('${lista}','${it.id}','${ec}')" aria-label="Moneda">${it[ec]?S:'$'}</button>
+        <span class="conv" data-cv="${lista}:${it.id}:${modo}"></span>`:''}</div>
+      ${real?`<div class="vs"><span>Estimado <b data-ve="${lista}:${it.id}"></b></span><span>Diferencia <b data-vd="${lista}:${it.id}"></b></span></div>`:''}
+    </div>`).join('');
 }
-const tot=(k,label)=>`<div class="tot"><span>${label}</span><span class="v"><span data-t="${k}"></span><small data-tx="${k}"></small></span></div>`;
 const addB=(lista,txt)=>`<button class="add" onclick="agregar('${lista}')"><i class="ti ti-plus"></i> ${txt}</button>`;
 const acc=(k,cl,ic,titulo,inner)=>`<section class="acc ${cl}${openAcc===k?' open':''}" id="acc-${k}">
   <button class="acc-h" onclick="toggleAcc('${k}')" aria-expanded="${openAcc===k}"><i class="ti ti-${ic} ic"></i>${titulo}<span class="sum" data-h="${k}"></span><i class="ti ti-chevron-down chev"></i></button>
   <div class="acc-b">${inner}</div></section>`;
+const totRow=(label,k)=>`<div class="tot"><span>${label}</span><span class="v"><span data-t="${k}"></span><small data-tx="${k}"></small></span></div>`;
 
 function render(after){
   const v=cur(),body=document.getElementById('body');
@@ -394,7 +413,7 @@ function render(after){
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   document.getElementById('tabs').style.display=v?'':'none';
   if(!v){body.innerHTML=`<div class="trip vacio"><b>${viajes.length?'Elegí una vacación':'Todavía no hay vacaciones'}</b>${viajes.length?'Buscala arriba.':'Tocá <i class="ti ti-circle-plus-filled" style="color:var(--accent)"></i> para crear la primera.'}</div>`;return;}
-  const ext=v.moneda!=='ARS',S=SIM[v.moneda],T=tab,real=T==='r';
+  const ext=v.moneda!=='ARS',S=SIM[v.moneda],R=tab==='r';
   const trip=`<div class="trip">
     <div class="th"><h2><i class="ti ti-map-pin-filled"></i>${esc(v.lugar)}</h2>${ext?`<span class="chip">1 ${S} = ${fmt(n0(v.cot))}</span>`:''}</div>
     ${v.nota?`<div class="nota">${esc(v.nota)}</div>`:''}
@@ -407,47 +426,52 @@ function render(after){
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
   </div>`;
-  const hintMon=ext?`<p class="hint">Tocá <b>$</b> / <b>${S}</b> para elegir en qué moneda escribís cada costo; al lado aparece convertido. Podés sumar en el campo: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
-  // total de cada sección; en Real se compara con lo estimado
-  const totS=(sc)=>`<div class="tot"><span>TOTAL</span><span class="v"><span data-t="${T}_${sc}"></span><small data-tx="${T}_${sc}"></small></span></div>`+
-    (real?`<div class="cmp"><span>Estimado <b data-t="e_${sc}"></b></span><span>Diferencia <b data-d="${sc}"></b></span></div>`:'');
-  const sec=(sc,cl,ic,titulo,ph,txt)=>acc(T+'_'+sc,cl,ic,titulo,filas(v,T+'_'+sc,ph)+totS(sc)+addB(T+'_'+sc,txt)+(sc==='gastos'?hintMon:''));
-
+  const hint=ext?`<p class="hint">Tocá <b>$</b> / <b>${S}</b> para elegir la moneda de cada monto; al lado aparece convertido. Podés sumar: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
+  const cmp=l=>R?`<div class="cmp"><span>Estimado <b data-t="e_${l}"></b></span><span>Diferencia <b data-d="${l}"></b></span></div>`:'';
+  const M=R?'r':'e';
+  const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl,ic,R?tR:tE,
+    filas(v,l,ph,M)+totRow(R?'TOTAL REAL':'TOTAL ESTIMADO',M+'_'+l)+cmp(l)+addB(l,txt)+(extra||''));
   const aho=`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
         ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
         <div class="ct" data-a="${p}"></div></div>`).join('')}
-    </div><div class="tot"><span>TOTAL DE LOS DOS</span><span class="v"><span data-t="aho"></span><small data-tx="aho"></small></span></div><p class="hint">Montos en pesos.</p>`;
-
+    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">Montos en pesos.</p>`;
+  const dias=`<div class="tot"><span>Presupuesto por día</span><span class="v"><span data-t="e_diario"></span><small data-tx="e_diario"></small></span></div>`+
+    filas(v,'dias','Día (ej: Lunes 9)','e')+addB('dias','Día')+totRow('TOTAL GASTADO','dias')+
+    `<div class="cmp"><span>Estimado (${v.dias.length} días) <b data-t="diasEst"></b></span><span>Diferencia <b data-d="dias"></b></span></div>
+     <p class="hint">Cada día se compara con el gasto diario estimado. Verde: te sobró; rojo: te pasaste.</p>`;
   body.innerHTML=trip+
-    sec('gastos','a-est','calculator',real?'Gastos realizados':'Gastos estimados','Concepto','Gasto')+
-    sec('exc','a-exc','ticket',real?'Excursiones hechas':'Excursiones posibles','Excursión','Excursión')+
-    sec('com','a-com','tools-kitchen-2',real?'Comida (lo gastado)':'Comida (presupuesto)',real?'Día (ej: Lunes 9)':'Desayuno, almuerzo…',real?'Día':'Concepto')+
-    acc('aho','a-aho','pig-money','Plata ahorrada',aho)+
-    acc('ruta','a-ruta','map-2','Ruta',`<div class="ruta">${v.ruta.length?v.ruta.map((r,i)=>`<div class="rl"><span class="rn">${i+1}</span>
-        <textarea rows="1" placeholder="ej: Lunes 9 — Praia do Amor, cena en…" oninput="setLinea('${r.id}',this)">${esc(r.texto)}</textarea>
-        <button class="x" onclick="quitarLinea('${r.id}')" aria-label="Borrar línea"><i class="ti ti-trash"></i></button></div>`).join('')
-      :'<p class="empty">Todavía no hay líneas</p>'}</div><button class="add" onclick="agregarLinea()"><i class="ti ti-plus"></i> Línea</button>`);
-  document.querySelectorAll('.rl textarea').forEach(autoAlto);
-  document.querySelectorAll('.row input.m,.it input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
+    sec('gastos','a-est','calculator','Gastos estimados','Gastos reales','Concepto','Gasto',hint)+
+    sec('exc','a-exc','ticket','Excursiones estimadas','Excursiones reales','Excursión','Excursión')+
+    sec('diario','a-com','sun','Gasto diario estimado','Gasto diario real','Desayuno, almuerzo…','Concepto',
+      R?'<p class="hint">Promedio real por día de cada concepto, para comparar con lo estimado.</p>':'<p class="hint">Lo que calculan gastar por día.</p>')+
+    (R?acc('dias','a-rea','calendar','Gastado por día',dias):'')+
+    acc('aho','a-aho','pig-money','Plata ahorrada',aho);
+  document.querySelectorAll('.it input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
   recalc();
   if(typeof after==='function')after();
 }
 
 function recalc(){
-  const v=cur();if(!v)return;const K=calcular(v),ext=v.moneda!=='ARS',m=v.moneda,T=tab;
+  const v=cur();if(!v)return;const K=calcular(v),ext=v.moneda!=='ARS',m=v.moneda,M=tab==='r'?'r':'e';
   const put=(sel,txt,n,color)=>document.querySelectorAll(sel).forEach(e=>{e.textContent=txt;if(color)e.className=e.className.replace(/\b(pos|neg|zero)\b/g,'').trim()+' '+cls(n)});
-  document.querySelectorAll('[data-cv]').forEach(e=>{const [l,id]=e.dataset.cv.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
-    const m0=n0(it.monto);e.textContent=it.ext?fmt(m0*cotOf(v)):fmt(aExt(v,m0),m);});
-  SECC.forEach(sc=>['e','r'].forEach(t=>{const n=K[t+'_'+sc];put(`[data-t="${t}_${sc}"]`,fmt(n),0,false);put(`[data-tx="${t}_${sc}"]`,ext?fmt(aExt(v,n),m):'',0,false);}));
-  SECC.forEach(sc=>{const d=K['e_'+sc]-K['r_'+sc];put(`[data-d="${sc}"]`,fmt(d),d,true);});
-  put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);
-  SECC.forEach(sc=>put(`[data-h="${T}_${sc}"]`,fmt(K[T+'_'+sc]),0,false));
-  put('[data-h="aho"]',fmt(K.aho),0,false);
+  document.querySelectorAll('[data-cv]').forEach(e=>{const [l,id,mo]=e.dataset.cv.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
+    const [mc,ec]=campos(mo),x=n0(it[mc]);e.textContent=it[ec]?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
+  // en Real: estimado y diferencia de cada fila
+  document.querySelectorAll('[data-ve]').forEach(e=>{const [l,id]=e.dataset.ve.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
+    const es=enPesos(v,it,'e'),re=enPesos(v,it,'r'),d=es-re;e.textContent=fmt(es);
+    const dd=document.querySelector(`[data-vd="${l}:${id}"]`);if(dd){dd.textContent=String(it.rmonto??'').trim()?fmt(d):'—';dd.className=String(it.rmonto??'').trim()?cls(d):'zero';}});
+  LISTAS.forEach(l=>['e','r'].forEach(t=>{const n=K[t+'_'+l];put(`[data-t="${t}_${l}"]`,fmt(n),0,false);put(`[data-tx="${t}_${l}"]`,ext?fmt(aExt(v,n),m):'',0,false);}));
+  LISTAS.forEach(l=>{const d=K['e_'+l]-K['r_'+l];put(`[data-d="${l}"]`,fmt(d),d,true);put(`[data-h="${l}"]`,fmt(K[M+'_'+l]),0,false);});
+  put('[data-t="dias"]',fmt(K.dias),0,false);put('[data-tx="dias"]',ext?fmt(aExt(v,K.dias),m):'',0,false);
+  put('[data-t="diasEst"]',fmt(K.diasEst),0,false);put('[data-d="dias"]',fmt(K.diasEst-K.dias),K.diasEst-K.dias,true);
+  put('[data-h="dias"]',fmt(K.dias),0,false);
+  v.dias.forEach(d=>{const x=K.e_diario-enPesos(v,d,'e');put(`[data-dd="${d.id}"]`,fmt(x),x,true);});
+  put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);put('[data-h="aho"]',fmt(K.aho),0,false);
   put('[data-a="j"]',fmt(K.ahJ),0,false);put('[data-a="a"]',fmt(K.ahA),0,false);
-  const R={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest};
-  Object.entries(R).forEach(([k,n])=>{put(`[data-r="${k}"]`,fmt(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,ext&&cotOf(v)?fmt(aExt(v,n),m):'',0,false);});
+  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest};
+  Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,fmt(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,ext&&cotOf(v)?fmt(aExt(v,n),m):'',0,false);});
 }
 
 /* ================= guardado + Firebase ================= */
