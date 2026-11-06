@@ -4,10 +4,17 @@
 (function () {
   let ctx = null;
   const activo = () => { try { return localStorage.getItem('sonidos') !== '0'; } catch (e) { return true; } };
+  let destrabado = false;
   function ac() {
     if (!ctx) { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; ctx = new C(); }
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
     return ctx;
+  }
+  // el iPhone "despierta" el audio solo si suena algo durante un toque: tocamos un silencio cortísimo
+  function destrabar() {
+    const c = ac(); if (!c) return;
+    if (destrabado && c.state === 'running') return;
+    try { const b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); destrabado = true; } catch (e) {}
   }
   // una nota: frecuencia inicial/final, duración, forma de onda, volumen, retraso
   function nota(f1, f2, dur, tipo = 'sine', vol = .16, delay = 0) {
@@ -40,7 +47,13 @@
     pagado: () => { nota(1320, 1320, .35, 'sine', .12); nota(1760, 1760, .45, 'sine', .1, .07); },
     tick: () => nota(1200, 1000, .035, 'sine', .07)
   };
-  window.sonido = function (n, forzar) { if ((forzar || activo()) && SON[n]) try { SON[n](); } catch (e) {} };
+  window.sonido = function (n, forzar) {
+    if (!(forzar || activo()) || !SON[n]) return;
+    const c = ac(); if (!c) return;
+    const tocar = () => { try { SON[n](); } catch (e) {} };
+    // si el audio está dormido, primero lo despierta y recién ahí suena (antes ese sonido se perdía)
+    if (c.state === 'running') tocar(); else c.resume().then(tocar).catch(() => {});
+  };
   window.sonidosActivos = activo;
 
   // ¿qué sonido le corresponde a lo que se tocó?
@@ -60,8 +73,10 @@
     return null;
   }
   // preparar el audio apenas el dedo toca la pantalla (antes del click), así el primer sonido no se pierde
-  document.addEventListener('pointerdown', () => { if (activo()) ac(); }, { capture: true, passive: true });
-  document.addEventListener('touchstart', () => { if (activo()) ac(); }, { capture: true, passive: true });
+  ['pointerdown', 'touchstart', 'touchend'].forEach(ev => document.addEventListener(ev, () => { if (activo()) destrabar(); }, { capture: true, passive: true }));
+  // al volver a la app desde otra (o desbloquear el celu) el audio queda "interrumpido": lo despertamos
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && ctx) { destrabado = false; ctx.resume().catch(() => {}); } });
+  window.addEventListener('pageshow', () => { if (ctx) { destrabado = false; ctx.resume().catch(() => {}); } });
   document.addEventListener('click', e => {
     const n = cual(e.target); if (!n) return;
     sonido(n);
