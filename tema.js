@@ -137,3 +137,44 @@ window.ptsCampo = function (el) {
   st.textContent = 'input.es-suma{text-decoration:underline dotted;text-underline-offset:4px;text-decoration-thickness:1.5px}';
   document.head.appendChild(st);
 })();
+
+/* Barrita con + − × ÷ arriba del teclado numérico (el del iPhone no trae el "+").
+   Aparece en los campos de monto de las secciones que aceptan cuentas (window.CALC_OK = true). */
+(function () {
+  let bar, campo = null;
+  const esMonto = el => window.CALC_OK && el && el.tagName === 'INPUT' && (el.inputMode === 'decimal' || el.getAttribute('inputmode') === 'decimal');
+  function armar() {
+    if (bar) return;
+    const st = document.createElement('style');
+    st.textContent = `.calcbar{position:fixed;left:0;right:0;z-index:99998;display:none;justify-content:center;gap:8px;padding:6px 10px;background:var(--surface,#fff);border-top:1px solid var(--border,rgba(0,0,0,.1));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+.calcbar.show{display:flex}
+.calcbar button{flex:1;max-width:84px;height:40px;border:none;border-radius:10px;background:var(--surface2,#eee);color:var(--text,#222);font-size:1.35rem;font-weight:800;font-family:inherit}
+.calcbar button:active{background:var(--accent,#1D9E75);color:#fff}`;
+    document.head.appendChild(st);
+    bar = document.createElement('div'); bar.className = 'calcbar';
+    bar.innerHTML = [['+', '+'], ['−', '-'], ['×', '*'], ['÷', '/']].map(([t, v]) => `<button type="button" data-v="${v}">${t}</button>`).join('');
+    document.body.appendChild(bar);
+    bar.addEventListener('pointerdown', e => {
+      e.preventDefault(); // que no se cierre el teclado
+      const b = e.target.closest('button'); if (!b || !campo) return;
+      const s = campo.selectionStart ?? campo.value.length, f = campo.selectionEnd ?? s;
+      campo.setRangeText(b.dataset.v, s, f, 'end');
+      campo.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }
+  function ubicar() {
+    if (!bar || !bar.classList.contains('show')) return;
+    const vv = window.visualViewport;
+    const abajo = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) : 0;
+    bar.style.bottom = abajo + 'px';
+  }
+  document.addEventListener('focusin', e => {
+    if (!esMonto(e.target)) return;
+    armar(); campo = e.target; bar.classList.add('show'); ubicar();
+  });
+  document.addEventListener('focusout', e => {
+    if (e.target !== campo) return;
+    setTimeout(() => { if (!esMonto(document.activeElement)) { bar && bar.classList.remove('show'); campo = null; } }, 50);
+  });
+  if (window.visualViewport) { visualViewport.addEventListener('resize', ubicar); visualViewport.addEventListener('scroll', ubicar); }
+})();
