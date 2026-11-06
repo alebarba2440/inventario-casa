@@ -6,7 +6,7 @@
   "background_color": "#C0392B",
   "theme_color": "#1D9E75",
   "icons": [
-    { "src": "img/icono.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "img/icono.png?v=9", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icono-512.png?v=9", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }
