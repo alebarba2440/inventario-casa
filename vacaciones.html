@@ -630,10 +630,8 @@ async function exportarPDF(){
       doc.setFillColor(255,255,255);doc.circle(MX+12,19,12.6,'F');
       if(icono)doc.addImage(icono,'PNG',MX,7,24,24);
       doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(20);
-      doc.text('Nuestras vacaciones - Escapadas',MX+31,18);
-      doc.setFont('helvetica','normal');doc.setFontSize(10);
-      doc.text(`${lista.length} ${lista.length===1?'vacación':'vacaciones'} · de la más vieja a la más nueva`,MX+31,25.5);
-      doc.setFontSize(8.5);doc.text('Generado el '+hoy,W-MX,33,{align:'right'});
+      doc.text('Nuestras vacaciones - Escapadas',MX+31,21.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.text('Generado el '+hoy,W-MX,33,{align:'right'});
     };
     const cabTabla=y=>{
       doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...acc);
