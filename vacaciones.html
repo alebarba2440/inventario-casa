@@ -80,7 +80,8 @@
   .tabsrow{display:flex;align-items:center;gap:8px;width:100%;max-width:560px;margin:0 auto}
   .tabsrow .tabs{flex:1;max-width:none;margin:0}
   .dmon{display:flex;gap:3px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px;flex-shrink:0}
-  .dmon button{border:none;background:none;color:var(--text2);border-radius:999px;padding:9px 11px;font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer}
+  .dmon{min-width:104px}
+  .dmon button{border:none;background:none;color:var(--text2);border-radius:999px;padding:9px 0;min-width:44px;text-align:center;font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer}
   .dmon button.on{background:var(--accent);color:#fff}
   .ndias{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;font-weight:800;font-size:.9rem}
   .ndias input{width:90px;background:var(--surface2);border:1.5px solid var(--c);border-radius:999px;padding:8px 10px;font-family:inherit;font-size:1rem;font-weight:800;text-align:center;outline:none;color:var(--text)}
@@ -182,7 +183,7 @@
   .fld input,.fld textarea{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r);padding:11px 12px;font-size:1rem;font-weight:600;outline:none;width:100%}
   .fld input:focus,.fld textarea:focus{border-color:var(--accent)}
   .fld textarea{min-height:80px;resize:vertical}
-  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--surface2);border-radius:12px;padding:4px}
   .seg button{padding:10px 4px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);font-family:inherit;font-size:.82rem;font-weight:700;color:var(--text);cursor:pointer;line-height:1.2}
   .seg button b{display:block;font-size:1rem}
   .seg button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
@@ -226,7 +227,7 @@
     <button class="ib" id="bEdit" onclick="abrirForm(true)" aria-label="Editar vacación"><i class="ti ti-edit"></i></button>
     <button class="ib del" id="bDel" onclick="borrarViaje()" aria-label="Eliminar vacación"><i class="ti ti-trash"></i></button>
   </div>
-  <div class="tabsrow"><div class="tabs" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div><div class="dmon" id="dmon"><button data-m="ext" onclick="setDiaMon('ext')" id="dmExt">R$</button><button data-m="ARS" onclick="setDiaMon('ARS')">$</button></div></div>
+  <div class="tabsrow"><div class="tabs sw" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div><div class="dmon sw" id="dmon"><button data-m="ext" onclick="setDiaMon('ext')" id="dmExt">R$</button><button data-m="ARS" onclick="setDiaMon('ARS')">$</button></div></div>
   <div id="body"></div>
 </main>
 
@@ -236,7 +237,7 @@
     <h3 id="fT">Nueva vacación</h3>
     <label class="fld"><span>Lugar</span><input type="text" id="fLugar" placeholder="ej: Pipa, Brasil"></label>
     <div class="fld"><span>Moneda que se usa</span>
-      <div class="seg" id="fMon">
+      <div class="seg sw" id="fMon" style="--pad:4px;--kr:10px">
         <button data-m="ARS" onclick="setMon('ARS')"><b>$</b>Pesos argentinos</button>
         <button data-m="USD" onclick="setMon('USD')"><b>US$</b>Dólares</button>
         <button data-m="BRL" onclick="setMon('BRL')"><b>R$</b>Reales</button>

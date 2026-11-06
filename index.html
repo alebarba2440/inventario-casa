@@ -70,7 +70,7 @@
   .block h3 i{color:var(--accent);font-size:1.15rem}
   .size-row{display:flex;align-items:center;gap:10px}
   .size-row input{flex:1;accent-color:var(--accent)}
-  .seg{display:flex;gap:8px}
+  .seg{display:flex;gap:8px;background:var(--surface2);border-radius:12px;padding:4px}
   .seg button{flex:1;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);
               font-family:inherit;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
   .seg button.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
@@ -110,6 +110,7 @@
   @media (prefers-reduced-motion:reduce){a.card::after{display:none}}
 </style>
 <link rel="stylesheet" href="fondo.css">
+<link rel="stylesheet" href="comun.css">
 </head>
 <body>
 <div class="wrap">
@@ -162,7 +163,7 @@
 
     <div class="block">
       <h3><i class="ti ti-sun-moon"></i> Modo</h3>
-      <div class="seg">
+      <div class="seg sw" style="--pad:4px;--kr:9px">
         <button data-t="light" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
         <button data-t="dark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
       </div>

@@ -137,7 +137,7 @@
     flex-direction: column;
     gap: 0.75rem;
   }
-  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: var(--surface2); border-radius: calc(var(--radius) + 4px); padding: 4px; }
   .action-btn {
     padding: 0.875rem 0.625rem;
     border-radius: var(--radius);
@@ -951,9 +951,9 @@
   <div class="content" id="mainContent">
     <div class="panel active" id="panelCargar">
       <div class="card">
-        <div class="action-grid">
+        <div class="action-grid sw" style="--pad:4px;--kr:10px">
           <button class="action-btn sel-add" id="btnAdd" onclick="setAction('add')"><i class="ti ti-arrow-up"></i> Agregar</button>
-          <button class="action-btn" id="btnRem" onclick="setAction('remove')"><i class="ti ti-arrow-down" style="color:var(--danger)"></i> Consumí</button>
+          <button class="action-btn" id="btnRem" data-kc="var(--danger)" onclick="setAction('remove')"><i class="ti ti-arrow-down" style="color:var(--danger)"></i> Consumí</button>
         </div>
       </div>
       <div class="card">

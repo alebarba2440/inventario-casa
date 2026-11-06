@@ -23,3 +23,13 @@
 
 /* El estado de sincronización no se muestra (se puede revisar en Ajustes del inicio) */
 .sync,#syncDot,#syncLabel{display:none !important}
+
+/* Interruptores deslizantes (ver tema.js): botones del mismo ancho y una pastilla que se mueve */
+.sw{position:relative !important;display:grid !important;grid-template-columns:repeat(var(--n,2),minmax(0,1fr)) !important;gap:0 !important;isolation:isolate}
+.sw>.sw-knob{position:absolute;z-index:0;top:var(--pad,5px);bottom:var(--pad,5px);left:var(--pad,5px);
+  width:calc((100% - 2 * var(--pad,5px)) / var(--n,2));border-radius:var(--kr,999px);background:var(--accent);
+  transform:translateX(calc(var(--i,0) * 100%));transition:transform .32s cubic-bezier(.4,0,.2,1),background .25s,opacity .2s;
+  box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.sw>button{position:relative;z-index:1;background:transparent !important;border-color:transparent !important;box-shadow:none !important;transition:color .25s}
+.sw>button.on,.sw>button.active,.sw>button.sel-add,.sw>button.sel-rem{color:#fff !important}
+.sw>button.on i,.sw>button.sel-add i,.sw>button.sel-rem i{color:#fff !important}
