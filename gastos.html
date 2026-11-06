@@ -10,7 +10,7 @@
 <title>Gastos personales</title>
 <script src="tema.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--pos:#1D9E75;--neg:#E24B4A;--warn:#D97706;
@@ -19,7 +19,7 @@
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--paid-bg:rgba(29,158,117,.18)}}
   :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--paid-bg:rgba(29,158,117,.18)}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+  body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
   .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
   .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
   main{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
@@ -338,7 +338,7 @@ function grafico(){
   chart=new Chart(document.getElementById('grafico'),{type:'doughnut',
     data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
-      plugins:{legend:{position:'right',labels:{color:txt,boxWidth:10,font:{family:'DM Sans',size:11,weight:'600'}}},
+      plugins:{legend:{position:'right',labels:{color:txt,boxWidth:10,font:{family:'Nunito',size:11,weight:'600'}}},
         tooltip:{callbacks:{label:c=>' '+fmt(c.parsed)}}}}});
 }
 
