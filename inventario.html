@@ -683,6 +683,14 @@
     transition: transform 0.1s, background 0.2s;
   }
   .camera-fab:active { transform: scale(0.94); }
+  /* latido continuo: se agranda y se achica */
+  .camera-fab { animation: fabLatido 1.6s ease-in-out infinite; }
+  .camera-fab:active { animation-play-state: paused; }
+  @keyframes fabLatido {
+    0%, 100% { scale: 1;    box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    50%      { scale: 1.14; box-shadow: 0 8px 22px rgba(0,0,0,0.28); }
+  }
+  @media (prefers-reduced-motion: reduce) { .camera-fab { animation: none; } }
   .camera-fab i { font-size: 28px; }
   #scanner-container {
     width: 100%;
