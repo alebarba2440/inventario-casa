@@ -169,6 +169,7 @@
     </button>
     <div class="acc-b">
       <div id="listReal"></div>
+      <button class="addest" onclick="abrirAdd('aho')"><i class="ti ti-calendar-plus"></i> Agregar mes</button>
       <div class="tots"><div class="pj"><span id="totJN"></span><b id="tJ"></b></div><div class="pa"><span id="totAN"></span><b id="tA"></b></div></div>
       <div class="neto"><span id="netoL">TOTAL:</span><b id="neto">$ 0</b></div>
     </div>
@@ -189,7 +190,7 @@
 
 <div class="bg" id="addEst" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="sheet">
-    <h3>Agregar mes a Estimado</h3>
+    <h3 id="aeT">Agregar mes</h3>
     <div class="row"><select id="aeMes" class="aesel"></select><select id="aeAnio" class="aesel"></select></div>
     <p class="hint" id="aeErr" style="color:var(--neg)"></p>
     <div class="row"><button class="btn ghost" style="flex:1" onclick="document.getElementById('addEst').classList.remove('show')">Cancelar</button><button class="btn" style="flex:1" onclick="confirmarAddEst()">Agregar</button></div>
@@ -266,8 +267,9 @@ function estMonths(){return state.months.map((m,i)=>[monthKey(m,i),m]).filter(([
   .sort((a,b)=>a[0]-b[0]).map(([k,m])=>{m.label=MESES[k%12].toUpperCase()+' '+Math.floor(k/12);return m;})
   .filter(m=>selYear==='all'||Math.floor(monthKey(m,0)/12)===selYear);}
 function yearsEst(){return [...new Set(state.months.filter(enEst).map((m,i)=>yearOf(m,0)).filter(y=>y!==null))];}
+const enAho=m=>m.enAho||tieneMov(m); // mes agregado a mano en Ahorrado o con movimientos
 function years(){
-  const hoy=new Date().getFullYear(),ys=state.months.filter(tieneMov).map(m=>yearOf(m,0)).filter(y=>y!==null);
+  const hoy=new Date().getFullYear(),ys=state.months.filter(m=>enAho(m)&&!m.oculto).map(m=>yearOf(m,0)).filter(y=>y!==null);
   // un año nuevo aparece recién el 1 de enero
   const lo=Math.min(hoy,...ys),hi=Math.max(hoy,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
 }
@@ -279,6 +281,7 @@ function allMonths(){
   years().forEach(y=>MESES.forEach((n,k)=>{const key=y*12+k;
     if(byKey[key])byKey[key].label=n.toUpperCase()+' '+y; // nombre prolijo: "NOVIEMBRE 2026" aunque se haya cargado "noviembre"
     if(byKey[key]&&byKey[key].oculto)return; // mes borrado de Ahorrado
+    if(y>new Date().getFullYear()&&!(byKey[key]&&enAho(byKey[key])))return; // años futuros: solo los meses agregados
     out.push(byKey[key]||{id:'m'+y+'_'+k,label:n.toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0},virtual:true});}));
   // los registros viejos cuyo nombre no es un mes no se muestran (quedan guardados, no se borran)
   return out;
@@ -356,7 +359,7 @@ function render(){
         <button class="anio-h" onclick="toggleYearEst('${G.g}')" aria-expanded="${op}"><span class="nm">${G.g}</span><span class="rs" id="eyr_${G.g}"></span><i class="ti ti-chevron-down chev"></i></button>
         <div class="anio-b">${tabla(G.ms)}</div></div>`}).join('');
   if(!grupos.length)est=`<p class="hint" style="text-align:center;padding:10px 0">Todavía no hay meses estimados${selYear==='all'?'':' en '+selYear}.</p>`;
-  est+=`<button class="addest" onclick="abrirAddEst()"><i class="ti ti-calendar-plus"></i> Agregar mes</button>`;
+  est+=`<button class="addest" onclick="abrirAdd('est')"><i class="ti ti-calendar-plus"></i> Agregar mes</button>`;
   document.getElementById('estList').innerHTML=est;
   document.getElementById('netoL').textContent=selYear==='all'?'TOTAL:':'TOTAL '+selYear+':';
   recalc();
@@ -396,23 +399,37 @@ function quitarEst(id){
   save();render();
 }
 /* agregar un mes a Estimado */
-function abrirAddEst(){
-  const hoy=new Date(),ems=state.months.filter(enEst).map(m=>monthKey(m,0)).sort((a,b)=>a-b);
-  let k=ems.length?ems[ems.length-1]+1:hoy.getFullYear()*12+hoy.getMonth();
-  const y0=hoy.getFullYear();
+let modoAdd='est';
+function abrirAdd(modo){
+  modoAdd=modo;const hoy=new Date(),y0=hoy.getFullYear();
+  const lista=modo==='est'?state.months.filter(enEst).map(m=>monthKey(m,0)):allMonths().map(m=>monthKey(m,0));
+  lista.sort((a,b)=>a-b);
+  let k=modo==='est'?(lista.length?lista[lista.length-1]+1:y0*12+hoy.getMonth())
+       :(state.months.find(m=>m.oculto)?monthKey(state.months.find(m=>m.oculto),0):(lista.length?lista[lista.length-1]+1:y0*12+hoy.getMonth()));
+  document.getElementById('aeT').textContent=modo==='est'?'Agregar mes a Estimado':'Agregar mes a Ahorrado';
   document.getElementById('aeMes').innerHTML=MESES.map((n,i)=>`<option value="${i}"${i===k%12?' selected':''}>${n}</option>`).join('');
   document.getElementById('aeAnio').innerHTML=[y0-1,y0,y0+1,y0+2,y0+3].map(y=>`<option${y===Math.floor(k/12)?' selected':''}>${y}</option>`).join('');
   document.getElementById('aeErr').textContent='';
   document.getElementById('addEst').classList.add('show');
 }
 function confirmarAddEst(){
-  const k=+document.getElementById('aeMes').value,y=+document.getElementById('aeAnio').value,key=y*12+k;
+  const k=+document.getElementById('aeMes').value,y=+document.getElementById('aeAnio').value,key=y*12+k,err=document.getElementById('aeErr');
   let m=state.months.find((x,i)=>monthKey(x,i)===key);
-  if(m&&enEst(m)){document.getElementById('aeErr').textContent=MESES[k]+' '+y+' ya está en Estimado.';return;}
-  if(!m){m={id:uid(),label:MESES[k].toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0}};state.months.push(m);}
-  m.enEst=true;openYearEst=String(y);
+  if(modoAdd==='est'){
+    if(m&&enEst(m)){err.textContent=MESES[k]+' '+y+' ya está en Estimado.';return;}
+    if(!m){m={id:uid(),label:MESES[k].toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0}};state.months.push(m);}
+    m.enEst=true;openYearEst=String(y);
+  }else{
+    const visible=allMonths().some(x=>monthKey(x,0)===key);
+    if(visible){err.textContent=MESES[k]+' '+y+' ya está en Ahorrado.';return;}
+    if(!m){m={id:uid(),label:MESES[k].toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0}};state.months.push(m);}
+    delete m.oculto;m.enAho=true;
+    if(selYear!=='all'&&selYear!==y)selYear='all';
+    openYear=String(y);openMes=m.id;
+  }
   document.getElementById('addEst').classList.remove('show');save();render();
-  const r=document.getElementById('et_'+m.id);if(r){const inp=r.closest('.er').querySelector('input');if(inp){inp.scrollIntoView({block:'center'});inp.focus();}}
+  if(modoAdd==='est'){const r=document.getElementById('et_'+m.id);if(r){const inp=r.closest('.er').querySelector('input');if(inp){inp.scrollIntoView({block:'center'});inp.focus();}}}
+  else{const el=document.getElementById('mes_'+m.id);if(el)el.scrollIntoView({block:'center'});}
 }
 
 /* ---------- meses ---------- */
@@ -430,7 +447,7 @@ function borrarMes(id){
   const m=getM(id);if(!m)return;
   const n=(m.mov.j||[]).length+(m.mov.a||[]).length;
   if(!confirm(n?`${m.label} tiene ${n} movimiento(s). ¿Borrarlo igual? Se pierden esos movimientos.`:`¿Borrar ${m.label} de Ahorrado?`))return;
-  const r=realM(id);r.mov={j:[],a:[]};r.oculto=true;openMes=null;save();render();
+  const r=realM(id);r.mov={j:[],a:[]};r.oculto=true;delete r.enAho;openMes=null;save();render();
 }
 function restaurarMeses(){state.months.forEach(m=>{if(m.oculto&&(selYear==='all'||yearOf(m,0)===selYear))delete m.oculto;});save();render();}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
