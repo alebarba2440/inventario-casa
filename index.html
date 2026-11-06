@@ -27,7 +27,7 @@
   header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px}
   h1{font-family:'Dancing Script',cursive;font-size:2.5rem;font-weight:600;color:var(--text);letter-spacing:0;line-height:1.1}
   h1 b{font-weight:700;color:var(--accent)}
-  p.sub{color:var(--text2);font-size:.95rem;margin-top:2px}
+  p.sub{color:var(--text2);font-family:'Dancing Script',cursive;font-size:1.3rem;font-weight:600;margin-top:0}
   .gear{width:44px;height:44px;border:none;background:none;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;padding:0;border-radius:10px;transition:transform .12s ease}
   .gear svg{width:30px;height:30px;display:block}
   /* perillas que se deslizan suave, cada una a su ritmo */
@@ -133,7 +133,7 @@
   #intro .tit path{fill:#1a1a1a;fill-opacity:0;stroke:#1a1a1a;stroke-width:14;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;
     animation:trazo .55s ease-in-out calc(1.6s + var(--i) * .32s) forwards, relleno .35s ease-out calc(1.95s + var(--i) * .32s) forwards}
   #intro .tit path.os{fill:var(--accent);stroke:var(--accent)}
-  #intro .sub{font-size:1.05rem;color:#666;font-weight:600;letter-spacing:.06em;opacity:0;animation:sube .6s ease-out 3.6s both}
+  #intro .sub{font-family:'Dancing Script',cursive;font-size:1.55rem;color:#666;font-weight:600;letter-spacing:0;opacity:0;animation:sube .6s ease-out 3.6s both}
   #intro .saltar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-size:.8rem;color:#999;opacity:.7}
   @keyframes aparece{0%{opacity:0;transform:scale(.6) translateY(20px)}100%{opacity:1;transform:none}}
   @keyframes vuela{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}12%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1) rotate(var(--r,0deg))}}
