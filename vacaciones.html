@@ -509,7 +509,8 @@ function render(after){
   const hint=ext?`<p class="hint">Tocá <b>$</b> / <b>${S}</b> para elegir la moneda de cada monto; al lado aparece convertido. Podés sumar: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
   const cmp=l=>R?`<div class="cmp"><span>Estimado <b data-t="e_${l}"></b></span><span>Diferencia <b data-d="${l}"></b></span></div>`:'';
   const M=R?'r':'e';
-  const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl+(R?' real':''),ic,R?tR+'<span class="rtag">REAL</span>':tE,
+  const tag=R?'<span class="rtag">REAL</span>':'<span class="rtag">ESTIMADO</span>';
+  const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl+(R?' real':''),ic,(R?tR:tE)+tag,
     filas(v,l,ph,M)+totRow(R?'TOTAL REAL':'TOTAL ESTIMADO',M+'_'+l)+cmp(l)+addB(l,txt)+(extra||''));
   const aho=`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
@@ -540,15 +541,15 @@ function render(after){
     `<div class="cmp"><span>Estimado (${v.dias.length} día${v.dias.length===1?'':'s'}) <b data-t="diasEst"></b></span><span>Diferencia <b data-d="dias"></b></span></div>
      <p class="hint">Cada día se compara con el gasto diario estimado (<b data-t="e_diario"></b>). Verde: les sobró; rojo: se pasaron.</p>`;
   body.innerHTML=trip+
-    sec('gastos','a-est','calculator','Gastos estimados','Gastos reales','Concepto','Gasto',hint)+
-    sec('exc','a-exc','ticket','Excursiones estimadas','Excursiones reales','Excursión','Excursión')+
-    (R?acc('dias','a-com real','sun','Gasto diario real<span class="rtag">REAL</span>',dias)
-      :acc('diario','a-com','sun','Gasto diario estimado',
+    sec('gastos','a-est','calculator','Gastos','Gastos','Concepto','Gasto',hint)+
+    sec('exc','a-exc','ticket','Excursiones','Excursiones','Excursión','Excursión')+
+    (R?acc('dias','a-com real','sun','Gasto diario'+tag,dias)
+      :acc('diario','a-com','sun','Gasto diario'+tag,
         `<label class="ndias"><span>Días de viaje</span><input type="text" inputmode="numeric" value="${esc(v.diasViaje||'')}" placeholder="0" oninput="setDiasViaje(this)"></label>`+
         filas(v,'diario','Desayuno, almuerzo…','e')+totRow('POR DÍA','e_diario')+
         `<div class="tot"><span>TOTAL (<span data-nd></span> días)</span><span class="v"><span data-t="e_diarioTot"></span><small data-tx="e_diarioTot"></small></span></div>`+
         addB('diario','Concepto')+'<p class="hint">Lo que calculan gastar por día. El total (por día × días de viaje) se suma al gasto estimado. En Real cada día se compara con el "por día".</p>'))+
-    acc('aho','a-aho','pig-money','Plata ahorrada',aho);
+    acc('aho','a-aho','pig-money','Plata ahorrada'+tag,aho);
   document.querySelectorAll('.it input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
   recalc();
   if(typeof after==='function')after();
