@@ -311,9 +311,9 @@ function borrarMes(mid){const m=mesDe(mid);confirmar('Borrar mes',`¿Borrar ${ME
 /* ================= MANTENIMIENTO ================= */
 function estado(r){
   const km=n0(D.auto.km),pk=n0(r.proxKm),hoy=new Date().toISOString().slice(0,10);
-  if(pk){const f=pk-km;const d=`A los ${fkm(pk)} km`;if(f<0)return{c:'venc',t:`+${fkm(-f)} km`,d:d+` · pasado por ${fkm(-f)} km`};return{c:f<=1500?'cerca':'ok',t:`${fkm(f)} km`,d};}
-  if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:'Vencido',d:`Venció el ${fFecha(r.proxFecha)}`};
-    const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`${dias} días`,d:`El ${fFecha(r.proxFecha)}`};}
+  if(pk){const f=pk-km;const d=`A los ${fkm(pk)} km`;if(f<0)return{c:'venc',t:`+${fkm(-f)} km`,d:d+` · pasado por ${fkm(-f)} km`,u:f/1500};return{c:f<=1500?'cerca':'ok',t:`${fkm(f)} km`,d,u:f/1500};}
+  if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:'Vencido',d:`Venció el ${fFecha(r.proxFecha)}`,u:(new Date(r.proxFecha)-new Date(hoy))/864e5/30};
+    const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`${dias} días`,d:`El ${fFecha(r.proxFecha)}`,u:dias/30};}
   return null;
 }
 function renderMant(){
@@ -343,7 +343,7 @@ function renderMant(){
   renderProx();
 }
 function renderProx(){
-  const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||(n0(a.r.proxKm)||9e9)-(n0(b.r.proxKm)||9e9)});
+  const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||a.e.u-b.e.u});
   document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}" onclick="this.classList.toggle('ab')"><span>${esc(x.r.tipo||'Mantenimiento')}</span><b>${x.e.t}</b><span class="det">${x.e.d}</span></div>`).join('')
     :'<p style="color:var(--text2);font-size:.88rem">Cargá "Próximo (km)" o "Próximo (fecha)" en un mantenimiento para verlo acá.</p>';
 }
