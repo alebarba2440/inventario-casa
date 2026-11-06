@@ -33,3 +33,9 @@
 .desliz>button{position:relative;z-index:1;background:transparent !important;border-color:transparent !important;box-shadow:none !important;transition:color .25s}
 .desliz>button.on,.desliz>button.active,.desliz>button.sel-add,.desliz>button.sel-rem{color:#fff !important}
 .desliz>button.on i,.desliz>button.sel-add i,.desliz>button.sel-rem i{color:#fff !important}
+
+/* Íconos de toda la app con un "latido" suave: se agrandan y se achican apenas */
+i.ti, .home-link svg, .gear svg { display:inline-block; animation: iconoLatido 2.4s ease-in-out infinite; }
+@keyframes iconoLatido { 0%,100% { scale:1; } 50% { scale:1.1; } }
+.camera-fab i.ti { animation:none; } /* el botón de cámara ya late entero */
+@media (prefers-reduced-motion: reduce) { i.ti, .home-link svg, .gear svg { animation:none; } }
