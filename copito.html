@@ -306,7 +306,8 @@ function setL(mid,lid,campo,el){
 }
 function agregarL(mid){const m=mesDe(mid),l={id:uid(),d:'',m:''};m.lineas.push(l);guardar();renderGastos();
   const r=document.querySelectorAll(`#mes_${mid} .row input:not(.m)`);if(r.length)r[r.length-1].focus();}
-function borrarL(mid,lid){const m=mesDe(mid);m.lineas=m.lineas.filter(x=>x.id!==lid);guardar();renderGastos();}
+function borrarL(mid,lid){const m=mesDe(mid),l=m.lineas.find(x=>x.id===lid);
+  confirmar('Borrar línea',`¿Borrar "${(l&&l.d)||'esta línea'}"?`,()=>{m.lineas=m.lineas.filter(x=>x.id!==lid);guardar();renderGastos();});}
 function togglePago(mid){const m=mesDe(mid);m.pagado=!m.pagado;guardarPago(m);renderGastos();}
 function agregarMes(){
   const ms=ordenados(),ult=ms[ms.length-1],hoy=new Date();

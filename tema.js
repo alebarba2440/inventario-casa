@@ -39,3 +39,39 @@
   });
   window.syncSwitches = all;
 })();
+
+/* Ventana de confirmación común para toda la app: preguntar(titulo, mensaje, alConfirmar, textoBoton) */
+(function () {
+  const css = `.pq-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99999;opacity:0;pointer-events:none;transition:opacity .18s}
+.pq-bg.show{opacity:1;pointer-events:auto}
+.pq{background:var(--surface,#fff);color:var(--text,#222);border-radius:20px;padding:22px 20px 18px;width:100%;max-width:340px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.25);transform:scale(.92);transition:transform .18s;font-family:'Nunito',system-ui,sans-serif}
+.pq-bg.show .pq{transform:scale(1)}
+.pq-ic{width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;background:#fdecec;color:#d64545}
+.pq-ic svg{width:26px;height:26px}
+.pq h3{margin:0 0 6px;font-size:1.1rem;font-weight:800}
+.pq p{margin:0 0 18px;font-size:.93rem;color:var(--text2,#666);line-height:1.4}
+.pq-b{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pq-b button{border:none;border-radius:12px;padding:12px;font-family:inherit;font-weight:800;font-size:.95rem;cursor:pointer}
+.pq-no{background:var(--surface2,#eee);color:var(--text,#222)}
+.pq-si{background:#d64545;color:#fff}`;
+  let bg, cb = null;
+  function armar() {
+    if (bg) return;
+    const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+    bg = document.createElement('div'); bg.className = 'pq-bg';
+    bg.innerHTML = `<div class="pq" role="dialog" aria-modal="true"><div class="pq-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></div>
+      <h3></h3><p></p><div class="pq-b"><button class="pq-no">Cancelar</button><button class="pq-si">Eliminar</button></div></div>`;
+    document.body.appendChild(bg);
+    const cerrar = () => { bg.classList.remove('show'); cb = null; };
+    bg.querySelector('.pq-no').onclick = cerrar;
+    bg.addEventListener('click', e => { if (e.target === bg) cerrar(); });
+    bg.querySelector('.pq-si').onclick = () => { const f = cb; cerrar(); if (f) f(); };
+  }
+  window.preguntar = function (titulo, msg, alConfirmar, boton) {
+    armar();
+    bg.querySelector('h3').textContent = titulo || '¿Estás segura?';
+    bg.querySelector('p').textContent = msg || '';
+    bg.querySelector('.pq-si').textContent = boton || 'Sí, eliminar';
+    cb = alConfirmar; bg.classList.add('show');
+  };
+})();

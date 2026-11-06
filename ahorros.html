@@ -382,10 +382,11 @@ function setEst(id,p,el){const m=realM(id);m.est[p]=miles(el);m.enEst=true;save(
 /* quitar un mes de Estimado (si no tiene ahorro cargado, se borra del todo) */
 function quitarEst(id){
   const m=state.months.find(x=>x.id===id);if(!m)return;
-  if(!confirm('¿Quitar '+m.label+' de Estimado?'))return;
+  preguntar('Quitar mes','¿Quitar '+m.label+' de Estimado?',()=>{
   m.est={j:0,a:0};m.enEst=false;
   if(!tieneMov(m))state.months=state.months.filter(x=>x.id!==id);
   save();render();
+});
 }
 /* agregar un mes a Estimado */
 let modoAdd='est';
@@ -434,8 +435,9 @@ function borrarTodo(){
 function borrarMes(id){
   const m=getM(id);if(!m)return;
   const n=(m.mov.j||[]).length+(m.mov.a||[]).length;
-  if(!confirm(n?`${m.label} tiene ${n} movimiento(s). ¿Borrarlo igual? Se pierden esos movimientos.`:`¿Borrar ${m.label} de Ahorrado?`))return;
+  preguntar('Borrar mes',n?`${m.label} tiene ${n} movimiento(s). ¿Borrarlo igual? Se pierden esos movimientos.`:`¿Borrar ${m.label} de Ahorrado?`,()=>{
   const r=realM(id);r.mov={j:[],a:[]};delete r.enAho;delete r.oculto;if(!enEst(r))state.months=state.months.filter(x=>x!==r);openMes=null;save();render();
+});
 }
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
@@ -460,7 +462,8 @@ function addMov(sign){
   document.getElementById('shAmt').value='';document.getElementById('shNote').value='';
   save();drawSheet();render();
 }
-function delMov(id){const m=getM(cur.id);m.mov[cur.p]=m.mov[cur.p].filter(x=>x.id!==id);save();drawSheet();render();}
+function delMov(id){const m=getM(cur.id),x=m.mov[cur.p].find(x=>x.id===id);
+  preguntar('Borrar movimiento',`¿Borrar el movimiento de ${fmt(Math.abs(x?x.amt:0))}${x&&x.note?' ('+x.note+')':''}?`,()=>{const m=getM(cur.id);m.mov[cur.p]=m.mov[cur.p].filter(x=>x.id!==id);save();drawSheet();render();});}
 
 /* ---------- guardado + Firebase (misma config que el inventario) ---------- */
 let db=null,timer=null;
