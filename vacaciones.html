@@ -344,8 +344,7 @@ const cur=()=>viajes.find(v=>v.id===selId)||null;
 function nuevoViaje(lugar,moneda,cot,nota){
   const ext=moneda!=='ARS',it=(label,e)=>({id:uid(),label,monto:'',ext:e,rmonto:'',rext:e});
   return{id:'v2_'+uid(),ver:2,v3:true,v4:true,creado:Date.now(),lugar,moneda,cot,nota,
-    gastos:[it('Viaje + seguro',false),it('Alojamiento',false),it('Transfers',false)],exc:[],
-    diario:[it('Desayuno',ext),it('Almuerzo',ext),it('Cena',ext)],dias:[],
+    gastos:[],exc:[],diario:[],dias:[],
     aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ruta:[]};
 }
 let tab=rd('viaje_tab','e');if(tab!=='e'&&tab!=='r')tab='e';
