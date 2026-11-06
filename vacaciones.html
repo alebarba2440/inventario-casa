@@ -77,9 +77,11 @@
   .dia.open .dia-h .chev{transform:rotate(180deg)}
   .dia-b{display:none;padding:10px 12px 12px}
   .dia.open .dia-b{display:block}
-  .dmon{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px;font-size:.78rem;font-weight:700;color:var(--text2)}
-  .dmon button{border:1.5px solid var(--c);background:none;color:var(--c);border-radius:999px;padding:4px 12px;font-family:inherit;font-weight:800;font-size:.8rem;cursor:pointer}
-  .dmon button.on{background:var(--c);color:#fff}
+  .tabsrow{display:flex;align-items:center;gap:8px;width:100%;max-width:560px;margin:0 auto}
+  .tabsrow .tabs{flex:1;max-width:none;margin:0}
+  .dmon{display:flex;gap:3px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px;flex-shrink:0}
+  .dmon button{border:none;background:none;color:var(--text2);border-radius:999px;padding:9px 11px;font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer}
+  .dmon button.on{background:var(--accent);color:#fff}
   .fd{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
   .fd span{font-size:.7rem;font-weight:800;color:var(--text2);text-transform:uppercase}
   .fd input{width:100%;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 10px;font-size:.95rem;font-weight:800;outline:none;color:var(--text)}
@@ -222,7 +224,7 @@
     <button class="ib" id="bEdit" onclick="abrirForm(true)" aria-label="Editar vacación"><i class="ti ti-edit"></i></button>
     <button class="ib del" id="bDel" onclick="borrarViaje()" aria-label="Eliminar vacación"><i class="ti ti-trash"></i></button>
   </div>
-  <div class="tabs" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div>
+  <div class="tabsrow"><div class="tabs" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div><div class="dmon" id="dmon"><button data-m="ext" onclick="setDiaMon('ext')" id="dmExt">R$</button><button data-m="ARS" onclick="setDiaMon('ARS')">$</button></div></div>
   <div id="body"></div>
 </main>
 
@@ -412,7 +414,7 @@ function quitar(lista,id){const v=cur(),it=item(lista,id);
 }
 let openDia;
 let diaMon=rd('dia_mon','ext'); // 'ext' = moneda del viaje (ej. R$), 'ARS' = pesos
-function setDiaMon(m){diaMon=m;wr('dia_mon',m);document.querySelectorAll('.dmon button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));recalc();}
+function setDiaMon(m){diaMon=m;wr('dia_mon',m);document.querySelectorAll('#dmon button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));recalc();}
 const dia=id=>cur().dias.find(d=>d.id===id);
 function agregarDia(){const v=cur(),e=v.moneda!=='ARS';
   // el día nuevo arranca con los mismos conceptos del gasto diario estimado
@@ -464,6 +466,9 @@ function render(after){
   document.getElementById('bEdit').disabled=!v;document.getElementById('bDel').disabled=!v;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   document.getElementById('tabs').style.display=v?'':'none';
+  {const dm=document.getElementById('dmon'),ok=v&&tab==='r'&&v.moneda!=='ARS';dm.style.display=ok?'':'none';
+   if(v)document.getElementById('dmExt').textContent=SIM[v.moneda];
+   dm.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===(diaMon==='ARS'?'ARS':'ext')));}
   if(!v){body.innerHTML=`<div class="trip vacio"><b>${viajes.length?'Elegí una vacación':'Todavía no hay vacaciones'}</b>${viajes.length?'Buscala arriba.':'Tocá <i class="ti ti-circle-plus-filled" style="color:var(--accent)"></i> para crear la primera.'}</div>`;return;}
   const ext=v.moneda!=='ARS',S=SIM[v.moneda],R=tab==='r';
   const trip=`<div class="trip">
@@ -506,8 +511,7 @@ function render(after){
         <div class="cmp"><span>Estimado <b data-t="e_diario"></b></span><span>Diferencia <b data-dd2="${d.id}"></b></span></div>
         <button class="delmes" onclick="quitarDia('${d.id}')"><i class="ti ti-trash"></i> Borrar día</button>
       </div></div>`};
-  const dmon=ext?`<div class="dmon"><span>Ver los días en</span><button data-m="ext" class="${diaMon!=='ARS'?'on':''}" onclick="setDiaMon('ext')">${S}</button><button data-m="ARS" class="${diaMon==='ARS'?'on':''}" onclick="setDiaMon('ARS')">$</button></div>`:'';
-  const dias=dmon+(v.dias.length?v.dias.map(diaHTML).join(''):'<p class="empty">Agregá un día cuando estén de viaje</p>')+
+  const dias=(v.dias.length?v.dias.map(diaHTML).join(''):'<p class="empty">Agregá un día cuando estén de viaje</p>')+
     `<button class="add" onclick="agregarDia()"><i class="ti ti-calendar-plus"></i> Día</button>`+
     totRow('TOTAL GASTADO','dias')+
     `<div class="cmp"><span>Estimado (${v.dias.length} día${v.dias.length===1?'':'s'}) <b data-t="diasEst"></b></span><span>Diferencia <b data-d="dias"></b></span></div>
@@ -526,30 +530,29 @@ function render(after){
 function recalc(){
   const v=cur();if(!v)return;const K=calcular(v),ext=v.moneda!=='ARS',m=v.moneda,M=tab==='r'?'r':'e';
   const put=(sel,txt,n,color)=>document.querySelectorAll(sel).forEach(e=>{e.textContent=txt;if(color)e.className=e.className.replace(/\b(pos|neg|zero)\b/g,'').trim()+' '+cls(n)});
+  // en la pestaña Real, todos los totales y diferencias van en la moneda elegida con el botón (R$ / $); la otra queda chica
+  const verExt=tab==='r'&&ext&&diaMon!=='ARS'&&cotOf(v);
+  const P=n=>verExt?fmt(aExt(v,n),m):fmt(n), O=n=>ext&&cotOf(v)?(verExt?fmt(n):fmt(aExt(v,n),m)):'';
   document.querySelectorAll('[data-cv]').forEach(e=>{const [l,id,mo]=e.dataset.cv.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
     const [mc,ec]=campos(mo),x=n0(it[mc]);e.textContent=it[ec]?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   // en Real: estimado y diferencia de cada fila
   document.querySelectorAll('[data-ve]').forEach(e=>{const [l,id]=e.dataset.ve.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
-    const es=enPesos(v,it,'e'),re=enPesos(v,it,'r'),d=es-re;e.textContent=fmt(es);
-    const dd=document.querySelector(`[data-vd="${l}:${id}"]`);if(dd){dd.textContent=String(it.rmonto??'').trim()?fmt(d):'—';dd.className=String(it.rmonto??'').trim()?cls(d):'zero';}});
-  LISTAS.forEach(l=>['e','r'].forEach(t=>{const n=K[t+'_'+l];put(`[data-t="${t}_${l}"]`,fmt(n),0,false);put(`[data-tx="${t}_${l}"]`,ext?fmt(aExt(v,n),m):'',0,false);}));
-  LISTAS.forEach(l=>{const d=K['e_'+l]-K['r_'+l];put(`[data-d="${l}"]`,fmt(d),d,true);put(`[data-h="${l}"]`,fmt(K[M+'_'+l]),0,false);});
-  // en "Gasto diario real" todo se muestra en la moneda elegida con el botón (R$ / $); la otra queda chica abajo
-  const verExt=ext&&diaMon!=='ARS'&&cotOf(v),fD=n=>verExt?fmt(aExt(v,n),m):fmt(n),fO=n=>ext&&cotOf(v)?(verExt?fmt(n):fmt(aExt(v,n),m)):'';
-  put('[data-t="dias"]',fD(K.dias),0,false);put('[data-tx="dias"]',fO(K.dias),0,false);
-  put('[data-t="diasEst"]',fD(K.diasEst),0,false);put('[data-d="dias"]',fD(K.diasEst-K.dias),K.diasEst-K.dias,true);
-  document.querySelectorAll('#acc-dias [data-t="e_diario"]').forEach(e=>e.textContent=fD(K.e_diario));
-  put('[data-h="dias"]',(ext&&diaMon!=='ARS'&&cotOf(v))?fmt(aExt(v,K.dias),m):fmt(K.dias),0,false);
+    const es=enPesos(v,it,'e'),re=enPesos(v,it,'r'),d=es-re;e.textContent=P(es);
+    const dd=document.querySelector(`[data-vd="${l}:${id}"]`);if(dd){dd.textContent=String(it.rmonto??'').trim()?P(d):'—';dd.className=String(it.rmonto??'').trim()?cls(d):'zero';}});
+  LISTAS.forEach(l=>['e','r'].forEach(t=>{const n=K[t+'_'+l];put(`[data-t="${t}_${l}"]`,P(n),0,false);put(`[data-tx="${t}_${l}"]`,O(n),0,false);}));
+  LISTAS.forEach(l=>{const d=K['e_'+l]-K['r_'+l];put(`[data-d="${l}"]`,P(d),d,true);put(`[data-h="${l}"]`,P(K[M+'_'+l]),0,false);});
+  put('[data-t="dias"]',P(K.dias),0,false);put('[data-tx="dias"]',O(K.dias),0,false);
+  put('[data-t="diasEst"]',P(K.diasEst),0,false);put('[data-d="dias"]',P(K.diasEst-K.dias),K.diasEst-K.dias,true);
+  put('[data-h="dias"]',P(K.dias),0,false);
   v.dias.forEach(d=>{const t=K.dia[d.id],x=K.e_diario-t;
-    const enExt=ext&&diaMon!=='ARS'&&cotOf(v),fd=n=>enExt?fmt(aExt(v,n),m):fmt(n);
-    put(`[data-dt="${d.id}"]`,fd(t),0,false);put(`[data-dt2="${d.id}"]`,fD(t),0,false);put(`[data-dx="${d.id}"]`,fO(t),0,false);
-    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+fd(x),x,true);put(`[data-dd2="${d.id}"]`,fD(x),x,true);});
+    put(`[data-dt="${d.id}"]`,P(t),0,false);put(`[data-dt2="${d.id}"]`,P(t),0,false);put(`[data-dx="${d.id}"]`,O(t),0,false);
+    put(`[data-dd="${d.id}"]`,(x>0?'+':'')+P(x),x,true);put(`[data-dd2="${d.id}"]`,P(x),x,true);});
   document.querySelectorAll('[data-cc]').forEach(e=>{const [did,cid]=e.dataset.cc.split(':'),d=v.dias.find(x=>x.id===did),it=d&&d.items.find(x=>x.id===cid);if(!it)return;
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
-  put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);put('[data-h="aho"]',fmt(K.aho),0,false);
-  put('[data-a="j"]',fmt(K.ahJ),0,false);put('[data-a="a"]',fmt(K.ahA),0,false);
+  put('[data-t="aho"]',P(K.aho),0,false);put('[data-tx="aho"]',O(K.aho),0,false);put('[data-h="aho"]',P(K.aho),0,false);
+  put('[data-a="j"]',P(K.ahJ),0,false);put('[data-a="a"]',P(K.ahA),0,false);
   const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest};
-  Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,fmt(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,ext&&cotOf(v)?fmt(aExt(v,n),m):'',0,false);});
+  Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
 
 /* ================= guardado + Firebase ================= */
