@@ -40,3 +40,7 @@ i.ti, .home-link svg, .gear svg { display:inline-block; animation: iconoLatido 2
 @keyframes iconoLatido { 0%,100% { scale:1; } 50% { scale:1.1; } }
 .camera-fab i.ti { animation:none; } /* el botón de cámara ya late entero */
 @media (prefers-reduced-motion: reduce) { i.ti, .home-link svg, .gear svg { animation:none; } }
+
+/* Celular: que no haga zoom al tocar un campo ni se pueda correr la pantalla para los costados */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
+html,body{overflow-x:clip;max-width:100%}
