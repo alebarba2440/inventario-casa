@@ -482,8 +482,8 @@ function render(after){
   const v=cur(),body=document.getElementById('body');
   document.getElementById('bEdit').disabled=!v;document.getElementById('bDel').disabled=!v;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
-  document.getElementById('tabs').style.display=v?'':'none';
-  {const dm=document.getElementById('dmon'),ok=v&&tab==='r'&&v.moneda!=='ARS';dm.style.display=ok?'':'none';
+  {const tb=document.getElementById('tabs');tb.style.display=v?'':'none';tb.classList.toggle('oculto',!v);}
+  {const dm=document.getElementById('dmon'),ok=v&&tab==='r'&&v.moneda!=='ARS';dm.style.display=ok?'':'none';dm.classList.toggle('oculto',!ok);
    if(v)document.getElementById('dmExt').textContent=SIM[v.moneda];
    dm.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===(diaMon==='ARS'?'ARS':'ext')));}
   if(!v){body.innerHTML=`<div class="trip vacio"><b>${viajes.length?'Elegí una vacación':'Todavía no hay vacaciones'}</b>${viajes.length?'Buscala arriba.':'Tocá <i class="ti ti-circle-plus-filled" style="color:var(--accent)"></i> para crear la primera.'}</div>`;return;}
