@@ -109,36 +109,24 @@
   .grid a.card:nth-child(5)::after{animation-delay:-4s}
   @media (prefers-reduced-motion:reduce){a.card::after{display:none}}
 
-  /* ===== Animación de inicio: ella llega corriendo y le da un beso ===== */
-  #intro{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden;transition:opacity .5s}
+  /* ===== Animación de inicio: ella llega corriendo y después sigue el GIF del beso ===== */
+  #intro{position:fixed;inset:0;z-index:10000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;transition:opacity .5s}
   #intro.fin{opacity:0;pointer-events:none}
-  #intro .esc{position:relative;width:min(80vw,380px);aspect-ratio:1089/1433}
-  #intro .esc>div{position:absolute;inset:0}
-  #intro img{position:absolute;inset:0;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
-  #intro .el{z-index:2;animation:elSorpresa 5s both}
-  #intro .ojo{inset:auto;position:absolute;top:26.1%;width:12.86%;height:auto;animation:ojos 5s both}
-  #intro .ojo.o0{left:55.46%}#intro .ojo.o1{left:72.91%}
-  #intro .ellaX{z-index:1;animation:ellaLlega 5s both}
-  #intro .ellaX.cara{z-index:3}
-  #intro .ellaX .ellaB{position:absolute;inset:0;animation:ellaPasos .26s ease-in-out 6 both;transform-origin:38% 99%}
-  #intro .ellaX img{animation:ellaBeso 5s both;transform-origin:38% 99%}
-  #intro .cora{position:absolute;left:47%;top:29%;width:13%;z-index:4;opacity:0;animation:cora 5s both}
-  #intro .cora.c2{left:63%;top:6%;width:8%;animation-delay:.25s}
-  #intro .cora.c3{left:46%;top:24%;width:7%;animation-delay:.45s}
-  #intro .sorp{position:absolute;left:84%;top:5%;width:14%;z-index:4;opacity:0;animation:sorp 5s both}
-  #intro .polvo{position:absolute;left:20%;bottom:1%;width:10%;aspect-ratio:1;border-radius:50%;background:var(--border2);opacity:0;animation:polvo 1.5s ease-out both}
-  #intro h1{font-size:2.3rem;font-weight:500;letter-spacing:.02em;opacity:0;animation:titulo 5s both}
-  #intro h1 b{font-weight:800;color:var(--accent)}
+  #intro .esc{position:relative;width:min(82vw,400px);aspect-ratio:520/768}
+  #intro .capa{position:absolute;inset:0}
+  #intro .capa img{position:absolute;inset:0;width:100%;height:100%;user-select:none;-webkit-user-drag:none}
+  #intro .el{z-index:2}
+  #intro .ella{z-index:1;animation:ellaLlega 1.6s cubic-bezier(.3,.7,.4,1) both}
+  #intro .ella .paso{position:absolute;inset:0;transform-origin:45% 95%;animation:ellaPasos .27s ease-in-out 6 both}
+  #intro .polvo{position:absolute;left:14%;bottom:6%;width:9%;aspect-ratio:1;border-radius:50%;background:var(--border2);opacity:0;animation:polvo .5s ease-out 3 both}
+  #intro .gif{position:absolute;inset:0;z-index:3;background:url(img/intro-sprite.webp) 0 0/1600% 100% no-repeat;opacity:0}
+  #intro.beso .gif{opacity:1;animation:gif 2.4s steps(15) both}
+  #intro.beso .capa,#intro.beso .polvo{visibility:hidden}
   #intro .saltar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-size:.8rem;color:var(--text2);opacity:.7}
-  @keyframes ellaLlega{0%{transform:translateX(-130%)}28%{transform:translateX(0)}100%{transform:translateX(0)}}
-  @keyframes ellaPasos{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-6%) rotate(5deg)}}
-  @keyframes ellaBeso{0%,30%{transform:none}38%,56%{transform:translate(6%,-4.5%) rotate(10deg)}64%,100%{transform:none}}
-  @keyframes elSorpresa{0%,41%{transform:none}45%{transform:translateY(-7%) scale(1.03,.97)}50%{transform:translateY(0) scale(.98,1.03)}54%,100%{transform:none}}
-  @keyframes ojos{0%,41%{transform:scale(1)}46%,58%{transform:scale(1.35)}64%,100%{transform:scale(1)}}
-  @keyframes cora{0%,38%{opacity:0;transform:scale(0) translateY(0)}43%{opacity:1;transform:scale(1.3)}48%{transform:scale(1)}66%{opacity:1;transform:translateY(-60%)}76%,100%{opacity:0;transform:translateY(-120%)}}
-  @keyframes sorp{0%,42%{opacity:0;transform:scale(.3) rotate(-10deg)}46%{opacity:1;transform:scale(1.15)}50%,60%{opacity:1;transform:scale(1)}66%,100%{opacity:0;transform:scale(.8)}}
-  @keyframes polvo{0%{opacity:0;transform:scale(.3)}20%{opacity:.6}100%{opacity:0;transform:scale(1.6) translateX(-60%)}}
-  @keyframes titulo{0%,66%{opacity:0;transform:translateY(12px)}76%,100%{opacity:1;transform:none}}
+  @keyframes ellaLlega{0%{transform:translateX(-140%)}100%{transform:translateX(0)}}
+  @keyframes ellaPasos{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-5%) rotate(4deg)}}
+  @keyframes polvo{0%{opacity:0;transform:scale(.3)}30%{opacity:.55}100%{opacity:0;transform:scale(1.5) translateX(-70%)}}
+  @keyframes gif{from{background-position:0 0}to{background-position:100% 0}}
   @media (prefers-reduced-motion:reduce){#intro{display:none}}
 </style>
 <link rel="stylesheet" href="fondo.css">
@@ -147,14 +135,11 @@
 <body>
 <div id="intro" onclick="finIntro()">
   <div class="esc">
-    <div class="ellaX"><div class="ellaB"><img src="img/beso-ella.webp" alt=""></div></div>
-    <div class="ellaX cara"><div class="ellaB"><img src="img/beso-cara.webp" alt=""></div></div>
-    <div class="el"><img src="img/beso-el.webp" alt=""><img class="ojo o0" src="img/beso-ojo0.webp" alt=""><img class="ojo o1" src="img/beso-ojo1.webp" alt=""></div>
-    <svg class="cora" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cora c2" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg><svg class="cora c3" viewBox="0 0 24 24"><path fill="#e8435a" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.4 2.5.8-1.3 2.3-2.5 4.4-2.5 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>
-    <svg class="sorp" viewBox="0 0 40 40" fill="none" stroke="#f2a20c" stroke-width="4" stroke-linecap="round"><path d="M8 26 4 30M14 14 8 6M26 12 30 3M30 22 38 19"/></svg>
+    <div class="capa el"><img src="img/intro-el.webp" alt=""></div>
+    <div class="capa ella"><div class="paso"><img src="img/intro-ella.webp" alt=""></div></div>
     <span class="polvo"></span>
+    <div class="gif"></div>
   </div>
-  <h1>Junt<b>OS</b></h1>
   <span class="saltar">Tocá para saltar</span>
 </div>
 <script>
@@ -163,7 +148,16 @@
   if(visto){el.remove();return}
   try{sessionStorage.setItem('intro_ok','1')}catch(e){}
   window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);};
-  setTimeout(finIntro,5000);
+  // espera a que estén cargadas las imágenes para que no arranque a medias
+  const urls=['img/intro-el.webp','img/intro-ella.webp','img/intro-sprite.webp'];
+  const anims=()=>el.getAnimations({subtree:true});
+  anims().forEach(a=>a.pause());
+  Promise.all(urls.map(u=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=u;}))).then(()=>{
+    anims().forEach(a=>a.play());
+    setTimeout(()=>el.classList.add('beso'),1650);   // llegó: arranca el beso
+    setTimeout(finIntro,1650+2400+1100);              // el beso dura 2,4 s y queda el logo un ratito
+  });
+  setTimeout(finIntro,9000); // por si algo no carga
 })();
 </script>
 <div class="wrap">
