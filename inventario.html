@@ -13,7 +13,6 @@
 <script src="firebase-config.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   :root {
     --accent: #1D9E75;
@@ -693,10 +692,10 @@
     overflow: hidden;
     position: relative;
   }
-  #scanner-container video, #scanner-container canvas {
+  #scanner-container video {
+    display: block;
     width: 100%;
-    height: auto;
-    min-height: 350px;
+    height: 350px;
     object-fit: cover;
   }
   .scanner-guide {
@@ -1134,7 +1133,6 @@
   let categories = JSON.parse(localStorage.getItem('categories_v2') || '["Alimentos", "Limpieza", "Bebidas"]');
   let action = 'add';
   let db = null, fbOn = false;
-  let html5QrCode = null;
   let scannerActive = false;
   let editId = null;
   let editQtyTemp = 0;
@@ -1384,50 +1382,75 @@
   /* ============================================================
      SCANNER
   ============================================================ */
+  /* Lector propio: usa el lector nativo del celu si tiene (Android) y si no (iPhone)
+     el lector ZXing en WebAssembly, que lee EAN-13 mucho mejor que el anterior. */
+  let scanStream = null, scanTimer = null, lector = null;
+  async function obtenerLector() {
+    if (lector) return lector;
+    const fmts = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf'];
+    try {
+      if ('BarcodeDetector' in window) {
+        const sop = await window.BarcodeDetector.getSupportedFormats();
+        if (sop.includes('ean_13')) return lector = new window.BarcodeDetector({ formats: fmts.filter(f => sop.includes(f)) });
+      }
+    } catch (e) {}
+    if (!window.BarcodeDetectionAPI) {
+      await new Promise((ok, ko) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/barcode-detector@3.1.3/dist/iife/ponyfill.js'; sc.onload = ok; sc.onerror = ko; document.head.appendChild(sc); });
+    }
+    return lector = new window.BarcodeDetectionAPI.BarcodeDetector({ formats: fmts });
+  }
   async function abrirScanner() {
     document.getElementById('scannerModal').classList.add('open');
-    const F = Html5QrcodeSupportedFormats;
-    // Solo los códigos de productos: así reconoce mucho más rápido que buscando todos los tipos
-    const formatos = [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.ITF];
-    const alLeer = (decodedText) => {
-      if (decodedText && !scannerActive) {
-        scannerActive = true;
-        if (navigator.vibrate) navigator.vibrate(60);
-        try { html5QrCode.stop(); } catch(e) {}
-        cerrarScanner();
-        processBarcode(decodedText);
-        setTimeout(() => { scannerActive = false; }, 2000);
-      }
-    };
-    const config = {
-      fps: 25,
-      // recuadro ancho y bajo, como un código de barras
-      qrbox: (w, h) => ({ width: Math.floor(w * 0.88), height: Math.floor(Math.min(h * 0.42, w * 0.5)) }),
-      disableFlip: true
-    };
+    const cont = document.getElementById('scanner-container');
+    cont.innerHTML = '<video id="scanVideo" playsinline muted autoplay></video><div class="scanner-guide"></div><div class="scanner-text" id="scanTxt">⏳ Preparando cámara…</div>';
+    const video = document.getElementById('scanVideo');
     try {
-      html5QrCode = new Html5Qrcode("scanner-container", {
-        formatsToSupport: formatos,
-        experimentalFeatures: { useBarCodeDetectorIfSupported: true }, // usa el lector nativo del celu si existe (Android)
-        verbose: false
-      });
-      try {
-        // cámara trasera en buena resolución y con enfoque continuo
-        await html5QrCode.start({ facingMode: "environment" }, Object.assign({}, config, {
-          videoConstraints: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: "continuous" }] }
-        }), alLeer, () => {});
-      } catch (e1) {
-        // si el celu no acepta esa configuración, arranca con la básica
-        await html5QrCode.start({ facingMode: "environment" }, config, alLeer, () => {});
-      }
-    } catch(e) {
-      document.getElementById('scanner-container').innerHTML = `<div style="color:white;text-align:center;padding:60px 20px;">❌ Error</div>`;
-      toast("Error al iniciar cámara");
+      scanStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      try { const tr = scanStream.getVideoTracks()[0], cap = tr.getCapabilities ? tr.getCapabilities() : {};
+        if (cap.focusMode && cap.focusMode.includes('continuous')) await tr.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }); } catch (e) {}
+      video.srcObject = scanStream; await video.play();
+    } catch (e) {
+      cont.innerHTML = '<div style="color:white;text-align:center;padding:60px 20px;">❌ No se pudo abrir la cámara.<br>Revisá el permiso de cámara para Safari.</div>';
+      toast('Error al iniciar cámara'); return;
     }
+    let det;
+    try { det = await obtenerLector(); } catch (e) {
+      document.getElementById('scanTxt').textContent = '❌ No se pudo cargar el lector. Revisá la conexión.'; return;
+    }
+    if (!scanStream) return; // se cerró mientras cargaba
+    document.getElementById('scanTxt').textContent = '🔍 Apuntá al código de barras';
+    const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+    let ocupado = false;
+    const leer = async () => {
+      if (!scanStream) return;
+      if (!ocupado && video.readyState >= 2 && video.videoWidth) {
+        ocupado = true;
+        try {
+          // analiza la franja del medio (donde está el recuadro), achicada para que sea rápido
+          const vw = video.videoWidth, vh = video.videoHeight, sw = vw * 0.92, sh = vh * 0.6;
+          const k = Math.min(1, 1280 / sw);
+          cv.width = Math.round(sw * k); cv.height = Math.round(sh * k);
+          cx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, cv.width, cv.height);
+          const res = await det.detect(cv);
+          if (res && res.length && res[0].rawValue && !scannerActive) {
+            scannerActive = true;
+            if (navigator.vibrate) navigator.vibrate(60);
+            const code = res[0].rawValue;
+            cerrarScanner();
+            processBarcode(code);
+            setTimeout(() => { scannerActive = false; }, 2000);
+            return;
+          }
+        } catch (e) {}
+        ocupado = false;
+      }
+      scanTimer = setTimeout(leer, 80);
+    };
+    leer();
   }
   function cerrarScanner() {
-    if (html5QrCode && html5QrCode.isScanning) { try { html5QrCode.stop(); } catch(e) {} html5QrCode = null; }
-    scannerActive = false;
+    clearTimeout(scanTimer); scanTimer = null;
+    if (scanStream) { scanStream.getTracks().forEach(t => t.stop()); scanStream = null; }
     document.getElementById('scannerModal').classList.remove('open');
     document.getElementById('scanner-container').innerHTML = '<div class="scanner-guide"></div><div class="scanner-text">🔍 Apunta al código</div>';
   }
