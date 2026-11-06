@@ -320,7 +320,8 @@ function renderMant(){
   document.getElementById('modelo').value=D.auto.modelo||'';
   document.getElementById('kmAct').value=D.auto.km?fkm(n0(D.auto.km)):'';
   document.getElementById('kmFecha').textContent=D.auto.kmFecha?'Actualizado el '+fFecha(D.auto.kmFecha):'';
-  const regs=D.mant.slice().sort((a,b)=>n0(a.km)-n0(b.km));
+  // más nuevo arriba, más viejo abajo; los que no tienen fecha (recién agregados) van primero
+  const regs=D.mant.slice().sort((a,b)=>(b.fecha||'9999').localeCompare(a.fecha||'9999')||n0(b.km)-n0(a.km));
   document.getElementById('regs').innerHTML=regs.map(r=>{const e=estado(r),op=r.id===openReg;
     const badge=e?`<span class="badge ${e.c}">${e.t}</span>`:'';
     return `<div class="reg${op?' open':''}${e?' '+e.c:''}" id="reg_${r.id}">
