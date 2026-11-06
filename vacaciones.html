@@ -474,12 +474,12 @@ function render(after){
   const trip=`<div class="trip">
     <div class="th"><h2><i class="ti ti-map-pin-filled"></i>${esc(v.lugar)}</h2>${ext?`<span class="chip">1 ${S} = ${fmt(n0(v.cot))}</span>`:''}</div>
     ${v.nota?`<div class="nota">${esc(v.nota)}</div>`:''}
-    <div class="resumen">
-      <div><small>Plata ahorrada</small><b data-r="aho"></b><small class="rx" data-rx="aho"></small></div>
-      <div><small>Gasto estimado</small><b data-r="e"></b><small class="rx" data-rx="e"></small></div>
-      <div class="wide"><small>BALANCE (ahorrado − estimado)</small><b data-r="bal"></b><small class="rx" data-rx="bal"></small></div>
-      <div><small>Gastado real</small><b data-r="r"></b><small class="rx" data-rx="r"></small></div>
-      <div><small>RESTANTE (ahorrado − gastado)</small><b data-r="rest"></b><small class="rx" data-rx="rest"></small></div>
+    <div class="resumen">${(R?[
+        ['aho','Plata ahorrada'],['r','Gastado real'],['rest','RESTANTE (ahorrado − gastado)',1],
+        ['e','Gasto estimado'],['dif','Diferencia (estimado − real)']]
+      :[['aho','Plata ahorrada'],['e','Gasto estimado'],['bal','BALANCE (ahorrado − estimado)',1],
+        ['e_gastos','Gastos'],['e_exc','Excursiones'],['e_diario','Gasto diario (por día)',1]]
+      ).map(([k,t,w])=>`<div${w?' class="wide"':''}><small>${t}</small><b data-r="${k}"></b><small class="rx" data-rx="${k}"></small></div>`).join('')}
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
   </div>`;
@@ -551,8 +551,8 @@ function recalc(){
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   put('[data-t="aho"]',P(K.aho),0,false);put('[data-tx="aho"]',O(K.aho),0,false);put('[data-h="aho"]',P(K.aho),0,false);
   put('[data-a="j"]',P(K.ahJ),0,false);put('[data-a="a"]',P(K.ahA),0,false);
-  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest};
-  Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,O(n),0,false);});
+  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario};
+  Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest'||k==='dif');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
 
 /* ================= guardado + Firebase ================= */
