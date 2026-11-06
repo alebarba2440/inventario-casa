@@ -488,10 +488,11 @@ async function exportarPDF(){
       doc.setDrawColor(230,230,230);doc.setLineWidth(.2);doc.line(MX,H-12,W-MX,H-12);
       doc.text('JuntOS · Mantenimiento',MX,H-7.5);doc.text(`Página ${p} de ${n}`,W-MX,H-7.5,{align:'right'});}
 
-    const nombre='Copito - Mantenimiento.pdf';
+    const auto=String(D.auto.modelo||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
+    const nombre=(auto?'Mantenimiento - '+auto:'Mantenimiento')+'.pdf';
     const file=new File([doc.output('blob')],nombre,{type:'application/pdf'});
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file],title:'Copito - Mantenimiento'});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
+      try{await navigator.share({files:[file],title:nombre.replace(/\.pdf$/,'')});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
     }else doc.save(nombre);
   }catch(e){console.warn(e);alert('No se pudo crear el PDF. Revisá la conexión a internet y probá de nuevo.');}
   finally{b.disabled=false;b.classList.remove('cargando');b.querySelector('i').className='ti ti-file-type-pdf';}
