@@ -28,7 +28,7 @@
   input,textarea,select{font-family:inherit;color:var(--text)}
 
   /* buscador + botones */
-  .bar{display:flex;gap:8px;align-items:center;position:relative}
+  .bar{display:flex;gap:8px;align-items:center;position:relative;width:100%;max-width:560px;margin:0 auto}
   .search{flex:1;position:relative}
   .search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:1.1rem}
   .search input{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:11px 14px 11px 38px;font-size:.95rem;font-weight:600;outline:none}
@@ -49,7 +49,9 @@
   .trip{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:14px}
   .trip h2{font-size:1.25rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:8px}
   .trip h2 i{color:var(--accent)}
-  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .trip .th{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .trip .th h2{min-width:0}
+  .trip .th .chip{flex-shrink:0;white-space:nowrap}
   .chip{font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--accent-light);color:var(--accent-dark)}
   .trip .nota{margin-top:8px;font-size:.88rem;color:var(--text2);white-space:pre-wrap}
   .resumen{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
@@ -59,6 +61,11 @@
   .resumen .wide{grid-column:1/-1}
   .resumen small.rx{font-size:.78rem;margin-top:1px}
 
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px;width:100%;max-width:560px;margin:0 auto}
+  .tabs button{border:none;background:none;border-radius:999px;padding:11px 8px;font-family:inherit;font-size:.95rem;font-weight:800;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+  .tabs button.on{background:var(--accent);color:#fff}
+  .cmp{display:flex;justify-content:space-between;gap:8px;margin-top:6px;padding:0 4px;font-size:.8rem;color:var(--text2);font-weight:700}
+  .cmp b{font-weight:800;color:var(--text)}
   /* acordeones con color propio */
   .acc{--c:var(--accent);background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--c);border-radius:16px;overflow:hidden}
   .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:14px;background:color-mix(in srgb,var(--c) calc(var(--tint)*100%),transparent);border:none;font-family:inherit;color:var(--text);font-size:1rem;font-weight:800;cursor:pointer;text-align:left}
@@ -79,11 +86,11 @@
   .row{padding:5px 0;border-top:.5px solid var(--border)}
   .row input{width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 8px;font-size:.9rem;font-weight:600;outline:none}
   .row input:focus{border-color:var(--c)}
-  .row input.m{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .row input.m{text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
   .row input.bad{border-color:var(--neg)}
   .cur{height:36px;border-radius:10px;border:1.5px solid var(--c);background:none;color:var(--c);font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer}
   .cur.ext{background:var(--c);color:#fff}
-  .conv{text-align:right;font-size:.85rem;font-weight:800;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .conv{text-align:center;font-size:.85rem;font-weight:800;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .x{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:32px;flex-shrink:0;padding:0}
   .tot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding:11px 12px;border-radius:var(--r);background:color-mix(in srgb,var(--c) calc(var(--tint)*100%),transparent);font-weight:800}
   .tot .v{text-align:right;font-variant-numeric:tabular-nums}
@@ -99,7 +106,7 @@
   .col h4{text-align:center;font-size:.85rem;font-weight:800;letter-spacing:.05em}
   .col.j h4,.col.j .ct{color:var(--juli)} .col.a h4,.col.a .ct{color:var(--ale)}
   .col .ar{display:flex;gap:4px;align-items:center}
-  .col .ar input{flex:1;min-width:0;width:100%;background:var(--surface);border:1px solid transparent;border-radius:10px;padding:9px 8px;font-size:.9rem;font-weight:800;text-align:right;outline:none;font-variant-numeric:tabular-nums}
+  .col .ar input{flex:1;min-width:0;width:100%;background:var(--surface);border:1px solid transparent;border-radius:10px;padding:9px 8px;font-size:.9rem;font-weight:800;text-align:center;outline:none;font-variant-numeric:tabular-nums}
   .col .ar input:focus{border-color:var(--c)}
   .col .add{margin-top:2px;padding:8px}
   .col.j .add{border-color:var(--juli);color:var(--juli)} .col.a .add{border-color:var(--ale);color:var(--ale)}
@@ -109,7 +116,7 @@
   .it:first-child{border-top:none;padding-top:0}
   .it input{width:100%;min-width:0;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 10px;font-size:.92rem;font-weight:700;outline:none}
   .it input:focus{border-color:var(--c)}
-  .it input.m{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  .it input.m{text-align:center;font-weight:800;font-variant-numeric:tabular-nums}
   .it input.bad{border-color:var(--neg)}
   .l1{display:flex;gap:6px;align-items:center}
   .l1 input{flex:1}
@@ -167,7 +174,6 @@
   /* ===== PC: resumen del viaje fijo a la izquierda, acordeones a la derecha ===== */
   @media (min-width:900px){
     main{max-width:1180px;padding:22px}
-    .bar{max-width:640px}
     #body{display:grid !important;grid-template-columns:380px minmax(0,1fr);gap:16px;align-items:start}
     #body>.trip{grid-column:1;grid-row:1 / span 20;position:sticky;top:90px}
     #body>.acc{grid-column:2}
@@ -195,6 +201,7 @@
     <button class="ib" id="bEdit" onclick="abrirForm(true)" aria-label="Editar vacación"><i class="ti ti-edit"></i></button>
     <button class="ib del" id="bDel" onclick="borrarViaje()" aria-label="Eliminar vacación"><i class="ti ti-trash"></i></button>
   </div>
+  <div class="tabs" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div>
   <div id="body"></div>
 </main>
 
@@ -251,17 +258,30 @@ const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 /* ================= estado ================= */
 let viajes=rd(LS,[]);if(!Array.isArray(viajes))viajes=[];
 let selId=rd(LS_SEL,null);
-function normalizar(v){if(v&&!Array.isArray(v.ruta))v.ruta=String(v.ruta||'').split('\n').map(t=>t.trim()).filter(Boolean).map(texto=>({id:uid(),texto}));return v;}
+function normalizar(v){
+  if(!v)return v;
+  if(!Array.isArray(v.ruta))v.ruta=String(v.ruta||'').split('\n').map(t=>t.trim()).filter(Boolean).map(texto=>({id:uid(),texto}));
+  if(!v.v3){ // pasar al formato con pestañas Estimado / Real
+    v.e_gastos=v.est||[];v.e_exc=v.exc||[];v.e_com=v.dia||[];
+    v.r_gastos=v.real||[];v.r_exc=[];v.r_com=v.com||[];
+    delete v.est;delete v.exc;delete v.dia;delete v.real;delete v.com;v.v3=true;
+  }
+  ['e_gastos','e_exc','e_com','r_gastos','r_exc','r_com'].forEach(k=>{if(!Array.isArray(v[k]))v[k]=[]});
+  if(!v.aho)v.aho={j:[],a:[]};
+  return v;
+}
 viajes.forEach(normalizar);
 const cur=()=>viajes.find(v=>v.id===selId)||null;
 function nuevoViaje(lugar,moneda,cot,nota){
   const it=label=>({id:uid(),label,monto:'',ext:false});
-  return{id:'v2_'+uid(),ver:2,creado:Date.now(),lugar,moneda,cot,nota,
-    est:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],
-    aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},
-    exc:[],dia:[it('Desayuno'),it('Almuerzo'),it('Cena')],real:[],com:[],ruta:[]};
+  return{id:'v2_'+uid(),ver:2,v3:true,creado:Date.now(),lugar,moneda,cot,nota,
+    e_gastos:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],e_exc:[],e_com:[it('Desayuno'),it('Almuerzo'),it('Cena')],
+    r_gastos:[it('Viaje + seguro'),it('Alojamiento'),it('Transfers')],r_exc:[],r_com:[],
+    aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ruta:[]};
 }
-let openAcc='est';
+let tab=rd('viaje_tab','e');if(tab!=='e'&&tab!=='r')tab='e';
+let openAcc=tab+'_gastos';
+const SECC=['gastos','exc','com'];
 
 /* ================= cálculos ================= */
 function cotOf(v){return v.moneda==='ARS'?1:(n0(v.cot)||0)}
@@ -270,10 +290,9 @@ function totLista(v,lista){return (v[lista]||[]).reduce((a,it)=>a+enPesos(v,it),
 function aExt(v,ars){const c=cotOf(v);return c?ars/c:NaN}
 function calcular(v){
   const K={};
-  ['est','exc','dia','real'].forEach(l=>K[l]=totLista(v,l));
+  ['e','r'].forEach(t=>{K[t]=0;SECC.forEach(sc=>{const x=totLista(v,t+'_'+sc);K[t+'_'+sc]=x;K[t]+=x;});});
   K.ahJ=v.aho.j.reduce((a,x)=>a+n0(x.monto),0);K.ahA=v.aho.a.reduce((a,x)=>a+n0(x.monto),0);K.aho=K.ahJ+K.ahA;
-  K.comG=0;K.comE=K.dia*(v.com.length);v.com.forEach(c=>{K.comG+=enPesos(v,c)});K.comD=K.comE-K.comG;
-  K.bal=K.aho-K.est;K.rest=K.aho-K.real;
+  K.bal=K.aho-K.e;K.rest=K.aho-K.r;
   return K;
 }
 
@@ -288,7 +307,8 @@ function listar(){
 }
 q.addEventListener('focus',listar);q.addEventListener('input',listar);
 q.addEventListener('blur',()=>setTimeout(()=>res.classList.remove('show'),120));
-function elegir(id){selId=id;wr(LS_SEL,id);q.value='';res.classList.remove('show');q.blur();openAcc='est';render();}
+function elegir(id){selId=id;wr(LS_SEL,id);q.value='';res.classList.remove('show');q.blur();openAcc=tab+'_gastos';render();}
+function setTab(t){tab=t;wr('viaje_tab',t);openAcc=t+'_gastos';render();}
 
 /* ================= crear / editar ================= */
 let editando=false,monSel='ARS';
@@ -309,8 +329,8 @@ function guardarForm(){
   const lugar=document.getElementById('fLugar').value.trim();
   if(!lugar){document.getElementById('fLugar').focus();return;}
   const cot=document.getElementById('fCot').value.trim(),nota=document.getElementById('fNota').value.trim();
-  if(editando){const v=cur();Object.assign(v,{lugar,moneda:monSel,cot,nota});if(monSel==='ARS')['est','exc','dia','real','com'].forEach(l=>v[l].forEach(it=>it.ext=false));guardar(v);}
-  else{const v=nuevoViaje(lugar,monSel,cot,nota);viajes.push(v);selId=v.id;wr(LS_SEL,selId);openAcc='est';guardar(v);}
+  if(editando){const v=cur();Object.assign(v,{lugar,moneda:monSel,cot,nota});if(monSel==='ARS')['e_gastos','e_exc','e_com','r_gastos','r_exc','r_com'].forEach(l=>v[l].forEach(it=>it.ext=false));guardar(v);}
+  else{const v=nuevoViaje(lugar,monSel,cot,nota);viajes.push(v);selId=v.id;wr(LS_SEL,selId);openAcc=tab+'_gastos';guardar(v);}
   cerrar('form');render();
 }
 function borrarViaje(){
@@ -333,8 +353,8 @@ function setF(lista,id,campo,el){
   cambio();
 }
 function toggleExt(lista,id){const it=item(lista,id);it.ext=!it.ext;cambio();render();}
-function agregar(lista){cur()[lista].push({id:uid(),label:'',monto:'',ext:cur().moneda!=='ARS'&&lista!=='est'});cambio();render(()=>{
-  const a=lista==='real'?'rea':lista==='dia'?'com':lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
+function agregar(lista){cur()[lista].push({id:uid(),label:'',monto:'',ext:cur().moneda!=='ARS'&&!lista.endsWith('gastos')});cambio();render(()=>{
+  const a=lista,r=document.querySelectorAll(`#acc-${a} .row input,#acc-${a} .it input`);const l=[...r].filter(x=>!x.classList.contains('m'));if(l.length)l[l.length-1].focus();});}
 function quitar(lista,id){cur()[lista]=cur()[lista].filter(x=>x.id!==id);cambio();render();}
 function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
@@ -371,79 +391,62 @@ const acc=(k,cl,ic,titulo,inner)=>`<section class="acc ${cl}${openAcc===k?' open
 function render(after){
   const v=cur(),body=document.getElementById('body');
   document.getElementById('bEdit').disabled=!v;document.getElementById('bDel').disabled=!v;
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+  document.getElementById('tabs').style.display=v?'':'none';
   if(!v){body.innerHTML=`<div class="trip vacio"><b>${viajes.length?'Elegí una vacación':'Todavía no hay vacaciones'}</b>${viajes.length?'Buscala arriba.':'Tocá <i class="ti ti-circle-plus-filled" style="color:var(--accent)"></i> para crear la primera.'}</div>`;return;}
-  const ext=v.moneda!=='ARS',S=SIM[v.moneda];
+  const ext=v.moneda!=='ARS',S=SIM[v.moneda],T=tab,real=T==='r';
   const trip=`<div class="trip">
-    <h2><i class="ti ti-map-pin-filled"></i>${esc(v.lugar)}</h2>
-    <div class="chips"><span class="chip">${NOM[v.moneda]} (${S})</span>${ext?`<span class="chip">1 ${S} = ${fmt(n0(v.cot))}</span>`:''}</div>
+    <div class="th"><h2><i class="ti ti-map-pin-filled"></i>${esc(v.lugar)}</h2>${ext?`<span class="chip">1 ${S} = ${fmt(n0(v.cot))}</span>`:''}</div>
     ${v.nota?`<div class="nota">${esc(v.nota)}</div>`:''}
     <div class="resumen">
       <div><small>Plata ahorrada</small><b data-r="aho"></b><small class="rx" data-rx="aho"></small></div>
-      <div><small>Gasto estimado</small><b data-r="est"></b><small class="rx" data-rx="est"></small></div>
+      <div><small>Gasto estimado</small><b data-r="e"></b><small class="rx" data-rx="e"></small></div>
       <div class="wide"><small>BALANCE (ahorrado − estimado)</small><b data-r="bal"></b><small class="rx" data-rx="bal"></small></div>
-      <div><small>Gastado real</small><b data-r="real"></b><small class="rx" data-rx="real"></small></div>
+      <div><small>Gastado real</small><b data-r="r"></b><small class="rx" data-rx="r"></small></div>
       <div><small>RESTANTE (ahorrado − gastado)</small><b data-r="rest"></b><small class="rx" data-rx="rest"></small></div>
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
   </div>`;
-  const hintMon=ext?`<p class="hint">Tocá el botón <b>$</b> / <b>${S}</b> para elegir en qué moneda escribís cada costo; al lado aparece convertido. Podés sumar en el campo: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
+  const hintMon=ext?`<p class="hint">Tocá <b>$</b> / <b>${S}</b> para elegir en qué moneda escribís cada costo; al lado aparece convertido. Podés sumar en el campo: 2000+1500.</p>`:'<p class="hint">Podés sumar en el campo: 2000+1500.</p>';
+  // total de cada sección; en Real se compara con lo estimado
+  const totS=(sc)=>`<div class="tot"><span>TOTAL</span><span class="v"><span data-t="${T}_${sc}"></span><small data-tx="${T}_${sc}"></small></span></div>`+
+    (real?`<div class="cmp"><span>Estimado <b data-t="e_${sc}"></b></span><span>Diferencia <b data-d="${sc}"></b></span></div>`:'');
+  const sec=(sc,cl,ic,titulo,ph,txt)=>acc(T+'_'+sc,cl,ic,titulo,filas(v,T+'_'+sc,ph)+totS(sc)+addB(T+'_'+sc,txt)+(sc==='gastos'?hintMon:''));
 
   const aho=`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
         ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
         <div class="ct" data-a="${p}"></div></div>`).join('')}
-    </div>${tot('aho','TOTAL DE LOS DOS')}<p class="hint">Montos en pesos.</p>`;
-
-  const com=`<h5 class="sub"><i class="ti ti-sun"></i> Presupuesto por día</h5>`+filas(v,'dia','Desayuno, almuerzo…')+
-    `<div class="tot"><span>PRESUPUESTO DIARIO</span><span class="v"><span data-t="dia"></span><small data-tx="dia"></small></span></div>`+addB('dia','Concepto')+
-    `<h5 class="sub" style="margin-top:18px"><i class="ti ti-calendar"></i> Lo gastado cada día</h5>`+
-    (v.com.length?v.com.map(it=>`<div class="it">
-      <div class="l1"><input type="text" value="${esc(it.label)}" placeholder="Día (ej: Lunes 9)" oninput="setF('com','${it.id}','label',this)">
-        <span class="dif" data-d="${it.id}"></span>
-        <button class="x" onclick="quitar('com','${it.id}')" aria-label="Borrar"><i class="ti ti-trash"></i></button></div>
-      <div class="l2${ext?'':' noext'}"><input type="text" class="m" inputmode="decimal" value="${esc(cp(it.monto))}" placeholder="Gastado: 56+8+50…" oninput="setF('com','${it.id}','monto',this)">
-        ${ext?`<button class="cur${it.ext?' ext':''}" onclick="toggleExt('com','${it.id}')">${it.ext?S:'$'}</button><span class="conv" data-cv="com:${it.id}"></span>`:''}</div></div>`).join('')
-    :'<p class="empty">Agregá un día cuando estés de viaje</p>')+`
-    <button class="add" onclick="agregar('com')"><i class="ti ti-plus"></i> Día</button>
-    ${tot('comG','Total gastado')}${tot('comD','DIFERENCIA')}
-    <p class="hint">Cada día se compara con el presupuesto diario. Verde: te sobró; rojo: te pasaste.</p>`;
+    </div><div class="tot"><span>TOTAL DE LOS DOS</span><span class="v"><span data-t="aho"></span><small data-tx="aho"></small></span></div><p class="hint">Montos en pesos.</p>`;
 
   body.innerHTML=trip+
-    acc('est','a-est','calculator','Gastos estimados',filas(v,'est','Concepto')+tot('est','TOTAL')+addB('est','Gasto')+hintMon)+
+    sec('gastos','a-est','calculator',real?'Gastos realizados':'Gastos estimados','Concepto','Gasto')+
+    sec('exc','a-exc','ticket',real?'Excursiones hechas':'Excursiones posibles','Excursión','Excursión')+
+    sec('com','a-com','tools-kitchen-2',real?'Comida (lo gastado)':'Comida (presupuesto)',real?'Día (ej: Lunes 9)':'Desayuno, almuerzo…',real?'Día':'Concepto')+
     acc('aho','a-aho','pig-money','Plata ahorrada',aho)+
-    acc('exc','a-exc','ticket','Excursiones posibles',filas(v,'exc','Excursión')+tot('exc','TOTAL')+addB('exc','Excursión'))+
-    acc('rea','a-rea','receipt','Gastos realizados',filas(v,'real','Gasto')+tot('real','TOTAL GASTADO')+addB('real','Gasto'))+
-    acc('com','a-com','tools-kitchen-2','Comida por día',com)+
     acc('ruta','a-ruta','map-2','Ruta',`<div class="ruta">${v.ruta.length?v.ruta.map((r,i)=>`<div class="rl"><span class="rn">${i+1}</span>
         <textarea rows="1" placeholder="ej: Lunes 9 — Praia do Amor, cena en…" oninput="setLinea('${r.id}',this)">${esc(r.texto)}</textarea>
         <button class="x" onclick="quitarLinea('${r.id}')" aria-label="Borrar línea"><i class="ti ti-trash"></i></button></div>`).join('')
       :'<p class="empty">Todavía no hay líneas</p>'}</div><button class="add" onclick="agregarLinea()"><i class="ti ti-plus"></i> Línea</button>`);
   document.querySelectorAll('.rl textarea').forEach(autoAlto);
-  document.querySelectorAll('.row input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
+  document.querySelectorAll('.row input.m,.it input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
   recalc();
   if(typeof after==='function')after();
 }
 
 function recalc(){
-  const v=cur();if(!v)return;const K=calcular(v),ext=v.moneda!=='ARS',m=v.moneda;
+  const v=cur();if(!v)return;const K=calcular(v),ext=v.moneda!=='ARS',m=v.moneda,T=tab;
   const put=(sel,txt,n,color)=>document.querySelectorAll(sel).forEach(e=>{e.textContent=txt;if(color)e.className=e.className.replace(/\b(pos|neg|zero)\b/g,'').trim()+' '+cls(n)});
-  // filas: valor convertido
   document.querySelectorAll('[data-cv]').forEach(e=>{const [l,id]=e.dataset.cv.split(':'),it=v[l].find(x=>x.id===id);if(!it)return;
     const m0=n0(it.monto);e.textContent=it.ext?fmt(m0*cotOf(v)):fmt(aExt(v,m0),m);});
-  // totales
-  const T={est:K.est,exc:K.exc,dia:K.dia,real:K.real,aho:K.aho,comG:K.comG,comD:K.comD};
-  Object.entries(T).forEach(([k,n])=>{put(`[data-t="${k}"]`,fmt(n),n,k==='comD');put(`[data-tx="${k}"]`,ext?fmt(aExt(v,n),m):'',0,false);});
-  // encabezados de acordeones
-  const H={est:K.est,aho:K.aho,exc:K.exc,rea:K.real,com:K.comD};
-  Object.entries(H).forEach(([k,n])=>put(`[data-h="${k}"]`,fmt(n),n,false));
-  put('[data-h="ruta"]','',0,false);
-  // ahorro por persona
+  SECC.forEach(sc=>['e','r'].forEach(t=>{const n=K[t+'_'+sc];put(`[data-t="${t}_${sc}"]`,fmt(n),0,false);put(`[data-tx="${t}_${sc}"]`,ext?fmt(aExt(v,n),m):'',0,false);}));
+  SECC.forEach(sc=>{const d=K['e_'+sc]-K['r_'+sc];put(`[data-d="${sc}"]`,fmt(d),d,true);});
+  put('[data-t="aho"]',fmt(K.aho),0,false);put('[data-tx="aho"]',ext?fmt(aExt(v,K.aho),m):'',0,false);
+  SECC.forEach(sc=>put(`[data-h="${T}_${sc}"]`,fmt(K[T+'_'+sc]),0,false));
+  put('[data-h="aho"]',fmt(K.aho),0,false);
   put('[data-a="j"]',fmt(K.ahJ),0,false);put('[data-a="a"]',fmt(K.ahA),0,false);
-  // comida: diferencia por día
-  v.com.forEach(c=>{const d=K.dia-enPesos(v,c);put(`[data-d="${c.id}"]`,fmt(d),d,true);});
-  // resumen
-  const R={aho:K.aho,est:K.est,bal:K.bal,real:K.real,rest:K.rest};
+  const R={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest};
   Object.entries(R).forEach(([k,n])=>{put(`[data-r="${k}"]`,fmt(n),n,k==='bal'||k==='rest');put(`[data-rx="${k}"]`,ext&&cotOf(v)?fmt(aExt(v,n),m):'',0,false);});
 }
 
