@@ -230,6 +230,12 @@
     main{padding:10px}
   }
   #body{display:flex;flex-direction:column;gap:10px;padding-bottom:45vh}
+  /* botón PDF a la derecha del header */
+  .pdf-btn{position:absolute;right:8px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;border:none;background:none;color:var(--accent);font-size:1.7rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px}
+  .pdf-btn:active{transform:scale(.88);opacity:.8}
+  .pdf-btn:disabled{opacity:.35;cursor:default}
+  .pdf-btn.cargando i{animation:pdfGira 1s linear infinite !important}
+  @keyframes pdfGira{to{transform:rotate(360deg)}}
 
   /* ===== PC: resumen del viaje fijo a la izquierda, acordeones a la derecha ===== */
   @media (min-width:900px){
@@ -248,6 +254,7 @@
 <div class="top">
   <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
   <h1>VACACIONES</h1>
+  <button class="pdf-btn" id="bPdf" onclick="exportarPDF()" aria-label="Exportar vacaciones en PDF"><i class="ti ti-file-type-pdf"></i></button>
 </div>
 
 <main>
@@ -501,7 +508,7 @@ const totRow=(label,k)=>`<div class="tot"><span>${label}</span><span class="v"><
 
 function render(after){
   const v=cur(),body=document.getElementById('body');
-  document.getElementById('bEdit').disabled=!v;document.getElementById('bDel').disabled=!v;
+  document.getElementById('bEdit').disabled=!v;document.getElementById('bDel').disabled=!v;document.getElementById('bPdf').disabled=!viajes.length;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
   {const tb=document.getElementById('tabs');tb.style.display=v?'':'none';tb.classList.toggle('oculto',!v);}
   {const dm=document.getElementById('dmon'),ok=v&&tab==='r'&&v.moneda!=='ARS';dm.style.display=ok?'':'none';dm.classList.toggle('oculto',!ok);
@@ -598,6 +605,102 @@ function recalc(){
   const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario,e_diarioTot:K.e_diarioTot};
   Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest'||k==='dif');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
+
+/* confirmación genérica (la usan borrar concepto del día y borrar ahorro) */
+function preguntar(t,m,ok){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=m;
+  document.getElementById('dOk').onclick=()=>{cerrar('dlg');ok();};abrir('dlg');}
+
+/* ================= exportar PDF ================= */
+/* PDF con todas las vacaciones de la más vieja a la más nueva: título, nota y lo gastado (real) */
+async function exportarPDF(){
+  const b=document.getElementById('bPdf');if(b.disabled)return;
+  if(!viajes.length)return;
+  b.disabled=true;b.classList.add('cargando');b.querySelector('i').className='ti ti-loader-2';
+  try{
+    if(!window.jspdf)await loadScript('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+    const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
+    const W=210,H=297,MX=16,acc=colorRGB(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#1D9E75');
+    const icono=await iconoRedondo('img/icono-512.png');
+    const lista=viajes.slice().sort((a,b)=>(a.creado||0)-(b.creado||0));
+    const hoy=new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+
+    /* header: banda de color con el ícono y el título */
+    const header=()=>{
+      doc.setFillColor(...acc);doc.rect(0,0,W,38,'F');
+      doc.setFillColor(255,255,255);doc.circle(MX+12,19,12.6,'F');
+      if(icono)doc.addImage(icono,'PNG',MX,7,24,24);
+      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(20);
+      doc.text('Nuestras vacaciones - Escapadas',MX+31,18);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);
+      doc.text(`${lista.length} ${lista.length===1?'vacación':'vacaciones'} · de la más vieja a la más nueva`,MX+31,25.5);
+      doc.setFontSize(8.5);doc.text('Generado el '+hoy,W-MX,33,{align:'right'});
+    };
+    const cabTabla=y=>{
+      doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...acc);
+      doc.text('#',MX+2,y);doc.text('VACACIÓN Y NOTAS',MX+12,y);doc.text('GASTAMOS',W-MX-2,y,{align:'right'});
+      doc.setDrawColor(...acc);doc.setLineWidth(.5);doc.line(MX,y+2.5,W-MX,y+2.5);
+      return y+7;
+    };
+    header();
+    let y=cabTabla(50),total=0;
+    const colTxt=MX+12,anchoTxt=W-MX*2-12-48,fin=H-18;
+    lista.forEach((v,i)=>{
+      const K=calcular(v),ext=v.moneda!=='ARS'&&cotOf(v);
+      doc.setFont('helvetica','bold');doc.setFontSize(11.5);
+      const tit=doc.splitTextToSize(String(v.lugar||'Sin nombre').toUpperCase(),anchoTxt);
+      doc.setFont('helvetica','normal');doc.setFontSize(9.5);
+      const nota=v.nota?doc.splitTextToSize(String(v.nota),anchoTxt):[];
+      const alto=Math.max(14,6+tit.length*5+nota.length*4.3+3);
+      if(y+alto>fin){doc.addPage();header();y=cabTabla(50);}
+      if(i%2===0){doc.setFillColor(...mezcla(acc,.06));doc.rect(MX,y-1,W-MX*2,alto,'F');}
+      // número
+      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...acc);doc.text(String(i+1),MX+2,y+5);
+      // título + nota
+      doc.setFontSize(11.5);doc.setTextColor(30,30,30);doc.text(tit,colTxt,y+5);
+      let yy=y+5+tit.length*5;
+      if(nota.length){doc.setFont('helvetica','normal');doc.setFontSize(9.5);doc.setTextColor(100,100,100);doc.text(nota,colTxt,yy-.6,{lineHeightFactor:1.3});}
+      else{doc.setFont('helvetica','italic');doc.setFontSize(9);doc.setTextColor(160,160,160);doc.text('Sin notas',colTxt,yy-.6);}
+      // gastado (real) a la derecha
+      const xr=W-MX-2;
+      if(K.r){total+=K.r;
+        doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(30,30,30);doc.text(fmt(K.r),xr,y+5,{align:'right'});
+        if(ext){doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(120,120,120);doc.text('aprox. '+fmt(aExt(v,K.r),v.moneda),xr,y+9.5,{align:'right'});}
+      }else{
+        doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(160,160,160);doc.text('Sin cargar',xr,y+5,{align:'right'});
+        if(K.e){doc.setFontSize(8.5);doc.text('Estimado '+fmt(K.e),xr,y+9.5,{align:'right'});}
+      }
+      doc.setDrawColor(225,225,225);doc.setLineWidth(.2);doc.line(MX,y-1+alto,W-MX,y-1+alto);
+      y+=alto;
+    });
+    // total
+    if(y+16>fin){doc.addPage();header();y=50;}
+    y+=3;doc.setFillColor(...acc);doc.roundedRect(MX,y,W-MX*2,12,2.5,2.5,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text('TOTAL GASTADO',MX+5,y+7.8);doc.setFontSize(13);doc.text(fmt(total),W-MX-5,y+7.9,{align:'right'});
+    // pie con número de página
+    const n=doc.getNumberOfPages();
+    for(let p=1;p<=n;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(150,150,150);
+      doc.setDrawColor(230,230,230);doc.setLineWidth(.2);doc.line(MX,H-12,W-MX,H-12);
+      doc.text('JuntOS · Vacaciones',MX,H-7.5);doc.text(`Página ${p} de ${n}`,W-MX,H-7.5,{align:'right'});}
+
+    const nombre='Nuestras vacaciones - Escapadas.pdf';
+    const file=new File([doc.output('blob')],nombre,{type:'application/pdf'});
+    if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file],title:'Nuestras vacaciones - Escapadas'});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
+    }else doc.save(nombre);
+  }catch(e){
+    alert('No se pudo crear el PDF. Revisá la conexión a internet y probá de nuevo.');
+  }finally{b.disabled=false;b.classList.remove('cargando');b.querySelector('i').className='ti ti-file-type-pdf';}
+}
+/* color CSS -> [r,g,b] */
+function colorRGB(c){const x=document.createElement('canvas').getContext('2d');x.fillStyle='#1D9E75';x.fillStyle=c;const h=x.fillStyle;
+  if(h[0]==='#')return [1,3,5].map(i=>parseInt(h.substr(i,2),16));const m=h.match(/\d+/g);return m?m.slice(0,3).map(Number):[29,158,117];}
+const mezcla=(rgb,a)=>rgb.map(c=>Math.round(255-(255-c)*a));
+/* el ícono recortado en círculo (PNG) para el header del PDF */
+function iconoRedondo(src){return new Promise(ok=>{const im=new Image();im.onload=()=>{try{
+    const s=400,cv=document.createElement('canvas');cv.width=cv.height=s;const x=cv.getContext('2d');
+    x.beginPath();x.arc(s/2,s/2,s/2,0,Math.PI*2);x.clip();x.drawImage(im,0,0,s,s);ok(cv.toDataURL('image/png'));}catch(e){ok(null)}};
+  im.onerror=()=>ok(null);im.src=src;});}
 
 /* ================= guardado + Firebase ================= */
 const COL='vacaciones'; // misma colección de antes; los viajes nuevos tienen ver:2 y se ignoran los viejos
