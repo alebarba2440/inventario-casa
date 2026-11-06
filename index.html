@@ -119,8 +119,8 @@
   #intro .ella{z-index:1;animation:ellaLlega 1.6s cubic-bezier(.3,.7,.4,1) both}
   #intro .ella .paso{position:absolute;inset:0;transform-origin:45% 95%;animation:ellaPasos .27s ease-in-out 6 both}
   #intro .polvo{position:absolute;left:14%;bottom:6%;width:9%;aspect-ratio:1;border-radius:50%;background:var(--border2);opacity:0;animation:polvo .5s ease-out 3 both}
-  #intro .gif{position:absolute;inset:0;z-index:3;background:url(img/intro-sprite.webp) 0 0/1600% 100% no-repeat;opacity:0}
-  #intro.beso .gif{opacity:1;animation:gif 2.4s steps(15) both}
+  #intro .gif{position:absolute;inset:0;z-index:3;background:url(img/intro-sprite.webp?v=2) 0 0/1400% 100% no-repeat;opacity:0}
+  #intro.beso .gif{opacity:1;animation:gif 2.1s steps(13) both}
   #intro.beso .capa,#intro.beso .polvo{visibility:hidden}
   #intro .saltar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-size:.8rem;color:var(--text2);opacity:.7}
   @keyframes ellaLlega{0%{transform:translateX(-140%)}100%{transform:translateX(0)}}
@@ -149,13 +149,13 @@
   try{sessionStorage.setItem('intro_ok','1')}catch(e){}
   window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);};
   // espera a que estén cargadas las imágenes para que no arranque a medias
-  const urls=['img/intro-el.webp','img/intro-ella.webp','img/intro-sprite.webp'];
+  const urls=['img/intro-el.webp','img/intro-ella.webp','img/intro-sprite.webp?v=2'];
   const anims=()=>el.getAnimations({subtree:true});
   anims().forEach(a=>a.pause());
   Promise.all(urls.map(u=>new Promise(r=>{const i=new Image();i.onload=i.onerror=r;i.src=u;}))).then(()=>{
     anims().forEach(a=>a.play());
     setTimeout(()=>el.classList.add('beso'),1650);   // llegó: arranca el beso
-    setTimeout(finIntro,1650+2400+1100);              // el beso dura 2,4 s y queda el logo un ratito
+    setTimeout(finIntro,1650+2100+1000);              // el beso dura 2,1 s y queda el abrazo un ratito
   });
   setTimeout(finIntro,9000); // por si algo no carga
 })();
