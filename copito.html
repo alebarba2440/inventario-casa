@@ -129,15 +129,24 @@
   .sheet h3{font-size:1.1rem;text-align:center}.sheet p{color:var(--text2);text-align:center}
   .two{display:flex;gap:8px}.two .btn{flex:1}
   @media (max-width:380px){.hdr,.row,.tot{grid-template-columns:1fr 86px 64px 24px} main{padding:10px}}
-  #meses{display:flex;flex-direction:column;gap:10px}
+  #meses{display:flex;flex-direction:column;gap:12px}
+  .anio{background:var(--surface);border:.5px solid var(--border);border-radius:18px;overflow:hidden}
+  .anio-h{width:100%;display:flex;align-items:center;gap:10px;padding:14px 14px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .anio-h .ay{font-weight:900;font-size:1.05rem;letter-spacing:.04em}
+  .anio-h .ap{flex:1;font-size:.8rem;font-weight:700;color:var(--text2)}
+  .anio-h .at{font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+  .anio-h .chev{color:var(--text2);transition:transform .2s}
+  .anio.open>.anio-h .chev{transform:rotate(180deg)}
+  .anio-b{display:none;padding:0 10px 10px;flex-direction:column;gap:10px}
+  .anio.open>.anio-b{display:flex}
 
   /* ===== PC: más ancho, meses y mantenimientos en dos columnas ===== */
   @media (min-width:900px){
     main{max-width:1180px;padding:22px}
     .tabs{max-width:520px;width:100%;margin:0 auto}
     #tabG>.card{max-width:640px;width:100%;margin:0 auto}
-    #meses{display:block !important;columns:2;column-gap:14px}
-    #meses>.mes{break-inside:avoid;margin-bottom:12px}
+    .anio.open>.anio-b{display:block !important;columns:2;column-gap:14px}
+    .anio-b>.mes{break-inside:avoid;margin-bottom:12px}
     #tabG>.add{max-width:640px;width:100%;margin:0 auto}
     #tabM{display:none}
     #tabM.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
@@ -240,12 +249,14 @@ const totMes=m=>m.lineas.reduce((a,l)=>a+n0(l.m),0);
 function renderGastos(){
   const ms=ordenados(),hoy=new Date(),kHoy=hoy.getFullYear()*12+hoy.getMonth();
   if(openMes===undefined){const a=ms.find(m=>key(m)===kHoy);openMes=a?a.id:(ms.length?ms[ms.length-1].id:null);}
-  document.getElementById('meses').innerHTML=ms.map(m=>{const t=totMes(m),op=m.id===openMes;
+  const anios=[...new Set(ms.map(m=>m.y))].sort((a,b)=>b-a);
+  if(!aniosAb){aniosAb=new Set(rd('copito_anios',[hoy.getFullYear()]));if(!anios.some(y=>aniosAb.has(y))&&anios.length)aniosAb.add(anios[0]);}
+  const htmlMes=m=>{const t=totMes(m),op=m.id===openMes;
     return `<div class="mes${m.pagado?' paid':''}${op?' open':''}" id="mes_${m.id}">
       <div class="mes-h" role="button" tabindex="0" onclick="toggleMes('${m.id}')" onkeydown="if(event.key==='Enter')toggleMes('${m.id}')" aria-expanded="${op}">
         <button class="chk${m.pagado?' on':''}" onclick="event.stopPropagation();togglePago('${m.id}')" role="checkbox" aria-checked="${m.pagado}" aria-label="${m.pagado?'Pagado':'Sin pagar'}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></button>
-        <span class="nm">${MESES[m.k]} ${m.y}</span>
+        <span class="nm">${MESES[m.k]}</span>
         <span class="tt" data-tm="${m.id}">${fmt(t)}</span><i class="ti ti-chevron-down chev"></i></div>
       <div class="mes-b">
         <div class="hdr"><span>Detalle</span><span>Monto</span><span>C/U</span><span></span></div>
@@ -260,7 +271,11 @@ function renderGastos(){
           ${anterior(m)?`<button class="add copy" onclick="copiarAnterior('${m.id}')"><i class="ti ti-copy"></i> Copiar mes anterior</button>`:''}
         </div>
         <button class="delmes" onclick="borrarMes('${m.id}')"><i class="ti ti-trash"></i> Borrar mes</button>
-      </div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
+      </div></div>`};
+  document.getElementById('meses').innerHTML=anios.map(y=>{const lm=ms.filter(m=>m.y===y),ab=aniosAb.has(y),tot=lm.reduce((a,m)=>a+totMes(m),0),pag=lm.filter(m=>m.pagado).length;
+    return `<div class="anio${ab?' open':''}" data-y="${y}"><button class="anio-h" onclick="toggleAnio(${y})" aria-expanded="${ab}">
+      <span class="ay">${y}</span><span class="ap">${pag}/${lm.length} pagados</span><span class="at">${fmt(tot)}</span><i class="ti ti-chevron-down chev"></i></button>
+      <div class="anio-b">${lm.map(htmlMes).join('')}</div></div>`}).join('')||'<p class="card" style="text-align:center;color:var(--text2)">No hay meses. Agregá uno.</p>';
   resumen();
 }
 function resumen(){
@@ -269,6 +284,9 @@ function resumen(){
   document.getElementById('rMes').textContent=fmt(t);document.getElementById('rCu').textContent=fmt(t/2);
   const pend=ms.filter(m=>!m.pagado&&totMes(m)>0);
 }
+let aniosAb=null;
+function toggleAnio(y){aniosAb.has(y)?aniosAb.delete(y):aniosAb.add(y);wr('copito_anios',[...aniosAb]);
+  const el=document.querySelector(`.anio[data-y="${y}"]`);if(el){el.classList.toggle('open',aniosAb.has(y));el.querySelector('.anio-h').setAttribute('aria-expanded',aniosAb.has(y));}}
 function toggleMes(id){openMes=openMes===id?null:id;
   document.querySelectorAll('.mes').forEach(el=>{const o=el.id==='mes_'+openMes;el.classList.toggle('open',o);el.querySelector('.mes-h').setAttribute('aria-expanded',o)});}
 const mesDe=id=>D.meses.find(m=>m.id===id);
@@ -295,7 +313,7 @@ function agregarMes(){
   let y=ult?ult.y:hoy.getFullYear(),k=ult?ult.k+1:hoy.getMonth();if(k>11){k=0;y++}
   const lineas=(ult?ult.lineas:[]).map(l=>({id:uid(),d:l.d,m:''})); // mismos conceptos que el mes anterior, montos vacíos
   const m={id:`m${y}_${k}_${uid()}`,y,k,pagado:false,lineas:lineas.length?lineas:[{id:uid(),d:'',m:''}]};
-  D.meses.push(m);openMes=m.id;guardar();renderGastos();
+  D.meses.push(m);openMes=m.id;if(aniosAb){aniosAb.add(m.y);wr("copito_anios",[...aniosAb]);}guardar();renderGastos();
   document.getElementById('mes_'+m.id).scrollIntoView({block:'center',behavior:'smooth'});
 }
 function anterior(m){return ordenados().filter(x=>key(x)<key(m)).pop()||null;}
