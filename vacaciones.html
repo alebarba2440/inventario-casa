@@ -227,7 +227,7 @@
     <button class="ib" id="bEdit" onclick="abrirForm(true)" aria-label="Editar vacación"><i class="ti ti-edit"></i></button>
     <button class="ib del" id="bDel" onclick="borrarViaje()" aria-label="Eliminar vacación"><i class="ti ti-trash"></i></button>
   </div>
-  <div class="tabsrow"><div class="tabs sw" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div><div class="dmon sw" id="dmon"><button data-m="ext" onclick="setDiaMon('ext')" id="dmExt">R$</button><button data-m="ARS" onclick="setDiaMon('ARS')">$</button></div></div>
+  <div class="tabsrow"><div class="tabs desliz" id="tabs"><button data-t="e" onclick="setTab('e')"><i class="ti ti-calculator"></i> Estimado</button><button data-t="r" onclick="setTab('r')"><i class="ti ti-receipt"></i> Real</button></div><div class="dmon desliz" id="dmon"><button data-m="ext" onclick="setDiaMon('ext')" id="dmExt">R$</button><button data-m="ARS" onclick="setDiaMon('ARS')">$</button></div></div>
   <div id="body"></div>
 </main>
 
@@ -237,7 +237,7 @@
     <h3 id="fT">Nueva vacación</h3>
     <label class="fld"><span>Lugar</span><input type="text" id="fLugar" placeholder="ej: Pipa, Brasil"></label>
     <div class="fld"><span>Moneda que se usa</span>
-      <div class="seg sw" id="fMon" style="--pad:4px;--kr:10px">
+      <div class="seg desliz" id="fMon" style="--pad:4px;--kr:10px">
         <button data-m="ARS" onclick="setMon('ARS')"><b>$</b>Pesos argentinos</button>
         <button data-m="USD" onclick="setMon('USD')"><b>US$</b>Dólares</button>
         <button data-m="BRL" onclick="setMon('BRL')"><b>R$</b>Reales</button>
