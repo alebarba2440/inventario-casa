@@ -555,8 +555,8 @@ function render(after){
      <p class="hint">Cada día se compara con el gasto de comidas estimado por día (<b data-t="e_diario"></b>). Verde: les sobró; rojo: se pasaron.</p>`;
   body.innerHTML=trip+
     sec('gastos','a-est','calculator','Gastos Básicos','Gastos Básicos','Concepto','Gasto',hint)+
-    (R?acc('dias','a-com real','sun','Gasto comidas'+tag,dias)
-      :acc('diario','a-com','sun','Gasto comidas'+tag,
+    (R?acc('dias','a-com real','tools-kitchen-2','Gasto comidas'+tag,dias)
+      :acc('diario','a-com','tools-kitchen-2','Gasto comidas'+tag,
         `<label class="ndias"><span>Días de viaje</span><input type="text" inputmode="numeric" value="${esc(v.diasViaje||'')}" placeholder="0" oninput="setDiasViaje(this)"></label>`+
         filas(v,'diario','Desayuno, almuerzo…','e')+totRow('POR DÍA','e_diario')+
         `<div class="tot"><span>TOTAL (<span data-nd></span> días)</span><span class="v"><span data-t="e_diarioTot"></span><small data-tx="e_diarioTot"></small></span></div>`+
