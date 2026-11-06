@@ -54,7 +54,7 @@
   .mov button{background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer}
   .hint{font-size:.78rem;color:var(--text2)}
   .delmes{background:none;border:none;color:var(--text2);font-family:inherit;font-size:.8rem;cursor:pointer;margin:10px auto 0;display:flex;align-items:center;gap:4px}
-  .restore{width:100%;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);padding:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+  .restore-x{width:100%;background:none;border:1px dashed var(--border2);color:var(--text2);border-radius:var(--r);padding:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
   .er{padding:8px 2px;border-top:.5px solid var(--border)}
   .er:first-child{border-top:none;padding-top:2px}
   .er1{display:flex;align-items:center;gap:8px}
@@ -268,23 +268,14 @@ function estMonths(){return state.months.map((m,i)=>[monthKey(m,i),m]).filter(([
   .filter(m=>selYear==='all'||Math.floor(monthKey(m,0)/12)===selYear);}
 function yearsEst(){return [...new Set(state.months.filter(enEst).map((m,i)=>yearOf(m,0)).filter(y=>y!==null))];}
 const enAho=m=>m.enAho||tieneMov(m); // mes agregado a mano en Ahorrado o con movimientos
-function years(){
-  const hoy=new Date().getFullYear(),ys=state.months.filter(m=>enAho(m)&&!m.oculto).map(m=>yearOf(m,0)).filter(y=>y!==null);
-  // un año nuevo aparece recién el 1 de enero
-  const lo=Math.min(hoy,...ys),hi=Math.max(hoy,...ys),out=[];for(let y=lo;y<=hi;y++)out.push(y);return out;
-}
+function years(){return [...new Set(state.months.filter(enAhorrado).map(m=>yearOf(m,0)).filter(y=>y!==null))].sort((a,b)=>a-b);}
 function setYear(y){selYear=y==='all'?'all':+y;openMes=undefined;openYear=undefined;openYearEst=undefined;render();}
 /* todos los meses del rango, ordenados. Los que todavía no tienen datos son "virtuales" hasta que se cargue algo */
+/* meses de Ahorrado: solo los que agregan ustedes (o los que ya tienen movimientos), ordenados */
+const enAhorrado=m=>!m.oculto&&enAho(m);
 function allMonths(){
-  const byKey={};state.months.forEach((m,i)=>{const k=monthKey(m,i);if(k<1e9&&!byKey[k])byKey[k]=m;});
-  const out=[];
-  years().forEach(y=>MESES.forEach((n,k)=>{const key=y*12+k;
-    if(byKey[key])byKey[key].label=n.toUpperCase()+' '+y; // nombre prolijo: "NOVIEMBRE 2026" aunque se haya cargado "noviembre"
-    if(byKey[key]&&byKey[key].oculto)return; // mes borrado de Ahorrado
-    if(y>new Date().getFullYear()&&!(byKey[key]&&enAho(byKey[key])))return; // años futuros: solo los meses agregados
-    out.push(byKey[key]||{id:'m'+y+'_'+k,label:n.toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0},virtual:true});}));
-  // los registros viejos cuyo nombre no es un mes no se muestran (quedan guardados, no se borran)
-  return out;
+  return state.months.map((m,i)=>[monthKey(m,i),m]).filter(([k,m])=>k<1e9&&enAhorrado(m))
+    .sort((a,b)=>a[0]-b[0]).map(([k,m])=>{m.label=MESES[k%12].toUpperCase()+' '+Math.floor(k/12);return m;});
 }
 function monthsOfYear(){if(selYear!=='all'&&!years().includes(selYear))return [];return allMonths().filter((m)=>{if(selYear==='all')return true;const x=String(m.label).match(/(\d{4})/);return x&&+x[1]===selYear;});}
 function getM(id){return state.months.find(x=>x.id===id)||allMonths().find(x=>x.id===id);}
@@ -340,9 +331,7 @@ function render(){
         <button class="anio-h" onclick="toggleYear('${G.g}')" aria-expanded="${op}"><span class="nm">${G.g}</span>${resumen(j,a)}<i class="ti ti-chevron-down chev"></i></button>
         <div class="anio-b">${G.ms.map(mesHTML).join('')}</div></div>`}).join('');
   } else html=ms.map(mesHTML).join('');
-  const ocultos=state.months.filter(m=>m.oculto&&(selYear==='all'||yearOf(m,0)===selYear));
-  if(html&&ocultos.length)html+=`<button class="restore" onclick="restaurarMeses()"><i class="ti ti-arrow-back-up"></i> Volver a mostrar meses borrados (${ocultos.length})</button>`;
-  document.getElementById('listReal').innerHTML=html||`<p class="hint" style="text-align:center;padding:14px 0">Todavía no hay ahorro cargado en ${selYear}.</p>`;
+  document.getElementById('listReal').innerHTML=html||`<p class="hint" style="text-align:center;padding:14px 0">Todavía no hay meses${selYear==='all'?'':' en '+selYear}. Tocá <b>Agregar mes</b>.</p>`;
   /* estimado: meses agregados a mano, separados por año (un acordeón por año) */
   const tabla=list=>list.map(m=>`<div class="er">
       <div class="er1"><b>${esc(m.label.replace(/ \d{4}$/,''))}</b><span class="et" id="et_${m.id}"></span>
@@ -405,7 +394,7 @@ function abrirAdd(modo){
   const lista=modo==='est'?state.months.filter(enEst).map(m=>monthKey(m,0)):allMonths().map(m=>monthKey(m,0));
   lista.sort((a,b)=>a-b);
   let k=modo==='est'?(lista.length?lista[lista.length-1]+1:y0*12+hoy.getMonth())
-       :(state.months.find(m=>m.oculto)?monthKey(state.months.find(m=>m.oculto),0):(lista.length?lista[lista.length-1]+1:y0*12+hoy.getMonth()));
+       :(lista.length?lista[lista.length-1]+1:y0*12+hoy.getMonth());
   document.getElementById('aeT').textContent=modo==='est'?'Agregar mes a Estimado':'Agregar mes a Ahorrado';
   document.getElementById('aeMes').innerHTML=MESES.map((n,i)=>`<option value="${i}"${i===k%12?' selected':''}>${n}</option>`).join('');
   document.getElementById('aeAnio').innerHTML=[y0-1,y0,y0+1,y0+2,y0+3].map(y=>`<option${y===Math.floor(k/12)?' selected':''}>${y}</option>`).join('');
@@ -420,8 +409,7 @@ function confirmarAddEst(){
     if(!m){m={id:uid(),label:MESES[k].toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0}};state.months.push(m);}
     m.enEst=true;openYearEst=String(y);
   }else{
-    const visible=allMonths().some(x=>monthKey(x,0)===key);
-    if(visible){err.textContent=MESES[k]+' '+y+' ya está en Ahorrado.';return;}
+    if(allMonths().some(x=>monthKey(x,0)===key)){err.textContent=MESES[k]+' '+y+' ya existe en Ahorrado.';return;}
     if(!m){m={id:uid(),label:MESES[k].toUpperCase()+' '+y,mov:{j:[],a:[]},est:{j:0,a:0}};state.months.push(m);}
     delete m.oculto;m.enAho=true;
     if(selYear!=='all'&&selYear!==y)selYear='all';
@@ -447,9 +435,8 @@ function borrarMes(id){
   const m=getM(id);if(!m)return;
   const n=(m.mov.j||[]).length+(m.mov.a||[]).length;
   if(!confirm(n?`${m.label} tiene ${n} movimiento(s). ¿Borrarlo igual? Se pierden esos movimientos.`:`¿Borrar ${m.label} de Ahorrado?`))return;
-  const r=realM(id);r.mov={j:[],a:[]};r.oculto=true;delete r.enAho;openMes=null;save();render();
+  const r=realM(id);r.mov={j:[],a:[]};delete r.enAho;delete r.oculto;if(!enEst(r))state.months=state.months.filter(x=>x!==r);openMes=null;save();render();
 }
-function restaurarMeses(){state.months.forEach(m=>{if(m.oculto&&(selYear==='all'||yearOf(m,0)===selYear))delete m.oculto;});save();render();}
 function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
 
 /* ---------- movimientos ---------- */
