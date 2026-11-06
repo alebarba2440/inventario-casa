@@ -82,6 +82,8 @@
   .dmon{display:flex;gap:3px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px;flex-shrink:0}
   .dmon button{border:none;background:none;color:var(--text2);border-radius:999px;padding:9px 11px;font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer}
   .dmon button.on{background:var(--accent);color:#fff}
+  .ndias{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;font-weight:800;font-size:.9rem}
+  .ndias input{width:90px;background:var(--surface2);border:1.5px solid var(--c);border-radius:999px;padding:8px 10px;font-family:inherit;font-size:1rem;font-weight:800;text-align:center;outline:none;color:var(--text)}
   .fd{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
   .fd span{font-size:.7rem;font-weight:800;color:var(--text2);text-transform:uppercase}
   .fd input{width:100%;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:9px 10px;font-size:.95rem;font-weight:800;outline:none;color:var(--text)}
@@ -326,7 +328,8 @@ function calcular(v){
   LISTAS.forEach(l=>{K['e_'+l]=totLista(v,l,'e');K['r_'+l]=totLista(v,l,'r');});
   K.dia={};K.dias=0;v.dias.forEach(d=>{const t=d.items.reduce((a,it)=>a+enPesos(v,it,'e'),0);K.dia[d.id]=t;K.dias+=t;});
   K.diasEst=K.e_diario*v.dias.length;
-  K.e=K.e_gastos+K.e_exc;               // estimado del viaje (el diario se compara día por día)
+  K.nDias=Math.max(0,Math.round(n0(v.diasViaje)));K.e_diarioTot=K.e_diario*K.nDias;
+  K.e=K.e_gastos+K.e_exc+K.e_diarioTot;  // estimado del viaje: gastos + excursiones + gasto diario × días
   K.r=K.r_gastos+K.r_exc+K.dias;        // lo gastado de verdad
   K.ahJ=v.aho.j.reduce((a,x)=>a+n0(x.monto),0);K.ahA=v.aho.a.reduce((a,x)=>a+n0(x.monto),0);K.aho=K.ahJ+K.ahA;
   K.bal=K.aho-K.e;K.rest=K.aho-K.r;
@@ -433,6 +436,7 @@ function setConc(did,cid,campo,el){const it=dia(did).items.find(x=>x.id===cid);i
   if(campo==='monto')el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function extConc(did,cid){const it=dia(did).items.find(x=>x.id===cid);it.ext=!it.ext;cambio();render();}
 function quitarConc(did,cid){const d=dia(did);d.items=d.items.filter(x=>x.id!==cid);cambio();render();}
+function setDiasViaje(el){el.value=el.value.replace(/\D/g,'');cur().diasViaje=el.value;cambio();}
 function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
 function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
 function quitarAho(p,id){const v=cur();v.aho[p]=v.aho[p].filter(x=>x.id!==id);if(!v.aho[p].length)v.aho[p].push({id:uid(),monto:''});cambio();render();}
@@ -478,7 +482,7 @@ function render(after){
         ['aho','Plata ahorrada'],['r','Gastado real'],['rest','RESTANTE (ahorrado − gastado)',1],
         ['e','Gasto estimado'],['dif','Diferencia (estimado − real)']]
       :[['aho','Plata ahorrada'],['e','Gasto estimado'],['bal','BALANCE (ahorrado − estimado)',1],
-        ['e_gastos','Gastos'],['e_exc','Excursiones'],['e_diario','Gasto diario (por día)',1]]
+        ['e_gastos','Gastos'],['e_exc','Excursiones'],['e_diarioTot','Gasto diario × <span data-nd></span> días',1]]
       ).map(([k,t,w])=>`<div${w?' class="wide"':''}><small>${t}</small><b data-r="${k}"></b><small class="rx" data-rx="${k}"></small></div>`).join('')}
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
@@ -520,7 +524,11 @@ function render(after){
     sec('gastos','a-est','calculator','Gastos estimados','Gastos reales','Concepto','Gasto',hint)+
     sec('exc','a-exc','ticket','Excursiones estimadas','Excursiones reales','Excursión','Excursión')+
     (R?acc('dias','a-com','sun','Gasto diario real',dias)
-      :sec('diario','a-com','sun','Gasto diario estimado','','Desayuno, almuerzo…','Concepto','<p class="hint">Lo que calculan gastar por día. En Real cada día se compara con este total.</p>'))+
+      :acc('diario','a-com','sun','Gasto diario estimado',
+        `<label class="ndias"><span>Días de viaje</span><input type="text" inputmode="numeric" value="${esc(v.diasViaje||'')}" placeholder="0" oninput="setDiasViaje(this)"></label>`+
+        filas(v,'diario','Desayuno, almuerzo…','e')+totRow('POR DÍA','e_diario')+
+        `<div class="tot"><span>TOTAL (<span data-nd></span> días)</span><span class="v"><span data-t="e_diarioTot"></span><small data-tx="e_diarioTot"></small></span></div>`+
+        addB('diario','Concepto')+'<p class="hint">Lo que calculan gastar por día. El total (por día × días de viaje) se suma al gasto estimado. En Real cada día se compara con el "por día".</p>'))+
     acc('aho','a-aho','pig-money','Plata ahorrada',aho);
   document.querySelectorAll('.it input.m,.ar input').forEach(el=>el.classList.toggle('bad',isNaN(ev(el.value))));
   recalc();
@@ -541,6 +549,8 @@ function recalc(){
     const dd=document.querySelector(`[data-vd="${l}:${id}"]`);if(dd){dd.textContent=String(it.rmonto??'').trim()?P(d):'—';dd.className=String(it.rmonto??'').trim()?cls(d):'zero';}});
   LISTAS.forEach(l=>['e','r'].forEach(t=>{const n=K[t+'_'+l];put(`[data-t="${t}_${l}"]`,P(n),0,false);put(`[data-tx="${t}_${l}"]`,O(n),0,false);}));
   LISTAS.forEach(l=>{const d=K['e_'+l]-K['r_'+l];put(`[data-d="${l}"]`,P(d),d,true);put(`[data-h="${l}"]`,P(K[M+'_'+l]),0,false);});
+  put('[data-t="e_diarioTot"]',P(K.e_diarioTot),0,false);put('[data-tx="e_diarioTot"]',O(K.e_diarioTot),0,false);put('[data-nd]',String(K.nDias),0,false);
+  if(tab==='e')put('[data-h="diario"]',P(K.e_diarioTot)+(K.nDias?'':''),0,false);
   put('[data-t="dias"]',P(K.dias),0,false);put('[data-tx="dias"]',O(K.dias),0,false);
   put('[data-t="diasEst"]',P(K.diasEst),0,false);put('[data-d="dias"]',P(K.diasEst-K.dias),K.diasEst-K.dias,true);
   put('[data-h="dias"]',P(K.dias),0,false);
@@ -551,7 +561,7 @@ function recalc(){
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   put('[data-t="aho"]',P(K.aho),0,false);put('[data-tx="aho"]',O(K.aho),0,false);put('[data-h="aho"]',P(K.aho),0,false);
   put('[data-a="j"]',P(K.ahJ),0,false);put('[data-a="a"]',P(K.ahA),0,false);
-  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario};
+  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario,e_diarioTot:K.e_diarioTot};
   Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest'||k==='dif');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
 
