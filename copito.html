@@ -289,7 +289,7 @@ function setL(mid,lid,campo,el){
 function agregarL(mid){const m=mesDe(mid),l={id:uid(),d:'',m:''};m.lineas.push(l);guardar();renderGastos();
   const r=document.querySelectorAll(`#mes_${mid} .row input:not(.m)`);if(r.length)r[r.length-1].focus();}
 function borrarL(mid,lid){const m=mesDe(mid);m.lineas=m.lineas.filter(x=>x.id!==lid);guardar();renderGastos();}
-function togglePago(mid){const m=mesDe(mid);m.pagado=!m.pagado;guardar();renderGastos();}
+function togglePago(mid){const m=mesDe(mid);m.pagado=!m.pagado;guardarPago(m);renderGastos();}
 function agregarMes(){
   const ms=ordenados(),ult=ms[ms.length-1],hoy=new Date();
   let y=ult?ult.y:hoy.getFullYear(),k=ult?ult.k+1:hoy.getMonth();if(k>11){k=0;y++}
@@ -368,16 +368,28 @@ function cerrar(){document.getElementById('dlg').classList.remove('show')}
 
 /* ================= guardado compartido (Firebase) =================
    Se guarda en la colección "ahorros", documento "copito", para usar las mismas reglas que ya funcionan. */
-let db=null,timer=null;
-function guardar(){wr(LS,D);if(!db)return;clearTimeout(timer);
-  timer=setTimeout(()=>db.collection('ahorros').doc('copito').set({json:JSON.stringify(D),ts:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{}),600);}
+let db=null,timer=null,listo=false,avisado=false;
+const ref=()=>db.collection('ahorros').doc('copito');
+function fallo(e){console.warn('Copito: no se pudo guardar',e);if(avisado)return;avisado=true;
+  const t=document.createElement('div');t.textContent='No se pudo guardar en la nube. Revisá la conexión.';
+  t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#c0392b;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:999;font-size:.9rem';
+  document.body.appendChild(t);setTimeout(()=>{t.remove();avisado=false},4000);}
+/* el resto de los datos va junto; los pagos van aparte para que nadie pise el check del otro */
+function guardar(){wr(LS,D);if(!db||!listo)return;clearTimeout(timer);
+  timer=setTimeout(()=>ref().set({json:JSON.stringify(D),ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(fallo),400);}
+function guardarPago(m){wr(LS,D);if(!db)return;
+  ref().set({pagos:{[m.id]:m.pagado},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(fallo);}
+function aplicar(doc){
+  if(!doc.exists){listo=true;guardar();return}
+  try{const x=doc.data(),d=JSON.parse(x.json||'null');if(d&&Array.isArray(d.meses)){
+    const pg=x.pagos||{};d.meses.forEach(m=>{if(m.id in pg)m.pagado=!!pg[m.id];});
+    D=d;wr(LS,D);listo=true;
+    const a=document.activeElement;if(!(a&&a.tagName==='INPUT'&&a.type!=='checkbox')){renderGastos();renderMant();}}}catch(e){}
+}
 function startSync(){
-  db.collection('ahorros').doc('copito').onSnapshot(doc=>{
-    if(doc.metadata.hasPendingWrites)return;
-    if(!doc.exists){guardar();return}
-    try{const d=JSON.parse(doc.data().json);if(d&&Array.isArray(d.meses)){D=d;wr(LS,D);
-      const a=document.activeElement;if(!(a&&a.tagName==='INPUT')){renderGastos();renderMant();}}}catch(e){}
-  },()=>{});
+  ref().onSnapshot(doc=>{if(doc.metadata.hasPendingWrites)return;aplicar(doc);},e=>console.warn(e));
+  /* al volver a la app (por ejemplo en el iPhone) trae lo último del servidor */
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')ref().get({source:'server'}).then(aplicar).catch(()=>{});});
 }
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
 async function initFb(){const c=window.getFbConfig&&window.getFbConfig();if(!c)return;
