@@ -389,16 +389,13 @@ function listar(){
 q.addEventListener('focus',listar);q.addEventListener('input',listar);
 q.addEventListener('blur',()=>setTimeout(()=>res.classList.remove('show'),120));
 function elegir(id){selId=id;wr(LS_SEL,id);q.value='';res.classList.remove('show');q.blur();openAcc='gastos';render();}
-/* al cambiar de pestaña queda abierto el mismo acordeón y en el mismo lugar de la pantalla */
+/* al cambiar de pestaña queda abierto el mismo acordeón, pero la pantalla vuelve arriba al tablero */
 function setTab(t){
   if(t===tab)return;
-  const antes=openAcc&&document.getElementById('acc-'+openAcc),y=antes?antes.getBoundingClientRect().top:null;
   tab=t;wr('viaje_tab',t);
   if(openAcc==='diario'&&t==='r')openAcc='dias';else if(openAcc==='dias'&&t==='e')openAcc='diario';
   render();
-  const ahora=openAcc&&document.getElementById('acc-'+openAcc);
-  if(ahora){if(y!==null)window.scrollBy(0,ahora.getBoundingClientRect().top-y);
-    const t=ahora.getBoundingClientRect().top;if(t<70||t>window.innerHeight*0.6)window.scrollBy(0,t-80);}
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 /* ================= crear / editar ================= */
