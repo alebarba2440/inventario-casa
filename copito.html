@@ -249,7 +249,7 @@ const totMes=m=>m.lineas.reduce((a,l)=>a+n0(l.m),0);
 function renderGastos(){
   const ms=ordenados(),hoy=new Date(),kHoy=hoy.getFullYear()*12+hoy.getMonth();
   if(openMes===undefined){const a=ms.find(m=>key(m)===kHoy);openMes=a?a.id:(ms.length?ms[ms.length-1].id:null);}
-  const anios=[...new Set(ms.map(m=>m.y))].sort((a,b)=>b-a);
+  const anios=[...new Set(ms.map(m=>m.y))].sort((a,b)=>a-b);
   if(!aniosAb){aniosAb=new Set(rd('copito_anios',[]));aniosAb.add(hoy.getFullYear());if(!anios.some(y=>aniosAb.has(y))&&anios.length)aniosAb.add(anios[0]);}
   const htmlMes=m=>{const t=totMes(m),op=m.id===openMes;
     return `<div class="mes${m.pagado?' paid':''}${op?' open':''}" id="mes_${m.id}">
