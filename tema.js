@@ -96,3 +96,44 @@ window.ptsCampo = function (el) {
   try { el.setSelectionRange(i, i); } catch (e) {}
   return nuevo;
 };
+
+/* Campos con cuentas (ej. 2.000+1.500): mientras no estás escribiendo muestran el total (3.500);
+   al tocarlos vuelve a aparecer la cuenta para poder editarla. */
+(function () {
+  const OPS = /\d\s*[+\-*/]\s*[\d(]/;
+  function calc(x) {
+    let s = String(x ?? '').trim(); if (!s) return NaN;
+    s = s.replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,/g, '.');
+    if (!/^[0-9+\-*/().\s]+$/.test(s)) return NaN;
+    try { const v = Function('"use strict";return (' + s + ')')(); return isFinite(v) ? v : NaN; } catch (e) { return NaN; }
+  }
+  const esCampo = el => el && el.tagName === 'INPUT' && /decimal|numeric/.test(el.inputMode || el.getAttribute('inputmode') || '');
+  function mostrarTotal(el) {
+    if (!esCampo(el) || document.activeElement === el) return;
+    const v = el.value;
+    if (!OPS.test(v)) return;
+    const t = calc(v); if (isNaN(t)) return;
+    el.dataset.expr = v;
+    el.value = t.toLocaleString('es-AR', { maximumFractionDigits: 2 });
+    el.classList.add('es-suma');
+  }
+  function todos() { document.querySelectorAll('input[inputmode="decimal"],input[inputmode="numeric"]').forEach(mostrarTotal); }
+  document.addEventListener('focusin', e => {
+    const el = e.target;
+    if (esCampo(el) && el.dataset.expr) {
+      el.value = el.dataset.expr; delete el.dataset.expr; el.classList.remove('es-suma');
+      const n = el.value.length; setTimeout(() => { try { el.setSelectionRange(n, n); } catch (_) {} }, 0);
+    }
+  });
+  document.addEventListener('focusout', e => setTimeout(() => mostrarTotal(e.target), 0));
+  let pend = false;
+  document.addEventListener('DOMContentLoaded', () => {
+    todos();
+    new MutationObserver(() => { if (pend) return; pend = true; requestAnimationFrame(() => { pend = false; todos(); }); })
+      .observe(document.body, { childList: true, subtree: true });
+  });
+  // marquita sutil para saber que ese número es una suma
+  const st = document.createElement('style');
+  st.textContent = 'input.es-suma{text-decoration:underline dotted;text-underline-offset:4px;text-decoration-thickness:1.5px}';
+  document.head.appendChild(st);
+})();
