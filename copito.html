@@ -95,6 +95,9 @@
   .prox h3{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
   .prox h3 i{color:var(--accent)}
   .pr{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;margin-top:6px;font-size:.9rem;font-weight:700}
+  .pr{flex-wrap:wrap;cursor:pointer;user-select:none}
+  .pr .det{flex-basis:100%;display:none;font-size:.82rem;font-weight:600;color:var(--text2);margin-top:4px}
+  .pr.ab .det{display:block}
   .pr b{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
   .pr.ok{background:var(--pos-l)} .pr.ok b{color:var(--pos)}
   .pr.cerca{background:var(--warn-l)} .pr.cerca b{color:var(--warn)}
@@ -308,9 +311,9 @@ function borrarMes(mid){const m=mesDe(mid);confirmar('Borrar mes',`¿Borrar ${ME
 /* ================= MANTENIMIENTO ================= */
 function estado(r){
   const km=n0(D.auto.km),pk=n0(r.proxKm),hoy=new Date().toISOString().slice(0,10);
-  if(pk){const f=pk-km;if(f<0)return{c:'venc',t:`Pasado por ${fkm(-f)} km`};if(f<=1500)return{c:'cerca',t:`Faltan ${fkm(f)} km`};return{c:'ok',t:`Faltan ${fkm(f)} km`};}
-  if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:`Venció el ${fFecha(r.proxFecha)}`};
-    const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`El ${fFecha(r.proxFecha)} (${dias} días)`};}
+  if(pk){const f=pk-km;const d=`A los ${fkm(pk)} km`;if(f<0)return{c:'venc',t:`+${fkm(-f)} km`,d:d+` · pasado por ${fkm(-f)} km`};return{c:f<=1500?'cerca':'ok',t:`${fkm(f)} km`,d};}
+  if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:'Vencido',d:`Venció el ${fFecha(r.proxFecha)}`};
+    const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`${dias} días`,d:`El ${fFecha(r.proxFecha)}`};}
   return null;
 }
 function renderMant(){
@@ -340,7 +343,7 @@ function renderMant(){
 }
 function renderProx(){
   const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||(n0(a.r.proxKm)||9e9)-(n0(b.r.proxKm)||9e9)});
-  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}"><span>${esc(x.r.tipo||'Mantenimiento')}${x.r.proxKm?` · a los ${fkm(n0(x.r.proxKm))} km`:''}</span><b>${x.e.t}</b></div>`).join('')
+  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}" onclick="this.classList.toggle('ab')"><span>${esc(x.r.tipo||'Mantenimiento')}</span><b>${x.e.t}</b><span class="det">${x.e.d}</span></div>`).join('')
     :'<p style="color:var(--text2);font-size:.88rem">Cargá "Próximo (km)" o "Próximo (fecha)" en un mantenimiento para verlo acá.</p>';
 }
 function setKm(el){const v=el.value.replace(/\D/g,'');D.auto.km=v;D.auto.kmFecha=new Date().toISOString().slice(0,10);
