@@ -482,7 +482,7 @@ function render(after){
         ['aho','Plata ahorrada'],['r','Gastado real'],['rest','RESTANTE (ahorrado − gastado)',1],
         ['e','Gasto estimado'],['dif','Diferencia (estimado − real)']]
       :[['aho','Plata ahorrada'],['e','Gasto estimado'],['bal','BALANCE (ahorrado − estimado)',1],
-        ['e_gastos','Gastos'],['e_exc','Excursiones'],['e_diarioTot','Gasto diario × <span data-nd></span> días',1]]
+        ['e_gastos','Gastos'],['e_exc','Excursiones']]
       ).map(([k,t,w])=>`<div${w?' class="wide"':''}><small>${t}</small><b data-r="${k}"></b><small class="rx" data-rx="${k}"></small></div>`).join('')}
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
