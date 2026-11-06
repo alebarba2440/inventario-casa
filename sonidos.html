@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JuntOS">
+<link rel="apple-touch-icon" href="img/apple-touch.png?v=9">
+<link rel="icon" type="image/png" href="img/icono.png?v=9">
+<title>Sonidos</title>
+<script src="tema.js"></script>
+<script src="sonidos.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="comun.css">
+<style>
+  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--pos:#1D9E75;--neg:#E24B4A;--warn:#D97706;
+        --bg:#f5f5f0;--surface:#fff;--surface2:#f5f5f0;--border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);--text:#1a1a1a;--text2:#666;--r:12px;
+        --paid-bg:rgba(29,158,117,.10)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--paid-bg:rgba(29,158,117,.18)}}
+  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--paid-bg:rgba(29,158,117,.18)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html{background:var(--bg)}
+  body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+  .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
+  main{max-width:520px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
+  .card{background:var(--surface);border:.5px solid var(--border);border-radius:18px;padding:14px}
+  .sn{width:100%;display:flex;align-items:center;gap:12px;background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:16px;font-family:inherit;font-size:1rem;font-weight:700;color:var(--text);cursor:pointer;text-align:left}
+  .sn i{font-size:1.4rem;color:var(--accent)} .sn span{flex:1} .sn .pl{font-size:1.1rem;opacity:.7}
+  .sn:active{transform:scale(.98)}
+  .nota{font-size:.85rem;color:var(--text2);text-align:center;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
+  <h1>SONIDOS</h1>
+</div>
+<main>
+  <p class="nota">Tocá cada uno para escucharlo. Si el iPhone está en silencio no se escuchan.</p>
+  <button class="sn" onclick="sonido('entrar',1)"><i class="ti ti-arrow-right"></i><span>Entrar a una sección</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('volver',1)"><i class="ti ti-home"></i><span>Volver al inicio</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('agregar',1)"><i class="ti ti-plus"></i><span>Agregar o crear un ítem</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('aceptar',1)"><i class="ti ti-check"></i><span>Aceptar o guardar</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('cancelar',1)"><i class="ti ti-x"></i><span>Al cancelar o cerrar</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('borrar',1)"><i class="ti ti-trash"></i><span>Al borrar</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('pagado',1)"><i class="ti ti-coin"></i><span>Pagado en Copito</span><i class="ti ti-player-play-filled pl"></i></button><button class="sn" onclick="sonido('tick',1)"><i class="ti ti-toggle-right"></i><span>Al tocar un switch</span><i class="ti ti-player-play-filled pl"></i></button>
+  <p class="nota" id="apag" style="display:none;color:var(--neg)">Los sonidos están apagados en Ajustes: acá los podés escuchar igual, pero en la app no suenan.</p>
+</main>
+<script>if(window.sonidosActivos&&!sonidosActivos())document.getElementById('apag').style.display='block';</script>
+</body>
+</html>

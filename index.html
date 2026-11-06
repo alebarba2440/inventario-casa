@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="img/icono.png?v=9">
 <title>JuntOS</title>
 <script src="tema.js"></script>
+<script src="sonidos.js"></script>
 <script src="firebase-config.js"></script>
 <link rel="preload" as="image" href="img/inventario.webp?v=2">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
@@ -216,6 +217,15 @@
     </div>
 
     <div class="block">
+      <h3><i class="ti ti-volume"></i> Sonidos</h3>
+      <div class="seg desliz" id="sndSeg" style="--pad:4px;--kr:9px">
+        <button data-s="1" onclick="setSonidos(true)"><i class="ti ti-volume"></i> Activados</button>
+        <button data-s="0" onclick="setSonidos(false)"><i class="ti ti-volume-off"></i> Apagados</button>
+      </div>
+      <a href="sonidos.html" style="display:block;text-align:center;margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:700">Escuchar los sonidos</a>
+    </div>
+
+    <div class="block">
       <h3><i class="ti ti-typography"></i> Tamaño del texto</h3>
       <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
     </div>
@@ -343,6 +353,11 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfg()});
 
 testFb();
 if(location.hash==='#ajustes')openCfg();
+</script>
+<script>
+function marcarSonidos(){const on=window.sonidosActivos?sonidosActivos():true;document.querySelectorAll('#sndSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.s==='1')===on));}
+function setSonidos(on){try{localStorage.setItem('sonidos',on?'1':'0')}catch(e){}marcarSonidos();if(on&&window.sonido)sonido('aceptar');}
+marcarSonidos();
 </script>
 </body>
 </html>
