@@ -54,12 +54,19 @@
   .trip .th .chip{flex-shrink:0;white-space:nowrap}
   .chip{font-size:.78rem;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--accent-light);color:var(--accent-dark)}
   .trip .nota{margin-top:8px;font-size:.88rem;color:var(--text2);white-space:pre-wrap}
-  .resumen{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-  .resumen div{background:var(--surface2);border-radius:var(--r);padding:9px 10px}
-  .resumen small{display:block;font-size:.72rem;color:var(--text2);font-weight:700}
-  .resumen b{font-size:1.02rem;font-weight:800;font-variant-numeric:tabular-nums}
+  /* tablero: 3 tarjetas modernas con los números centrados */
+  .resumen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  .resumen .kp{--k:#16A34A;position:relative;overflow:hidden;text-align:center;border-radius:18px;padding:14px 10px 12px;
+    background:linear-gradient(160deg,color-mix(in srgb,var(--k) 16%,var(--surface)) 0%,color-mix(in srgb,var(--k) 5%,var(--surface)) 100%);
+    border:1px solid color-mix(in srgb,var(--k) 22%,transparent);box-shadow:0 4px 14px color-mix(in srgb,var(--k) 12%,transparent)}
+  .resumen .kp::after{content:"";position:absolute;right:-22px;top:-22px;width:70px;height:70px;border-radius:50%;background:color-mix(in srgb,var(--k) 10%,transparent)}
+  .resumen .k-aho{--k:#16A34A}.resumen .k-est{--k:#2563EB}.resumen .k-rea{--k:#DC2626}.resumen .k-res{--k:var(--accent)}
+  .resumen .ki{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:11px;background:var(--k);color:#fff;font-size:1.15rem;margin-bottom:6px;box-shadow:0 3px 8px color-mix(in srgb,var(--k) 35%,transparent)}
+  .resumen small{display:block;font-size:.72rem;color:var(--text2);font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+  .resumen b{display:block;font-size:1.3rem;font-weight:900;font-variant-numeric:tabular-nums;margin-top:3px;line-height:1.15}
   .resumen .wide{grid-column:1/-1}
-  .resumen small.rx{font-size:.78rem;margin-top:1px}
+  .resumen .wide b{font-size:1.6rem}
+  .resumen small.rx{font-size:.78rem;margin-top:2px;text-transform:none;letter-spacing:0;font-weight:700}
 
   .tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface);border:.5px solid var(--border);border-radius:999px;padding:5px;width:100%;max-width:560px;margin:0 auto}
   .tabs button{border:none;background:none;border-radius:999px;padding:11px 8px;font-family:inherit;font-size:.95rem;font-weight:800;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
@@ -491,12 +498,11 @@ function render(after){
   const trip=`<div class="trip">
     <div class="th"><h2><i class="ti ti-map-pin-filled"></i>${esc(v.lugar)}</h2>${ext?`<span class="chip">1 ${S} = ${fmt(n0(v.cot))}</span>`:''}</div>
     ${v.nota?`<div class="nota">${esc(v.nota)}</div>`:''}
-    <div class="resumen">${(R?[
-        ['aho','Plata ahorrada'],['r','Gastado real'],['rest','RESTANTE (ahorrado − gastado)',1],
-        ['e','Gasto estimado'],['dif','Diferencia (estimado − real)']]
-      :[['aho','Plata ahorrada'],['e','Gasto estimado'],['bal','BALANCE (ahorrado − estimado)',1],
-        ['e_gastos','Gastos'],['e_exc','Excursiones']]
-      ).map(([k,t,w])=>`<div${w?' class="wide"':''}><small>${t}</small><b data-r="${k}"></b><small class="rx" data-rx="${k}"></small></div>`).join('')}
+    <div class="resumen">${[
+        ['aho','Plata ahorrada','pig-money','k-aho'],
+        [R?'r':'e',R?'Gasto real':'Gasto estimado',R?'receipt':'calculator',R?'k-rea':'k-est'],
+        [R?'rest':'bal','Restante','wallet','k-res wide']]
+      .map(([k,t,ic,cl])=>`<div class="kp ${cl}"><span class="ki"><i class="ti ti-${ic}"></i></span><small>${t}</small><b data-r="${k}"></b><small class="rx" data-rx="${k}"></small></div>`).join('')}
     </div>
     ${ext&&!n0(v.cot)?'<p class="hint" style="color:var(--neg)">Falta cargar la cotización (tocá editar) para que haga la conversión.</p>':''}
   </div>`;
