@@ -96,8 +96,9 @@
   .chk{width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid var(--border2);background:var(--surface);color:transparent;font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
   .chk.on{background:var(--pos);border-color:var(--pos);color:#fff}
   .chk-esp{width:32px;flex-shrink:0}
-  .it.sald .tx b,.it.sald .m{text-decoration:line-through;text-decoration-thickness:2px;color:var(--text2)}
-  .it.sald .av{opacity:.5}
+  /* ya dividido: queda apagado (gris claro), sin tachar; el check sigue con su color */
+  .it.sald .av,.it.sald .tx,.it.sald .m,.it.sald .q-none{opacity:.4}
+  .it.sald .av{filter:grayscale(1)}
   /* foto de quien pagó */
   .av{width:40px;height:40px;flex-shrink:0;border-radius:50%;object-fit:cover;display:block;border:2.5px solid transparent}
   .av.j{border-color:var(--juli)} .av.a{border-color:var(--ale)}
