@@ -205,7 +205,7 @@ const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};return {j:n.j||'Juli
    Cada mes hasta el que viene (por ejemplo, en enero se ve febrero pero no marzo) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
    y sin quién lo pagó; así si los dos celus lo crean a la vez, es el mismo y no se duplica. */
 let G=rd(LS,{})||{},S=rd(LS+'_s',{})||{};
-const FOTO={j:'img/avatar-juli.webp?v=3',a:'img/avatar-ale.webp?v=3'};
+const FOTO={j:'img/avatar-juli.webp?v=4',a:'img/avatar-ale.webp?v=4'};
 const mesDe=f=>f.slice(0,7);
 const mesActual=()=>hoyISO().slice(0,7);
 /* el mes que viene (AAAA-MM): los fijos se precargan hasta ahí nomás, para no llenar la base de meses lejanos */
