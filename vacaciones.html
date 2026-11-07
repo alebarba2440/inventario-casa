@@ -345,6 +345,9 @@ function normalizar(v){
   // días del formato anterior (un monto por día) -> día con un concepto "Total"
   v.dias=v.dias.map(d=>Array.isArray(d.items)?d:{id:d.id||uid(),label:d.label||'',items:(String(d.monto||'').trim()?[{id:uid(),label:'Total',monto:d.monto,ext:!!d.ext}]:[])});
   if(!v.aho)v.aho={j:[],a:[]};
+  // plata ahorrada REAL, aparte de la estimada. Las vacaciones que ya existían arrancan con los mismos montos que mostraban antes
+  if(!v.ahoR){const cp2=l=>(l||[]).map(x=>({id:uid(),monto:x.monto}));v.ahoR={j:cp2(v.aho.j),a:cp2(v.aho.a)};}
+  ['j','a'].forEach(p=>{if(!Array.isArray(v.ahoR[p])||!v.ahoR[p].length)v.ahoR[p]=[{id:uid(),monto:''}];});
   return v;
 }
 viajes.forEach(normalizar);
@@ -353,12 +356,12 @@ function nuevoViaje(lugar,moneda,cot,nota){
   const ext=moneda!=='ARS',it=(label,e)=>({id:uid(),label,monto:'',ext:e,rmonto:'',rext:e});
   return{id:'v2_'+uid(),ver:2,v3:true,v4:true,creado:Date.now(),lugar,moneda,cot,nota,
     gastos:[],exc:[],diario:[],dias:[],
-    aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ruta:[]};
+    aho:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ahoR:{j:[{id:uid(),monto:''}],a:[{id:uid(),monto:''}]},ruta:[]};
 }
 let tab=rd('viaje_tab','e');if(tab!=='e'&&tab!=='r')tab='e';
 let openAcc='gastos';
 
-/* ================= plata ahorrada REAL: sale del total de la app Ahorros ================= */
+/* ================= total de la app Ahorros (para el botón "Agregar ahorros actuales") ================= */
 const MES_N=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 let AHO=null; // {j, a, nj, na}
 function leerAhorros(st){
@@ -370,7 +373,6 @@ function leerAhorros(st){
   const ms=st.months.filter(m=>esMes(m)&&!m.oculto&&(m.enAho||tieneMov(m)));
   const n=st.names||{};
   AHO={j:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.j),0),a:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.a),0),nj:n.j||'Juli',na:n.a||'Ale'};
-  if(cur()){const a=document.activeElement;if(tab==='r'&&!(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')))render();else recalc();}
 }
 leerAhorros(rd('ahorros_v1',null));
 
@@ -388,8 +390,9 @@ function calcular(v){
   K.nDias=Math.max(0,Math.round(n0(v.diasViaje)));K.e_diarioTot=K.e_diario*K.nDias;
   K.e=K.e_gastos+K.e_exc+K.e_diarioTot;  // estimado del viaje: gastos + excursiones + gasto diario × días
   K.r=K.r_gastos+K.r_exc+K.dias;        // lo gastado de verdad
-  K.ahJ=v.aho.j.reduce((a,x)=>a+n0(x.monto),0);K.ahA=v.aho.a.reduce((a,x)=>a+n0(x.monto),0);K.aho=K.ahJ+K.ahA;
-  K.ahoR=AHO?AHO.j+AHO.a:0;          // real: lo que dice Ahorros
+  const sm=l=>(l||[]).reduce((a,x)=>a+n0(x.monto),0);
+  K.ahJ=sm(v.aho.j);K.ahA=sm(v.aho.a);K.aho=K.ahJ+K.ahA;             // estimado
+  K.ahRJ=sm(v.ahoR.j);K.ahRA=sm(v.ahoR.a);K.ahoR=K.ahRJ+K.ahRA;      // real (propio de cada vacación)
   K.bal=K.aho-K.e;K.rest=K.ahoR-K.r;
   return K;
 }
@@ -418,7 +421,8 @@ function setTab(t){
 /* ================= crear / editar ================= */
 let editando=false,monSel='ARS';
 function abrir(id){document.getElementById(id).classList.add('show')}
-function cerrar(id){document.getElementById(id).classList.remove('show')}
+function cerrar(id){document.getElementById(id).classList.remove('show');
+  if(id==='dlg'){const b=document.getElementById('dOk');b.textContent='Eliminar';b.className='btn danger';}} // vuelve al botón de borrar
 function setMon(m){monSel=m;document.querySelectorAll('#fMon button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
   document.getElementById('fCotW').style.display=m==='ARS'?'none':'';document.getElementById('fCotL').textContent='1 '+SIM[m]+' =';}
 function abrirForm(edit){
@@ -492,9 +496,17 @@ function extConc(did,cid){const it=dia(did).items.find(x=>x.id===cid);it.ext=!it
 function quitarConc(did,cid){const d=dia(did),it=d.items.find(x=>x.id===cid);
   preguntar('Borrar gasto',`¿Borrar "${(it&&it.label)||'este gasto'}"?`,()=>{d.items=d.items.filter(x=>x.id!==cid);cambio();render();});}
 function setDiasViaje(el){el.value=el.value.replace(/\D/g,'');cur().diasViaje=el.value;cambio();}
-function setAho(p,id,el){cur().aho[p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
-function agregarAho(p){cur().aho[p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
-function quitarAho(p,id){preguntar('Borrar ahorro','¿Borrar este monto de plata ahorrada?',()=>{const v=cur();v.aho[p]=v.aho[p].filter(x=>x.id!==id);if(!v.aho[p].length)v.aho[p].push({id:uid(),monto:''});cambio();render();});}
+const AK=()=>tab==='r'?'ahoR':'aho'; // Estimado y Real tienen cada uno su plata ahorrada
+function setAho(p,id,el){cur()[AK()][p].find(x=>x.id===id).monto=miles(el);el.classList.toggle('bad',isNaN(ev(el.value)));cambio();}
+function agregarAho(p){cur()[AK()][p].push({id:uid(),monto:''});cambio();render(()=>{const r=document.querySelectorAll(`.col.${p} input`);if(r.length)r[r.length-1].focus();});}
+function quitarAho(p,id){preguntar('Borrar ahorro','¿Borrar este monto de plata ahorrada?',()=>{const v=cur(),k=AK();v[k][p]=v[k][p].filter(x=>x.id!==id);if(!v[k][p].length)v[k][p].push({id:uid(),monto:''});cambio();render();});}
+function traerAhorros(){
+  if(!AHO){preguntar('Sin datos de Ahorros','Abrí Ahorros una vez (con internet) y volvé a probar.',()=>{},'Entendido');return;}
+  const v=cur(),hoy=new Date().toLocaleDateString('es-AR');
+  preguntar('Agregar ahorros actuales',`Se agrega ${AHO.nj}: ${fmt(AHO.j)} y ${AHO.na}: ${fmt(AHO.a)} (total de Ahorros al ${hoy}).`,()=>{
+    ['j','a'].forEach(p=>{const l=v.ahoR[p].filter(x=>String(x.monto??'').trim());l.push({id:uid(),monto:String(Math.round(AHO[p]))});v.ahoR[p]=l;});
+    cambio();render();},'Agregar');
+}
 function cambio(re=true){const v=cur();guardar(v);if(re)recalc();}
 function toggleAcc(k){openAcc=openAcc===k?null:k;
   document.querySelectorAll('.acc').forEach(a=>{const o=a.id==='acc-'+openAcc;a.classList.toggle('open',o);a.querySelector('.acc-h').setAttribute('aria-expanded',o)});}
@@ -547,16 +559,13 @@ function render(after){
   const tag=R?'<span class="rtag">REAL</span>':'<span class="rtag">ESTIMADO</span>';
   const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl+(R?' real':''),ic,(R?tR:tE)+tag,
     filas(v,l,ph,M)+totRow(R?'TOTAL REAL':'TOTAL ESTIMADO',M+'_'+l)+cmp(l)+addB(l,txt)+(extra||''));
-  const ahoReal=`<div class="cols">
-      <div class="col j"><h4>${esc((AHO?AHO.nj:'Juli').toUpperCase())}</h4><div class="ct" data-ar="j">—</div></div>
-      <div class="col a"><h4>${esc((AHO?AHO.na:'Ale').toUpperCase())}</h4><div class="ct" data-ar="a">—</div></div>
-    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">${AHO?'Se completa solo con el total ahorrado de cada uno en Ahorros.':'Abrí Ahorros una vez (con internet) para traer lo ahorrado.'}</p>`;
-  const aho=R?ahoReal:`<div class="cols">
+  const AL=R?v.ahoR:v.aho;
+  const aho=`${R?'<button class="add" style="margin:0 0 10px" onclick="traerAhorros()"><i class="ti ti-pig-money"></i> Agregar ahorros actuales</button>':''}<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
-        ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
+        ${AL[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
         <div class="ct" data-a="${p}"></div></div>`).join('')}
-    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">Montos en pesos.</p>`;
+    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">Montos en pesos.${R?' "Agregar ahorros actuales" suma lo que tiene cada uno hoy en Ahorros.':''}</p>`;
   if(openDia===undefined&&v.dias.length)openDia=v.dias[v.dias.length-1].id;
   const diaHTML=d=>{const op=d.id===openDia;return `<div class="dia${op?' open':''}" id="dia_${d.id}">
       <button class="dia-h" onclick="toggleDia('${d.id}')" aria-expanded="${op}">
@@ -620,15 +629,15 @@ function recalc(){
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
   const ahoV=tab==='r'?K.ahoR:K.aho;
   put('[data-t="aho"]',P(ahoV),0,false);put('[data-tx="aho"]',O(ahoV),0,false);put('[data-h="aho"]',P(ahoV),0,false);
-  if(AHO){put('[data-ar="j"]',P(AHO.j),0,false);put('[data-ar="a"]',P(AHO.a),0,false);}
-  put('[data-a="j"]',P(K.ahJ),0,false);put('[data-a="a"]',P(K.ahA),0,false);
+  put('[data-a="j"]',P(tab==='r'?K.ahRJ:K.ahJ),0,false);put('[data-a="a"]',P(tab==='r'?K.ahRA:K.ahA),0,false);
   const RR={aho:ahoV,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario,e_diarioTot:K.e_diarioTot};
   Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest'||k==='dif');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
 
 /* confirmación genérica (la usan borrar concepto del día y borrar ahorro) */
-function preguntar(t,m,ok){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=m;
-  document.getElementById('dOk').onclick=()=>{cerrar('dlg');ok();};abrir('dlg');}
+function preguntar(t,m,ok,lbl){document.getElementById('dT').textContent=t;document.getElementById('dM').textContent=m;
+  const b=document.getElementById('dOk');if(lbl){b.textContent=lbl;b.className='btn';}
+  b.onclick=()=>{cerrar('dlg');ok();};abrir('dlg');}
 
 /* ================= exportar PDF ================= */
 /* PDF con todas las vacaciones de la más vieja a la más nueva: título, nota y lo gastado (real) */
