@@ -215,7 +215,9 @@
 /* ---------- acordeones: uno abierto a la vez ---------- */
 function openAcc(id){
   document.querySelectorAll('.acc').forEach(el=>{const o=el.id===id&&!el.classList.contains('open');el.classList.toggle('open',o);el.querySelector('.acc-h').setAttribute('aria-expanded',o)});
-  if(id==='accCat'&&chart)requestAnimationFrame(()=>{chart.resize();if(tendChart)tendChart.resize();});
+  // al abrir "Por categoría" los gráficos se dibujan con animación (antes aparecían de golpe, con un salto)
+  if(id==='accCat'&&document.getElementById('accCat').classList.contains('open'))requestAnimationFrame(()=>{
+    [chart,tendChart].forEach(c=>{if(!c)return;c.resize();c.reset();c.update();});});
 }
 /* ---------- ventanas ---------- */
 function abrir(id){document.getElementById(id).classList.add('show')}
@@ -386,7 +388,7 @@ function tendencia(){
     {label:'Promedio',data:MESES.map(()=>prom),borderColor:txt2,borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false}];
   if(tendChart){tendChart.data.datasets=ds;tendChart.update();return;}
   tendChart=new Chart(document.getElementById('tendencia'),{type:'line',data:{labels:MESES.map(m=>m.slice(0,3)),datasets:ds},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:700,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y==null?'':` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
       scales:{x:{grid:{display:false},ticks:{color:txt2,font:{family:'Nunito',size:10,weight:'700'}}},
         y:{beginAtZero:true,grid:{color:'rgba(128,128,128,.12)'},ticks:{color:txt2,font:{family:'Nunito',size:10},callback:v=>v>=1e6?(v/1e6).toLocaleString('es-AR')+' M':v>=1e3?Math.round(v/1e3)+' k':v}}}}});
@@ -414,7 +416,7 @@ function grafico(){
   if(chart){chart.$flechas=flechas;chart.$difs=difs;chart.$mA=mA;chart.data.labels=labels;chart.data.datasets[0].data=vals;chart.data.datasets[0].backgroundColor=cols;chart.options.plugins.legend.labels.color=txt;chart.update();return;}
   chart=new Chart(document.getElementById('grafico'),{type:'pie',plugins:[flechasPlugin],
     data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{responsive:true,maintainAspectRatio:false,animation:{animateRotate:true,animateScale:true,duration:700,easing:'easeOutQuart'},
       plugins:{legend:{position:'right',labels:{color:txt,boxWidth:10,font:{family:'Nunito',size:11,weight:'600'}}},
         tooltip:{callbacks:{label:c=>' '+fmt(c.parsed),
           afterLabel:c=>{const f=(chart.$flechas||[])[c.dataIndex];if(f===undefined)return '';const d=(chart.$difs||[])[c.dataIndex];
@@ -424,7 +426,9 @@ function grafico(){
 /* escribe el % adentro de cada color de la torta */
 const flechasPlugin={id:'porcentajes',afterDatasetsDraw(ch){
   const ds=ch.data.datasets[0],tot=(ds.data||[]).reduce((a,b)=>a+(+b||0),0);if(!tot)return;const ctx=ch.ctx;
+  const rFinal=Math.min(ch.chartArea.width,ch.chartArea.height)/2;
   ch.getDatasetMeta(0).data.forEach((arc,i)=>{
+    if(arc.outerRadius<rFinal*.85)return;                     // mientras la torta se está armando, todavía no
     const p=ds.data[i]/tot*100;if(p<5)return;                 // en porciones muy chicas no entra
     const a=(arc.startAngle+arc.endAngle)/2,r=arc.outerRadius*(p>40?.55:.66);
     const x=arc.x+Math.cos(a)*r,y=arc.y+Math.sin(a)*r;
