@@ -78,7 +78,15 @@
   .nuevo .nv-bt{grid-column:1/-1;display:flex;gap:8px}
   .nuevo .nv-bt .btn{flex:1}
   /* hoja de categorías */
-  .cat-list{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow-y:auto}
+  .cat-list{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow-y:auto}
+  /* acordeones dentro de Opciones */
+  .oacc{border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface)}
+  .oacc-h{width:100%;display:flex;align-items:center;gap:8px;padding:13px 14px;background:none;border:none;font-family:inherit;font-size:.98rem;font-weight:800;color:var(--text);cursor:pointer;text-align:left}
+  .oacc-h>i:first-child{color:var(--accent);font-size:1.15rem}
+  .oacc-h .chev{margin-left:auto;color:var(--text2);transition:transform .2s}
+  .oacc.open .oacc-h .chev{transform:rotate(180deg)}
+  .oacc-b{display:none;flex-direction:column;gap:8px;padding:0 12px 12px}
+  .oacc.open .oacc-b{display:flex}
   .cat-it{display:flex;align-items:center;gap:8px;padding:4px 0}
   .cat-it input{flex:1;min-width:0;font-family:inherit;font-size:.98rem;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;outline:none}
   .cat-it input:focus{border-color:var(--accent)}
@@ -172,7 +180,7 @@
   <div class="periodo">
     <select id="mes" class="sel" aria-label="Mes"></select>
     <select id="anio" class="sel anio" aria-label="Año"></select>
-    <button class="icon-btn" onclick="abrir('opts')" aria-label="Opciones"><i class="ti ti-dots-vertical"></i></button>
+    <button class="icon-btn" onclick="dibujarCats();abrir('opts')" aria-label="Opciones"><i class="ti ti-dots-vertical"></i></button>
   </div>
 
   <section class="acc open" id="accGas">
@@ -222,26 +230,27 @@
   </section>
 </main>
 
-<!-- Opciones -->
-<div class="bgm" id="opts" onclick="if(event.target===this)cerrar('opts')">
+<!-- Opciones: acordeones (Categorías, Backups), después Limpiar y Cerrar -->
+<div class="bgm" id="opts" onclick="if(event.target===this)cerrarOpts()">
   <div class="sheet">
     <h3>Opciones</h3>
-    <button class="btn" onclick="descargarBackup()"><i class="ti ti-download"></i> Descargar backup</button>
-    <button class="btn ghost" onclick="document.getElementById('fileIn').click()"><i class="ti ti-upload"></i> Cargar backup</button>
-    <input type="file" id="fileIn" accept="application/json,.json" style="display:none">
-    <button class="btn ghost" onclick="cerrar('opts');abrirCats()"><i class="ti ti-category"></i> Categorías</button>
+    <section class="oacc" id="oCat">
+      <button class="oacc-h" onclick="toggleOpt('oCat')" aria-expanded="false"><i class="ti ti-category"></i> Categorías<i class="ti ti-chevron-down chev"></i></button>
+      <div class="oacc-b">
+        <div id="catList" class="cat-list"></div>
+        <button class="btn" onclick="nuevaCat()"><i class="ti ti-plus"></i> Nueva categoría</button>
+      </div>
+    </section>
+    <section class="oacc" id="oBak">
+      <button class="oacc-h" onclick="toggleOpt('oBak')" aria-expanded="false"><i class="ti ti-database"></i> Backups<i class="ti ti-chevron-down chev"></i></button>
+      <div class="oacc-b">
+        <button class="btn" onclick="descargarBackup()"><i class="ti ti-download"></i> Descargar backup</button>
+        <button class="btn ghost" onclick="document.getElementById('fileIn').click()"><i class="ti ti-upload"></i> Cargar backup</button>
+        <input type="file" id="fileIn" accept="application/json,.json" style="display:none">
+      </div>
+    </section>
     <button class="btn danger" onclick="limpiarTodo()"><i class="ti ti-trash"></i> Limpiar todo</button>
-    <button class="btn ghost" onclick="cerrar('opts')">Cerrar</button>
-  </div>
-</div>
-
-<!-- Categorías: nombre, emoji, crear y borrar -->
-<div class="bgm" id="cats" onclick="if(event.target===this)cerrarCats()">
-  <div class="sheet">
-    <h3>Categorías</h3>
-    <div id="catList" class="cat-list"></div>
-    <button class="btn" onclick="nuevaCat()"><i class="ti ti-plus"></i> Nueva categoría</button>
-    <button class="btn ghost" onclick="cerrarCats()">Listo</button>
+    <button class="btn ghost" onclick="cerrarOpts()">Cerrar</button>
   </div>
 </div>
 <!-- elegir emoji -->
@@ -525,8 +534,11 @@ document.getElementById('fileIn').addEventListener('change',e=>{
 /* ---------- categorías ---------- */
 const EMOJIS='📦 🏠 🍔 🚗 💡 💳 💊 🎉 🐷 🛒 ☕ 🍕 🍺 🎁 👕 👟 💇 🐶 🐱 📱 💻 🎮 📚 🎓 ✈️ 🏖️ 🚌 ⛽ 🔧 🏋️ ⚽ 🎬 🎵 🧾 🏦 💰 👶 🧸 🌱 🧴 🧹 🛠️ 📺 🍷 🍰 ❤️ ⭐'.split(' ');
 let emoPara=null;
-function abrirCats(){dibujarCats();abrir('cats');}
-function cerrarCats(){cerrar('cats');render();}
+/* acordeones de Opciones: abrir uno cierra el otro */
+function toggleOpt(id,forzar){document.querySelectorAll('.oacc').forEach(el=>{const o=el.id===id&&(forzar||!el.classList.contains('open'));
+  el.classList.toggle('open',o);el.querySelector('.oacc-h').setAttribute('aria-expanded',o);});if(id==='oCat')dibujarCats();}
+function abrirCats(){dibujarCats();toggleOpt('oCat',true);abrir('opts');}
+function cerrarOpts(){cerrar('opts');render();}   // al cerrar se aplican los cambios de categorías
 function usosCat(id){let n=0;Object.values(datos).forEach(d=>(d.gastos||[]).forEach(g=>{if((g.categoria||'varios')===id)n++;}));return n;}
 function dibujarCats(){
   document.getElementById('catList').innerHTML=CATS.map(c=>`<div class="cat-it">
@@ -544,7 +556,7 @@ function nuevaCat(){
   const ins=document.querySelectorAll('#catList input');const last=ins[ins.length-1];if(last){last.focus();last.select();last.scrollIntoView({block:'center'});}
 }
 function borrarCat(id){const c=catDe(id),n=usosCat(id);
-  cerrar('cats');
+  cerrar('opts');
   confirmar(n?`"${c.label}" tiene ${n} gasto${n===1?'':'s'} cargado${n===1?'':'s'}. Esos gastos pasan a "${nombreCat('varios')}".`:`¿Borrar la categoría "${c.label}"?`,()=>{
     Object.values(datos).forEach(d=>(d.gastos||[]).forEach(g=>{if((g.categoria||'varios')===id)g.categoria='varios';}));
     CATS=CATS.filter(x=>x.id!==id);guardarCats();guardar();if(ultCat===id)ultCat='varios';render();abrirCats();
