@@ -269,7 +269,7 @@ function abrirForm(g){
 function cerrarForm(){document.getElementById('form').hidden=true;document.getElementById('bNuevo').hidden=false;editando=null;}
 function guardarGasto(){
   const monto=parseN(document.getElementById('fMonto').value),fecha=document.getElementById('fFecha').value||hoyISO();
-  if(!monto){document.getElementById('fMonto').focus();return;}
+  // se puede guardar sin monto (queda en $ 0 y se completa después)
   const ant=editando?G[editando]:null,desc=document.getElementById('fDesc').value.trim();
   let g={id:editando||uid(),quien,desc,monto,fecha,creado:ant?ant.creado:Date.now()};
   if(ant&&ant.serie){
