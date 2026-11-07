@@ -194,13 +194,16 @@ const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};return {j:n.j||'Juli
 
 /* cada gasto se guarda por separado ({id: gasto}) para que si los dos cargan a la vez no se pise nada.
    Gastos fijos: S = {serie: {id, desde:'AAAA-MM', hasta:null|'AAAA-MM', saltar:{'AAAA-MM':true}}}.
-   Cada mes (también los que vienen, apenas los mirás) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
+   Cada mes hasta el que viene (por ejemplo, en enero se ve febrero pero no marzo) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
    y sin quién lo pagó; así si los dos celus lo crean a la vez, es el mismo y no se duplica. */
 let G=rd(LS,{})||{},S=rd(LS+'_s',{})||{};
 const FOTO={j:'img/avatar-juli.webp',a:'img/avatar-ale.webp'};
 const mesDe=f=>f.slice(0,7);
 const mesActual=()=>hoyISO().slice(0,7);
+/* el mes que viene (AAAA-MM): los fijos se precargan hasta ahí nomás, para no llenar la base de meses lejanos */
+const mesSiguiente=()=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()+1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');};
 function generarFijos(p){
+  if(p>mesSiguiente())return;
   if(!listo&&window.getFbConfig&&window.getFbConfig())return; // espera a tener lo último de la nube, así no revive algo borrado
   Object.values(S).forEach(sr=>{
     if(!sr||sr.desde>p||(sr.hasta&&p>sr.hasta)||(sr.saltar||{})[p])return;
@@ -238,6 +241,8 @@ function render(){
   else if(Math.abs(dif)<1){s.className='saldo ok';s.textContent='¡Están a mano!';}
   else{s.className='saldo';const debe=dif>0?NOM.a:NOM.j,cobra=dif>0?NOM.j:NOM.a;
     s.innerHTML=`<span style="color:var(--${dif>0?'ale':'juli'})">${esc(debe)}</span> le tiene que pasar <span class="num">${fmt(Math.abs(dif))}</span> a <span style="color:var(--${dif>0?'juli':'ale'})">${esc(cobra)}</span>`;}
+  const hayFijos=Object.values(S).some(sr=>sr&&sr.desde<=p&&(!sr.hasta||p<=sr.hasta));
+  const lejos=p>mesSiguiente()&&hayFijos;
   const pend=l.filter(g=>!g.quien),tp=pend.reduce((x,g)=>x+(+g.monto||0),0);
   let pt=document.getElementById('pendTot');if(!pt){pt=document.createElement('div');pt.id='pendTot';pt.className='pend-tot';s.after(pt);}
   pt.textContent=pend.length?`Falta asignar ${pend.length} gasto${pend.length===1?'':'s'} fijo${pend.length===1?'':'s'}: ${fmt(tp)}`:'';
@@ -247,7 +252,7 @@ function render(){
         <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}</small></div>
       <span class="m num">${fmt(+g.monto||0)}</span>
       <button class="del" onclick="borrar('${g.id}')" aria-label="Eliminar ${esc(g.desc)}"><i class="ti ti-trash"></i></button>
-    </div>`).join(''):'<p class="vacio">Todavía no hay gastos en este mes</p>';
+    </div>`).join('')+(lejos?'<p class="vacio" style="font-size:.82rem">Los gastos fijos aparecen acá cuando falte un mes.</p>':''):(lejos?'<p class="vacio">Los gastos fijos aparecen acá cuando falte un mes.</p>':'<p class="vacio">Todavía no hay gastos en este mes</p>');
 }
 
 /* formulario */
