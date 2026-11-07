@@ -168,7 +168,7 @@
   <div class="sheet">
     <h3 id="dT"></h3><p id="dM"></p>
     <div class="two" id="dTwo"><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button><button class="btn danger" id="dOk">Eliminar</button></div>
-    <div class="col" id="dCol" hidden><button class="btn danger" id="dSolo">Eliminar solo este mes</button><button class="btn danger" id="dTodo" style="background:#a32b2a">Eliminar en todos los que se repite</button><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button></div>
+    <button class="btn danger" id="dTodo" style="background:#a32b2a" hidden>Eliminar en los próximos meses</button>
   </div>
 </div>
 
@@ -241,9 +241,8 @@ function render(){
   pt.textContent=pend.length?`Falta asignar ${pend.length} gasto${pend.length===1?'':'s'} fijo${pend.length===1?'':'s'}: ${fmt(tp)}`:'';
   document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it${g.quien?'':' pend'}">
       ${g.quien?`<img class="av ${g.quien}" src="${FOTO[g.quien]}" alt="Pagó ${esc(NOM[g.quien])}">`:'<span class="q-none" aria-label="Sin pagar">?</span>'}
-      <div class="tx"><div onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}${g.serie?'<span class="fijo-tag"><i class="ti ti-repeat"></i> fijo</span>':''}</b>
-        <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'todavía sin pagar'}</small></div>
-        ${g.quien?'':`<div class="asig"><span>¿Quién lo pagó?</span>${['j','a'].map(q=>`<button onclick="asignar('${g.id}','${q}')"><img src="${FOTO[q]}" alt="">${esc(NOM[q])}</button>`).join('')}</div>`}</div>
+      <div class="tx" onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}${g.serie?'<span class="fijo-tag"><i class="ti ti-repeat"></i> fijo</span>':''}</b>
+        <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}</small></div>
       <span class="m num">${fmt(+g.monto||0)}</span>
       <button class="del" onclick="borrar('${g.id}')" aria-label="Eliminar ${esc(g.desc)}"><i class="ti ti-trash"></i></button>
     </div>`).join(''):'<p class="vacio">Todavía no hay gastos en este mes</p>';
@@ -289,13 +288,13 @@ function guardarGasto(){
 function editar(id){const g=G[id];if(g){abrirForm(g);window.scrollTo({top:0,behavior:'smooth'});}}
 function borrar(id){const g=G[id];if(!g)return;
   document.getElementById('dT').textContent='Eliminar gasto';
-  const fij=!!(g.serie&&S[g.serie]);document.getElementById('dTwo').hidden=fij;document.getElementById('dCol').hidden=!fij;
-  document.getElementById('dM').textContent=fij?`"${g.desc||'Este gasto'}" es un gasto fijo (${fmt(+g.monto||0)}).`:`¿Eliminar "${g.desc||'este gasto'}" de ${fmt(+g.monto||0)}?`;
-  document.getElementById('dOk').onclick=()=>{cerrarDlg();delete G[id];bajar(id);guardarLocal();render();};
-  // solo este mes: se borra y queda anotado que ese mes se saltea, para que no se vuelva a crear
-  document.getElementById('dSolo').onclick=()=>{cerrarDlg();const sr=S[g.serie];sr.saltar={...(sr.saltar||{}),[mesDe(g.fecha)]:true};
-    subirS(sr);delete G[id];bajar(id);guardarLocal();render();};
-  // en todos: se borra de este mes y de los siguientes, y deja de repetirse (los meses anteriores ya pasaron y quedan como estaban)
+  const fij=!!(g.serie&&S[g.serie]);document.getElementById('dTodo').hidden=!fij;
+  document.getElementById('dM').textContent=fij?`"${g.desc||'Este gasto'}" (${fmt(+g.monto||0)}) es un gasto fijo. "Eliminar" lo saca solo de este mes.`:`¿Eliminar "${g.desc||'este gasto'}" de ${fmt(+g.monto||0)}?`;
+  // gasto común: se borra. Gasto fijo: se borra de este mes y queda anotado que ese mes se saltea, para que no se vuelva a crear
+  document.getElementById('dOk').onclick=()=>{cerrarDlg();
+    if(fij){const sr=S[g.serie];sr.saltar={...(sr.saltar||{}),[mesDe(g.fecha)]:true};subirS(sr);}
+    delete G[id];bajar(id);guardarLocal();render();};
+  // próximos meses: se borra de este mes y de los siguientes, y deja de repetirse (los meses anteriores quedan como estaban)
   document.getElementById('dTodo').onclick=()=>{cerrarDlg();const sr=S[g.serie],p=mesDe(g.fecha);
     const [y,m]=p.split('-').map(Number),antes=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
     sr.hasta=antes;subirS(sr);
