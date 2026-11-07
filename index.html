@@ -159,6 +159,16 @@
   a.card:active{transform:rotate(0deg) scale(.97)}
   .pic{width:100% !important;height:var(--picH,150px) !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
   .pic img{max-height:94%;padding-top:0}
+  /* efecto reflejo: brillo de foto satinada + un destello de luz que cruza cada polaroid */
+  .pic{position:relative;overflow:hidden}
+  .pic::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:linear-gradient(135deg,rgba(255,255,255,.38) 0%,rgba(255,255,255,.08) 38%,transparent 55%)}
+  .pic::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:55%;pointer-events:none;z-index:2;
+    background:linear-gradient(100deg,transparent 0%,rgba(255,255,255,0) 20%,rgba(255,255,255,.75) 50%,rgba(255,255,255,0) 80%,transparent 100%);
+    transform:translateX(-160%) skewX(-12deg);
+    animation:reflejo 7s ease-in-out infinite;animation-delay:calc(1s + var(--n,0) * .18s)}
+  @keyframes reflejo{0%{transform:translateX(-160%) skewX(-12deg)}16%,100%{transform:translateX(260%) skewX(-12deg)}}
+  @media (prefers-reduced-motion:reduce){.pic::after{animation:none;display:none}}
   .txt{text-align:center;padding:4px 0 2px}
   .txt b{font-family:'Dancing Script',cursive;font-size:1.55rem;font-weight:700;color:#333;line-height:1.15}
   .go{display:none !important}
