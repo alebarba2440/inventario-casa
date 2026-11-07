@@ -92,7 +92,25 @@
 
   /* gráfico */
   .chart{position:relative;height:260px}
-  #comp{text-align:center;margin-top:10px;font-weight:700;font-size:.92rem}
+  .sub-t{font-size:.95rem;font-weight:800;margin:18px 0 8px}
+  /* comparación con el mes anterior */
+  .ct-row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) 58px;gap:6px;align-items:center;font-size:.84rem;padding:8px 0;border-top:1px solid var(--border)}
+  .ct-row.h{border-top:none;font-size:.7rem;font-weight:800;color:var(--text2);letter-spacing:.04em;padding-top:0}
+  .ct-row span:nth-child(2),.ct-row span:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+  .ct-row span:nth-child(1){font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ct-row span:nth-child(2){color:var(--text2)}
+  .ct-row span:nth-child(3){font-weight:800}
+  .ct-row .v{text-align:right;font-weight:900;font-size:.8rem;white-space:nowrap}
+  .v.mas{color:var(--neg)} .v.menos{color:var(--pos)} .v.igual{color:var(--text2)}
+  .ct-tot{display:flex;justify-content:space-between;align-items:center;gap:8px;border-radius:12px;padding:10px 12px;margin-top:6px;font-weight:900;font-size:.88rem;background:var(--surface2)}
+  .ct-tot.mas{background:color-mix(in srgb,var(--neg) 12%,transparent);color:var(--neg)}
+  .ct-tot.menos{background:color-mix(in srgb,var(--pos) 12%,transparent);color:var(--pos)}
+  /* tendencia */
+  .filtros{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .filtros::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;border:1px solid var(--border2);background:var(--surface);color:var(--text);border-radius:999px;padding:7px 12px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chart.tend{height:210px;margin-top:8px}
 
   /* hojas (ajustes / confirmar) */
   .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
@@ -163,7 +181,11 @@
     <button class="acc-h" onclick="openAcc('accCat')" aria-expanded="false"><i class="ti ti-chart-donut-3 ic"></i> Por categoría <i class="ti ti-chevron-down chev" style="margin-left:auto"></i></button>
     <div class="acc-b">
     <div class="chart"><canvas id="grafico"></canvas></div>
-    <div id="comp"></div>
+    <h3 class="sub-t" id="compT"></h3>
+    <div id="compTabla"></div>
+    <h3 class="sub-t">Tendencia del año</h3>
+    <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
+    <div class="chart tend"><canvas id="tendencia"></canvas></div>
     </div>
   </section>
 </main>
@@ -193,7 +215,7 @@
 /* ---------- acordeones: uno abierto a la vez ---------- */
 function openAcc(id){
   document.querySelectorAll('.acc').forEach(el=>{const o=el.id===id&&!el.classList.contains('open');el.classList.toggle('open',o);el.querySelector('.acc-h').setAttribute('aria-expanded',o)});
-  if(id==='accCat'&&chart)requestAnimationFrame(()=>chart.resize());
+  if(id==='accCat'&&chart)requestAnimationFrame(()=>{chart.resize();if(tendChart)tendChart.resize();});
 }
 /* ---------- ventanas ---------- */
 function abrir(id){document.getElementById(id).classList.add('show')}
@@ -318,13 +340,56 @@ function totales(){
   {const e=document.getElementById('sumRest');e.textContent='Restante '+fmt(rest);e.style.color=rest<0?'var(--neg)':'var(--accent-dark)';}
   grafico();comparacion();
 }
-function comparacion(){
-  const idx=MESES.indexOf(selMes.value),y=+selAnio.value,[mA,yA]=idx===0?[MESES[11],y-1]:[MESES[idx-1],y];
-  const tot=k=>(datos[k]?.gastos||[]).reduce((a,g)=>a+(+g.importe||0),0),el=document.getElementById('comp');
-  if(!datos[`${mA}-${yA}`]||!(datos[`${mA}-${yA}`].gastos||[]).length){el.innerHTML='<span class="zero">Sin datos del mes anterior</span>';return;}
-  const dif=tot(periodo())-tot(`${mA}-${yA}`);
-  el.innerHTML=dif>0?`<span class="neg">▲ ${fmt(dif)} más que en ${mA}</span>`:dif<0?`<span class="pos">▼ ${fmt(-dif)} menos que en ${mA}</span>`:'<span class="zero">Igual que el mes anterior</span>';
+function comparacion(){compTabla();tendencia();} // la comparación ahora es la tabla por categoría (con el total abajo)
+
+/* ---------- comparación por categoría con el mes anterior ---------- */
+const porCat=k=>{const o={};((datos[k]||{}).gastos||[]).forEach(g=>{const v=+g.importe||0;if(v>0){const c=g.categoria||'varios';o[c]=(o[c]||0)+v;}});return o;};
+function varPct(a,b){ // de a (mes anterior) a b (este mes)
+  if(Math.round(a)===Math.round(b))return{c:'igual',t:'— 0%'};
+  if(!a)return{c:'mas',t:'▲ nuevo'};
+  const p=(b-a)/a*100,r=Math.abs(p)<1?Math.abs(p).toFixed(1).replace('.',','):Math.round(Math.abs(p));
+  return b>a?{c:'mas',t:`▲ ${r}%`}:{c:'menos',t:`▼ ${r}%`};
 }
+function compTabla(){
+  const idx=MESES.indexOf(selMes.value),y=+selAnio.value,[mA,yA]=idx===0?[MESES[11],y-1]:[MESES[idx-1],y];
+  const kA=`${mA}-${yA}`,act=porCat(periodo()),ant=porCat(kA),T=document.getElementById('compTabla');
+  document.getElementById('compT').textContent='Comparado con '+mA.toLowerCase();
+  if(!((datos[kA]||{}).gastos||[]).length){T.innerHTML='<p style="color:var(--text2);font-size:.88rem;text-align:center">Sin datos del mes anterior para comparar.</p>';return;}
+  const cats=[...new Set([...Object.keys(act),...Object.keys(ant)])].sort((x,z)=>(act[z]||0)-(act[x]||0)||(ant[z]||0)-(ant[x]||0));
+  const filas=cats.map(c=>{const a=ant[c]||0,b=act[c]||0,v=varPct(a,b);
+    return `<div class="ct-row"><span>${iconCat(c)} ${esc(nombreCat(c))}</span><span>${fmt(a)}</span><span>${fmt(b)}</span><span class="v ${v.c}">${v.t}</span></div>`;}).join('');
+  const tA=Object.values(ant).reduce((x,z)=>x+z,0),tB=Object.values(act).reduce((x,z)=>x+z,0),v=varPct(tA,tB),d=tB-tA;
+  T.innerHTML=`<div class="ct-row h"><span>CATEGORÍA</span><span>${mA.toUpperCase()}</span><span>${selMes.value.toUpperCase()}</span><span style="text-align:right">VAR.</span></div>${filas}
+    <div class="ct-tot ${v.c}"><span>Total</span><span>${d>0?fmt(d)+' más':d<0?fmt(-d)+' menos':'Igual'} · ${v.t}</span></div>`;
+}
+
+/* ---------- tendencia del año (total o por categoría) ---------- */
+let tendChart=null,tendCat=rd('tend-cat','todas');
+function tendencia(){
+  if(typeof Chart==='undefined')return;
+  const y=+selAnio.value,usadas=new Set();
+  MESES.forEach(m=>((datos[`${m}-${y}`]||{}).gastos||[]).forEach(g=>{if(+g.importe>0)usadas.add(g.categoria||'varios')}));
+  const cats=CATS.map(c=>c.id).filter(id=>usadas.has(id));
+  if(tendCat!=='todas'&&!cats.includes(tendCat))tendCat='todas';
+  document.getElementById('filtros').innerHTML=[['todas','Todas']].concat(cats.map(id=>[id,iconCat(id)+' '+nombreCat(id)]))
+    .map(([id,t])=>`<button class="chip${id===tendCat?' on':''}" aria-pressed="${id===tendCat}" onclick="setTendCat('${id}')">${esc(t)}</button>`).join('');
+  const vals=MESES.map(m=>{const d=datos[`${m}-${y}`];if(!d||!(d.gastos||[]).length)return null;
+    return (d.gastos||[]).reduce((a,g)=>a+((tendCat==='todas'||(g.categoria||'varios')===tendCat)?(+g.importe||0):0),0);});
+  const con=vals.filter(v=>v!==null),prom=con.length?con.reduce((a,b)=>a+b,0)/con.length:null;
+  const sel=MESES.indexOf(selMes.value);
+  const acc=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#1D9E75';
+  const txt2=getComputedStyle(document.documentElement).getPropertyValue('--text2').trim()||'#888';
+  const ds=[{label:tendCat==='todas'?'Total':nombreCat(tendCat),data:vals,borderColor:acc,backgroundColor:acc+'22',fill:true,tension:.3,spanGaps:true,borderWidth:2.5,
+      pointRadius:vals.map((_,i)=>i===sel?6:3),pointBackgroundColor:vals.map((_,i)=>i===sel?acc:'#fff'),pointBorderColor:acc,pointBorderWidth:2},
+    {label:'Promedio',data:MESES.map(()=>prom),borderColor:txt2,borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false}];
+  if(tendChart){tendChart.data.datasets=ds;tendChart.update();return;}
+  tendChart=new Chart(document.getElementById('tendencia'),{type:'line',data:{labels:MESES.map(m=>m.slice(0,3)),datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y==null?'':` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
+      scales:{x:{grid:{display:false},ticks:{color:txt2,font:{family:'Nunito',size:10,weight:'700'}}},
+        y:{beginAtZero:true,grid:{color:'rgba(128,128,128,.12)'},ticks:{color:txt2,font:{family:'Nunito',size:10},callback:v=>v>=1e6?(v/1e6).toLocaleString('es-AR')+' M':v>=1e3?Math.round(v/1e3)+' k':v}}}}});
+}
+function setTendCat(id){tendCat=id;wr('tend-cat',id);tendencia();}
 
 /* ---------- gráfico ---------- */
 let chart=null;
@@ -345,9 +410,9 @@ function grafico(){
   const difs=e.map(([c,v])=>v-(ant[c]||0));
   const txt=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#1a1a1a';
   if(chart){chart.$flechas=flechas;chart.$difs=difs;chart.$mA=mA;chart.data.labels=labels;chart.data.datasets[0].data=vals;chart.data.datasets[0].backgroundColor=cols;chart.options.plugins.legend.labels.color=txt;chart.update();return;}
-  chart=new Chart(document.getElementById('grafico'),{type:'doughnut',plugins:[flechasPlugin],
-    data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+  chart=new Chart(document.getElementById('grafico'),{type:'pie',plugins:[flechasPlugin],
+    data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'right',labels:{color:txt,boxWidth:10,font:{family:'Nunito',size:11,weight:'600'}}},
         tooltip:{callbacks:{label:c=>' '+fmt(c.parsed),
           afterLabel:c=>{const f=(chart.$flechas||[])[c.dataIndex];if(f===undefined)return '';const d=(chart.$difs||[])[c.dataIndex];
