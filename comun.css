@@ -44,3 +44,6 @@ i.ti, .home-link svg, .gear svg { display:inline-block; animation: iconoLatido 2
 /* Celular: que no haga zoom al tocar un campo ni se pueda correr la pantalla para los costados */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
 html,body{overflow-x:clip;max-width:100%}
+
+/* títulos largos (nombre propio de la sección) no se salen de la barra */
+.top h1,.top-header-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}

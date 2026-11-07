@@ -1326,7 +1326,7 @@
     document.getElementById('panelCargar').classList.toggle('active', isC);
     document.getElementById('panelInventario').classList.toggle('active', !isC);
     document.getElementById('topIcon').className = isC ? 'ti ti-stack-2' : 'ti ti-list-check';
-    document.getElementById('topLabel').textContent = 'INVENTARIO';
+    document.getElementById('topLabel').textContent = window.nombreSeccion ? nombreSeccion('INVENTARIO') : 'INVENTARIO';
     const fab = document.getElementById('cameraFab');
     if (fab) fab.style.display = isC ? 'flex' : 'none';
     if (!isC) render();

@@ -178,3 +178,21 @@ window.ptsCampo = function (el) {
   });
   if (window.visualViewport) { visualViewport.addEventListener('resize', ubicar); visualViewport.addEventListener('scroll', ubicar); }
 })();
+
+/* Nombre de cada sección: si en el inicio (Ajustes › Accesos directos) se le cambió el nombre con el lápiz,
+   el título de arriba de la página muestra ese nombre en lugar del original. */
+(function () {
+  const k = (location.pathname.split('/').pop() || '').replace(/\.html$/, '');
+  const SECC = ['inventario', 'ahorros', 'vacaciones', 'copito', 'gastos'];
+  function propio() {
+    if (!SECC.includes(k)) return '';
+    try { const c = JSON.parse(localStorage.getItem('cfg_v2') || '{}'); return ((c.accesos || {})[k] || {}).nombre || ''; } catch (e) { return ''; }
+  }
+  window.nombreSeccion = function (def) { const n = propio(); return n ? n.toUpperCase() : def; };
+  document.addEventListener('DOMContentLoaded', () => {
+    const n = propio(); if (!n) return;
+    const el = document.getElementById('topLabel') || document.querySelector('.top h1');
+    if (el) el.textContent = n.toUpperCase();
+    document.title = n;
+  });
+})();
