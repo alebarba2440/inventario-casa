@@ -168,7 +168,7 @@
   <div class="sheet">
     <h3 id="dT"></h3><p id="dM"></p>
     <div class="two" id="dTwo"><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button><button class="btn danger" id="dOk">Eliminar</button></div>
-    <div class="col" id="dCol" hidden><button class="btn danger" id="dSolo">Borrar solo este mes</button><button class="btn danger" id="dTodo" style="background:#a32b2a">Dejar de repetirlo</button><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button></div>
+    <div class="col" id="dCol" hidden><button class="btn danger" id="dSolo">Eliminar solo este mes</button><button class="btn danger" id="dTodo" style="background:#a32b2a">Eliminar en todos los que se repite</button><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button></div>
   </div>
 </div>
 
@@ -199,6 +199,7 @@ const mesDe=f=>f.slice(0,7);
 const mesActual=()=>hoyISO().slice(0,7);
 function generarFijos(p){
   if(p>mesActual())return;                                    // los meses que todavía no llegaron no se precargan
+  if(!listo&&window.getFbConfig&&window.getFbConfig())return; // espera a tener lo último de la nube, así no revive algo borrado
   Object.values(S).forEach(sr=>{
     if(!sr||sr.desde>p||(sr.hasta&&p>sr.hasta)||(sr.saltar||{})[p])return;
     const id=sr.id+'_'+p;if(G[id])return;
@@ -208,7 +209,6 @@ function generarFijos(p){
     const g={id,serie:sr.id,quien:null,desc:prev.desc||'',monto:+prev.monto||0,fecha:`${p}-${dia}`,creado:Date.now()};
     G[id]=g;subir(g);
   });
-  wr(LS,G);
 }
 const selMes=document.getElementById('mes'),selAnio=document.getElementById('anio');
 let quien=rd('compartidos_quien','j'),editando=null;
@@ -256,7 +256,7 @@ function toggleFijo(v){fijo=v===undefined?!fijo:v;const b=document.getElementByI
   // en un gasto fijo se puede dejar "Nadie aún" y asignarlo después
   document.getElementById('qN').hidden=!fijo;document.getElementById('quienBox').classList.toggle('tres',fijo);
   if(!fijo&&quien===null)setQuien(rd('compartidos_quien','j'));}
-function asignar(id,q){const g=G[id];if(!g)return;g.quien=q;wr(LS,G);subir(g);render();}
+function asignar(id,q){const g=G[id];if(!g)return;g.quien=q;subir(g);render();}
 function abrirForm(g){
   editando=g?g.id:null;const f=document.getElementById('form');f.hidden=false;document.getElementById('bNuevo').hidden=true;
   document.getElementById('qJ').innerHTML=`<img src="${FOTO.j}" alt="">${esc(NOM.j)}`;document.getElementById('qA').innerHTML=`<img src="${FOTO.a}" alt="">${esc(NOM.a)}`;
@@ -281,7 +281,7 @@ function guardarGasto(){
     if(ant){delete G[ant.id];bajar(ant.id);}
     g={...g,id:sid+'_'+p,serie:sid};
   }
-  G[g.id]=g;wr(LS,G);wr(LS+'_s',S);if(quien)wr('compartidos_quien',quien);subir(g);
+  G[g.id]=g;if(quien)wr('compartidos_quien',quien);subir(g);
   // si el gasto es de otro mes, te lleva a ese mes
   selAnio.value=fecha.slice(0,4);if(selAnio.value!==fecha.slice(0,4)){llenarPeriodo();selAnio.value=fecha.slice(0,4);}selMes.value=+fecha.slice(5,7)-1;
   cerrarForm();render();
@@ -290,14 +290,17 @@ function editar(id){const g=G[id];if(g){abrirForm(g);window.scrollTo({top:0,beha
 function borrar(id){const g=G[id];if(!g)return;
   document.getElementById('dT').textContent='Eliminar gasto';
   const fij=!!(g.serie&&S[g.serie]);document.getElementById('dTwo').hidden=fij;document.getElementById('dCol').hidden=!fij;
-  document.getElementById('dM').textContent=fij?`"${g.desc||'Este gasto'}" es un gasto fijo. ¿Qué querés hacer?`:`¿Eliminar "${g.desc||'este gasto'}" de ${fmt(+g.monto||0)}?`;
-  const quitar=()=>{delete G[id];wr(LS,G);bajar(id);};
-  document.getElementById('dOk').onclick=()=>{cerrarDlg();quitar();render();};
-  document.getElementById('dSolo').onclick=()=>{cerrarDlg();const sr=S[g.serie];sr.saltar=sr.saltar||{};sr.saltar[mesDe(g.fecha)]=true;subirS(sr);wr(LS+'_s',S);quitar();render();};
+  document.getElementById('dM').textContent=fij?`"${g.desc||'Este gasto'}" es un gasto fijo (${fmt(+g.monto||0)}).`:`¿Eliminar "${g.desc||'este gasto'}" de ${fmt(+g.monto||0)}?`;
+  document.getElementById('dOk').onclick=()=>{cerrarDlg();delete G[id];bajar(id);guardarLocal();render();};
+  // solo este mes: se borra y queda anotado que ese mes se saltea, para que no se vuelva a crear
+  document.getElementById('dSolo').onclick=()=>{cerrarDlg();const sr=S[g.serie];sr.saltar={...(sr.saltar||{}),[mesDe(g.fecha)]:true};
+    subirS(sr);delete G[id];bajar(id);guardarLocal();render();};
+  // en todos: se borra de este mes y de los siguientes, y deja de repetirse (los meses anteriores ya pasaron y quedan como estaban)
   document.getElementById('dTodo').onclick=()=>{cerrarDlg();const sr=S[g.serie],p=mesDe(g.fecha);
-    // termina el mes anterior a este; si arrancaba este mes, la serie desaparece
     const [y,m]=p.split('-').map(Number),antes=m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`;
-    sr.hasta=antes;subirS(sr);wr(LS+'_s',S);quitar();render();};
+    sr.hasta=antes;subirS(sr);
+    Object.values(G).filter(x=>x.serie===sr.id&&mesDe(x.fecha)>=p).forEach(x=>{delete G[x.id];bajar(x.id);});
+    guardarLocal();render();};
   document.getElementById('dlg').classList.add('show');}
 function cerrarDlg(){document.getElementById('dlg').classList.remove('show');}
 
@@ -305,12 +308,37 @@ function cerrarDlg(){document.getElementById('dlg').classList.remove('show');}
 let db=null;
 const ref=()=>db.collection('ahorros').doc('compartidos');
 function aviso(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#c0392b;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:999;font-size:.9rem';document.body.appendChild(d);setTimeout(()=>d.remove(),4000);}
-function subir(g){if(!db)return;ref().set({g:{[g.id]:g},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>aviso('No se pudo guardar en la nube. Revisá la conexión.'));}
-function subirS(sr){if(!db)return;ref().set({s:{[sr.id]:sr},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>aviso('No se pudo guardar en la nube. Revisá la conexión.'));}
-function bajar(id){if(!db)return;ref().update({['g.'+id]:firebase.firestore.FieldValue.delete()}).catch(()=>aviso('No se pudo borrar en la nube. Revisá la conexión.'));}
+/* Todo cambio queda anotado como "pendiente" (también en el celu) hasta que la nube confirma que lo guardó.
+   Cuando llegan datos de la nube, se les aplican encima los pendientes: así un gasto recién cargado o borrado
+   no desaparece ni vuelve a aparecer mientras viaja. */
+let PEND=rd(LS+'_p',{g:{},s:{}})||{g:{},s:{}},listo=false,tEnv=null,enviando=false;
+const guardarLocal=()=>{wr(LS,G);wr(LS+'_s',S);wr(LS+'_p',PEND);};
+function subir(g){PEND.g[g.id]=JSON.parse(JSON.stringify(g));guardarLocal();programar();}
+function subirS(sr){PEND.s[sr.id]=JSON.parse(JSON.stringify(sr));guardarLocal();programar();}
+function bajar(id){PEND.g[id]=null;guardarLocal();programar();}
+function programar(){clearTimeout(tEnv);tEnv=setTimeout(enviar,250);}
+function enviar(){
+  if(!db||enviando)return;const FV=firebase.firestore.FieldValue;
+  const gk=Object.keys(PEND.g),sk=Object.keys(PEND.s);if(!gk.length&&!sk.length)return;
+  const foto=JSON.stringify(PEND),obj={ts:FV.serverTimestamp()};
+  if(gk.length){obj.g={};gk.forEach(k=>obj.g[k]=PEND.g[k]===null?FV.delete():PEND.g[k]);}
+  if(sk.length){obj.s={};sk.forEach(k=>obj.s[k]=PEND.s[k]);}
+  enviando=true;
+  ref().set(obj,{merge:true}).then(()=>{
+    const env=JSON.parse(foto);   // saca de pendientes lo que se mandó, salvo que haya cambiado mientras tanto
+    gk.forEach(k=>{if(JSON.stringify(PEND.g[k])===JSON.stringify(env.g[k]))delete PEND.g[k];});
+    sk.forEach(k=>{if(JSON.stringify(PEND.s[k])===JSON.stringify(env.s[k]))delete PEND.s[k];});
+    wr(LS+'_p',PEND);enviando=false;if(Object.keys(PEND.g).length||Object.keys(PEND.s).length)programar();
+  }).catch(e=>{enviando=false;console.warn(e);aviso('No se pudo guardar en la nube. Revisá la conexión.');setTimeout(programar,5000);});
+}
 function aplicar(doc){
-  if(!doc.exists){Object.values(G).forEach(subir);Object.values(S).forEach(subirS);return;}     // primera vez: sube lo que haya en este celu
-  const d=doc.data()||{};G=d.g||{};S=d.s||{};wr(LS,G);wr(LS+'_s',S);
+  const d=doc.exists?(doc.data()||{}):{};
+  const g={...(d.g||{})},sr={...(d.s||{})};
+  Object.entries(PEND.g).forEach(([k,v])=>{if(v===null)delete g[k];else g[k]=v;});
+  Object.entries(PEND.s).forEach(([k,v])=>{sr[k]=v;});
+  if(!doc.exists&&!listo){Object.values(G).forEach(subir);Object.values(S).forEach(subirS);}   // primera vez: sube lo que haya en este celu
+  else{G=g;S=sr;}
+  listo=true;guardarLocal();
   const a=document.activeElement;if(!(a&&a.tagName==='INPUT'))render();
 }
 function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
@@ -318,6 +346,7 @@ async function initFb(){const c=window.getFbConfig&&window.getFbConfig();if(!c)r
   try{if(typeof firebase==='undefined'){await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');}
     if(!firebase.apps.length)firebase.initializeApp(c);db=firebase.firestore();
     ref().onSnapshot(d=>{if(d.metadata.hasPendingWrites)return;aplicar(d);},e=>console.warn(e));
+    programar();   // lo que haya quedado pendiente de otra vez (por ejemplo, sin internet)
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')ref().get({source:'server'}).then(aplicar).catch(()=>{});});
   }catch(e){}}
 
