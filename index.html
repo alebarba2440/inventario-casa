@@ -71,6 +71,29 @@
   @media (max-width:759px){.grid{display:flex;flex-direction:column;gap:14px}}
 
   /* ---------- Ajustes ---------- */
+
+  /* ---------- Ajustes en acordeones (se abre uno y se cierran los demás) ---------- */
+  .block.acc{padding:0;overflow:hidden}
+  .acc-h{width:100%;display:flex;align-items:center;gap:8px;padding:14px;background:none;border:none;font-family:inherit;font-size:.95rem;font-weight:700;color:var(--text);cursor:pointer;text-align:left}
+  .acc-h>i:first-child{color:var(--accent);font-size:1.15rem}
+  .acc-h .chev{margin-left:auto;color:var(--text2);transition:transform .2s}
+  .acc.open .acc-h .chev{transform:rotate(180deg)}
+  .acc-b{display:none;padding:0 14px 14px}
+  .acc.open .acc-b{display:block}
+  .acc-hint{font-size:.78rem;color:var(--text2);margin-top:10px;line-height:1.35}
+  /* accesos directos: nombre, lápiz y switch */
+  .ad{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+  .ad:first-child{border-top:none;padding-top:0}
+  .ad img{width:40px;height:40px;object-fit:contain;flex-shrink:0;border-radius:10px;background:var(--surface2)}
+  .ad .nm{flex:1;min-width:0;font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ad.off .nm,.ad.off img{opacity:.45}
+  .ad input.nm{border:1.5px solid var(--accent);border-radius:10px;padding:7px 10px;background:var(--surface2);color:var(--text);font-family:inherit;outline:none}
+  .ad .lap{width:38px;height:38px;border:none;background:none;color:var(--accent);font-size:1.25rem;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:10px;flex-shrink:0}
+  .sw2{position:relative;width:50px;height:30px;flex-shrink:0;border-radius:999px;border:none;background:var(--border2);cursor:pointer;padding:0;transition:background .2s}
+  .sw2::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+  .sw2[aria-checked="true"]{background:var(--accent)}
+  .sw2[aria-checked="true"]::after{transform:translateX(20px)}
+  .sin-acc{text-align:center;color:var(--text2);font-size:.9rem;padding:30px 10px}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:100}
   .overlay.open{display:flex}
   .sheet{background:var(--surface);width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;border-radius:22px 22px 0 0;
@@ -134,22 +157,20 @@
   a.card::after{display:none !important}
   a.card:hover{box-shadow:0 10px 22px rgba(0,0,0,.18)}
   a.card:active{transform:rotate(0deg) scale(.97)}
-  .pic{width:100% !important;height:150px !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
+  .pic{width:100% !important;height:var(--picH,150px) !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
   .pic img{max-height:94%;padding-top:0}
   .txt{text-align:center;padding:4px 0 2px}
   .txt b{font-family:'Dancing Script',cursive;font-size:1.55rem;font-weight:700;color:#333;line-height:1.15}
   .go{display:none !important}
-  .grid a.card:nth-child(1){--rot:-3deg}
-  .grid a.card:nth-child(2){--rot:2.5deg}
-  .grid a.card:nth-child(3){--rot:2deg}
-  .grid a.card:nth-child(4){--rot:-2.5deg}
-  .grid a.card:nth-child(5){--rot:-1.5deg}
-  /* la última (si quedan impares) va sola y centrada */
-  .grid a.card:last-child:nth-child(odd){grid-column:1 / span 2;justify-self:center;width:calc(50% - 8px)}
+  a.card.oculta{display:none !important}
+  /* la última (si quedan impares) va sola y centrada; con una sola tarjeta, ocupa el ancho */
+  .grid a.card.sola{grid-column:1 / span 2;justify-self:center;width:calc(50% - 8px)}
+  .grid.una a.card.sola{width:min(100%,320px)}
   @media (min-width:760px){
     .grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:26px}
     .pic{height:220px !important}
-    .grid a.card:last-child:nth-child(odd){grid-column:auto;width:auto;justify-self:stretch}
+    .grid a.card.sola{grid-column:auto;width:auto;justify-self:stretch}
+    .grid.una a.card.sola{width:auto}
   }
   @media (prefers-reduced-motion:reduce){a.card{transform:none}}
 
@@ -213,33 +234,34 @@
       if(a&&b)t.style.fontSize=(parseFloat(getComputedStyle(t).fontSize)*b/a)+'px';}
     igualarMarca();if(document.fonts)document.fonts.ready.then(igualarMarca);addEventListener('resize',igualarMarca);window.igualarMarca=igualarMarca;})();
   </script>
-  <nav class="grid">
-    <a class="card" href="inventario.html">
+  <nav class="grid" id="grid">
+    <a class="card" href="inventario.html" data-k="inventario">
       <div class="pic"><img src="img/inventario.webp?v=2" alt="" width="520" height="513"></div>
       <div class="txt"><b>Inventario</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
-    <a class="card" href="ahorros.html">
+    <a class="card" href="ahorros.html" data-k="ahorros">
       <div class="pic"><img src="img/ahorros.webp?v=2" alt="" width="382" height="520"></div>
       <div class="txt"><b>Ahorros</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
-    <a class="card" href="vacaciones.html">
+    <a class="card" href="vacaciones.html" data-k="vacaciones">
       <div class="pic"><img src="img/vacaciones.webp?v=2" alt="" width="399" height="520"></div>
       <div class="txt"><b>Vacaciones</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
-    <a class="card" href="copito.html">
+    <a class="card" href="copito.html" data-k="copito">
       <div class="pic"><img src="img/copito.webp" alt="" width="520" height="419"></div>
       <div class="txt"><b>Copito</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
-    <a class="card" href="gastos.html">
+    <a class="card" href="gastos.html" data-k="gastos">
       <div class="pic"><img src="img/gastos.webp" alt="" width="309" height="520"></div>
       <div class="txt"><b>Gastos personales</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
   </nav>
+  <p class="sin-acc" id="sinAcc" hidden>No hay accesos directos activados. Activalos en Ajustes › Accesos directos.</p>
 </div>
 
 <div class="overlay" id="cfgOverlay" onclick="if(event.target===this)closeCfg()">
@@ -247,37 +269,46 @@
     <div class="handle"></div>
     <h2>Ajustes</h2>
 
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-layout-grid"></i> Accesos directos<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b"><div id="accList"></div><p class="acc-hint">Tocá el lápiz para cambiar el nombre. Con el interruptor apagado, la tarjeta no aparece en el inicio.</p></div>
+    </div>
+
     <div class="block" style="display:none"><!-- oculto por ahora: creador de personajes (personajes.html) -->
       <h3><i class="ti ti-user-heart"></i> Personajes</h3>
       <a class="btn pri" href="personajes.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none"><i class="ti ti-wand"></i> Personalizar personajes</a>
     </div>
 
-    <div class="block">
-      <h3><i class="ti ti-volume"></i> Sonidos</h3>
-      <div class="seg desliz" id="sndSeg" style="--pad:4px;--kr:9px">
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-volume"></i> Sonidos<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="seg desliz" id="sndSeg" style="--pad:4px;--kr:9px">
         <button data-s="1" onclick="setSonidos(true)"><i class="ti ti-volume"></i> Activados</button>
         <button data-s="0" onclick="setSonidos(false)"><i class="ti ti-volume-off"></i> Apagados</button>
-      </div>
+        </div>
       <a href="sonidos.html" style="display:block;text-align:center;margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:700">Escuchar los sonidos</a>
+      </div>
     </div>
 
-    <div class="block">
-      <h3><i class="ti ti-typography"></i> Tamaño del texto</h3>
-      <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-typography"></i> Tamaño del texto<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
+      </div>
     </div>
 
-    <div class="block">
-      <h3><i class="ti ti-sun-moon"></i> Modo</h3>
-      <div class="seg desliz" style="--pad:4px;--kr:9px">
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-sun-moon"></i> Modo<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="seg desliz" style="--pad:4px;--kr:9px">
         <button data-t="light" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
         <button data-t="dark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> Oscuro</button>
-      </div>
+        </div>
+    </div>
     </div>
 
-    <div class="block">
-      <h3><i class="ti ti-palette"></i> Color</h3>
-      <div class="pal" id="pal"></div>
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-palette"></i> Color<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="pal" id="pal"></div>
       <label class="custom-color"><span class="cc-dot" id="ccDot"><input type="color" id="ccInput" aria-label="Elegir color a mano"></span><span>Elegir otro color a mano</span></label>
+      </div>
     </div>
 
     <div class="block" style="display:none"><!-- oculto: estado de Firebase (se puede volver a mostrar) -->
@@ -339,7 +370,7 @@ function markTheme(){const t=cfg.theme==='dark'?'dark':'light';document.querySel
 
 const fs=document.getElementById('fsSlider');
 fs.value=cfg.fontSize||1;
-fs.addEventListener('input',e=>{cfg.fontSize=parseFloat(e.target.value);saveCfg();R.style.fontSize=(cfg.fontSize*100)+'%';if(window.igualarMarca)igualarMarca();});
+fs.addEventListener('input',e=>{cfg.fontSize=parseFloat(e.target.value);saveCfg();R.style.fontSize=(cfg.fontSize*100)+'%';if(window.igualarMarca)igualarMarca();if(window.llenarPantalla)llenarPantalla();});
 
 /* ---------- Firebase ---------- */
 const fromFile=!!(window.FB_CONFIG&&window.FB_CONFIG.apiKey);
@@ -394,6 +425,70 @@ if(location.hash==='#ajustes')openCfg();
 function marcarSonidos(){const on=window.sonidosActivos?sonidosActivos():true;document.querySelectorAll('#sndSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.s==='1')===on));}
 function setSonidos(on){try{localStorage.setItem('sonidos',on?'1':'0')}catch(e){}marcarSonidos();if(on&&window.sonido)sonido('aceptar');}
 marcarSonidos();
+</script>
+<script>
+/* ===== Accesos directos: nombre y visibilidad de cada tarjeta (se guarda en este dispositivo) ===== */
+const ROT=['-3deg','2.5deg','2deg','-2.5deg','-1.5deg'];
+function accCfg(){if(!cfg.accesos||typeof cfg.accesos!=='object')cfg.accesos={};return cfg.accesos;}
+const cards=()=>[...document.querySelectorAll('#grid a.card')];
+function defNombre(a){if(!a.dataset.def)a.dataset.def=a.querySelector('.txt b').textContent;return a.dataset.def;}
+function aplicarAccesos(){
+  const A=accCfg();let vis=[];
+  cards().forEach(a=>{const c=A[a.dataset.k]||{},on=c.on!==false;defNombre(a);
+    a.querySelector('.txt b').textContent=c.nombre||a.dataset.def;a.classList.toggle('oculta',!on);a.classList.remove('sola');if(on)vis.push(a);});
+  vis.forEach((a,i)=>a.style.setProperty('--rot',ROT[i%ROT.length]));
+  const g=document.getElementById('grid');g.classList.toggle('una',vis.length===1);
+  if(vis.length%2===1)vis[vis.length-1].classList.add('sola');
+  document.getElementById('sinAcc').hidden=vis.length>0;
+  llenarPantalla();
+}
+/* agranda las fotos para que las tarjetas ocupen la pantalla del celular */
+function llenarPantalla(){
+  const g=document.getElementById('grid');g.style.removeProperty('--picH');
+  if(innerWidth>=760)return;
+  const vis=cards().filter(a=>!a.classList.contains('oculta'));if(!vis.length)return;
+  const filas=vis.length===1?1:Math.ceil(vis.length/2),pic=vis[0].querySelector('.pic');
+  let extras=0;                                                // marco + nombre (el más alto de cada fila)
+  for(let f=0;f<filas;f++){const fila=vis.length===1?vis:vis.slice(f*2,f*2+2);
+    extras+=Math.max(...fila.map(a=>a.offsetHeight-a.querySelector('.pic').offsetHeight));}
+  const top=g.getBoundingClientRect().top+scrollY,cs=getComputedStyle(g);
+  const gap=parseFloat(cs.rowGap)||18,padB=parseFloat(cs.paddingBottom)||0;
+  const libre=innerHeight-top-padB-parseFloat(getComputedStyle(document.body).paddingBottom||0);
+  let h=(libre-8-gap*(filas-1)-extras)/filas;
+  const ancho=pic.offsetWidth||160;
+  h=Math.max(130,Math.min(h,ancho*(vis.length===1?1.1:1.9)));
+  g.style.setProperty('--picH',Math.floor(h)+'px');
+}
+function dibujarAccesos(){
+  const A=accCfg();
+  document.getElementById('accList').innerHTML=cards().map(a=>{const k=a.dataset.k,c=A[k]||{},on=c.on!==false,nom=c.nombre||defNombre(a);
+    return `<div class="ad${on?'':' off'}" data-k="${k}">
+      <img src="${a.querySelector('img').getAttribute('src')}" alt="">
+      <span class="nm">${nom.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
+      <button class="lap" onclick="editarNombre('${k}')" aria-label="Cambiar nombre de ${defNombre(a)}"><i class="ti ti-pencil"></i></button>
+      <button class="sw2" role="switch" aria-checked="${on}" aria-label="Mostrar ${defNombre(a)} en el inicio" onclick="toggleAcceso('${k}')"></button>
+    </div>`;}).join('');
+}
+function toggleAcceso(k){const A=accCfg();A[k]=A[k]||{};A[k].on=A[k].on===false;saveCfg();dibujarAccesos();aplicarAccesos();}
+function editarNombre(k){
+  const fila=document.querySelector(`.ad[data-k="${k}"]`),sp=fila.querySelector('.nm'),a=cards().find(x=>x.dataset.k===k);
+  if(sp.tagName==='INPUT'){sp.blur();return;}
+  const inp=document.createElement('input');inp.className='nm';inp.value=sp.textContent;inp.maxLength=30;inp.setAttribute('aria-label','Nombre de la tarjeta');
+  let listo=false;
+  const guardar=()=>{if(listo)return;listo=true;const A=accCfg(),v=inp.value.trim();A[k]=A[k]||{};
+    if(v&&v!==defNombre(a))A[k].nombre=v;else delete A[k].nombre;saveCfg();dibujarAccesos();aplicarAccesos();};
+  inp.addEventListener('blur',guardar);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}if(e.key==='Escape'){listo=true;dibujarAccesos();}});
+  sp.replaceWith(inp);inp.focus();inp.select();
+}
+/* acordeones de Ajustes: abrir uno cierra los demás */
+function toggleAccCfg(btn){const b=btn.closest('.acc'),abrir=!b.classList.contains('open');
+  document.querySelectorAll('.sheet .acc').forEach(x=>{x.classList.remove('open');x.querySelector('.acc-h').setAttribute('aria-expanded','false');});
+  if(abrir){b.classList.add('open');btn.setAttribute('aria-expanded','true');if(window.syncSwitches)syncSwitches();}}
+aplicarAccesos();dibujarAccesos();
+addEventListener('resize',llenarPantalla);addEventListener('load',llenarPantalla);
+if(document.fonts)document.fonts.ready.then(llenarPantalla);
+document.querySelectorAll('#grid img').forEach(im=>{if(!im.complete)im.addEventListener('load',llenarPantalla,{once:true});});
 </script>
 </body>
 </html>
