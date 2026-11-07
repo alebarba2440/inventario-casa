@@ -332,7 +332,10 @@ function grafico(){
   if(typeof Chart==='undefined')return;
   const por={};(datos[periodo()].gastos||[]).forEach(g=>{const v=+g.importe||0;if(v>0){const c=g.categoria||'varios';por[c]=(por[c]||0)+v;}});
   const e=Object.entries(por).sort((a,b)=>b[1]-a[1]);
-  const labels=e.map(([c])=>`${iconCat(c)} ${nombreCat(c)}`),vals=e.map(x=>x[1]);
+  const total=e.reduce((t,x)=>t+x[1],0);
+  /* porcentaje de cada categoría al lado del nombre (ej: "Comida 35%") */
+  const pct=v=>{const p=total?v/total*100:0;return p>0&&p<1?'<1%':Math.round(p)+'%';};
+  const labels=e.map(([c,v])=>`${iconCat(c)} ${nombreCat(c)} ${pct(v)}`),vals=e.map(x=>x[1]);
   const cols=e.map((_,i)=>`hsl(${(i*137.5+150)%360} 60% 55%)`);
   const txt=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#1a1a1a';
   if(chart){chart.data.labels=labels;chart.data.datasets[0].data=vals;chart.data.datasets[0].backgroundColor=cols;chart.options.plugins.legend.labels.color=txt;chart.update();return;}
