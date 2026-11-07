@@ -194,14 +194,13 @@ const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};return {j:n.j||'Juli
 
 /* cada gasto se guarda por separado ({id: gasto}) para que si los dos cargan a la vez no se pise nada.
    Gastos fijos: S = {serie: {id, desde:'AAAA-MM', hasta:null|'AAAA-MM', saltar:{'AAAA-MM':true}}}.
-   Cada mes (hasta el actual) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
+   Cada mes (también los que vienen, apenas los mirás) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
    y sin quién lo pagó; así si los dos celus lo crean a la vez, es el mismo y no se duplica. */
 let G=rd(LS,{})||{},S=rd(LS+'_s',{})||{};
 const FOTO={j:'img/avatar-juli.webp',a:'img/avatar-ale.webp'};
 const mesDe=f=>f.slice(0,7);
 const mesActual=()=>hoyISO().slice(0,7);
 function generarFijos(p){
-  if(p>mesActual())return;                                    // los meses que todavía no llegaron no se precargan
   if(!listo&&window.getFbConfig&&window.getFbConfig())return; // espera a tener lo último de la nube, así no revive algo borrado
   Object.values(S).forEach(sr=>{
     if(!sr||sr.desde>p||(sr.hasta&&p>sr.hasta)||(sr.saltar||{})[p])return;
@@ -283,6 +282,9 @@ function guardarGasto(){
     if(ant){delete G[ant.id];bajar(ant.id);}
     g={...g,id:sid+'_'+p,serie:sid};
   }
+  // si cambiaste monto o descripción de un fijo, se actualiza también en los meses siguientes que todavía no se pagaron
+  if(ant&&ant.serie&&fijo&&(ant.monto!==g.monto||ant.desc!==g.desc))
+    Object.values(G).filter(x=>x.serie===ant.serie&&mesDe(x.fecha)>mesDe(g.fecha)&&!x.quien).forEach(x=>{x.monto=g.monto;x.desc=g.desc;subir(x);});
   G[g.id]=g;if(quien)wr('compartidos_quien',quien);subir(g);
   // si el gasto es de otro mes, te lleva a ese mes
   selAnio.value=fecha.slice(0,4);if(selAnio.value!==fecha.slice(0,4)){llenarPeriodo();selAnio.value=fecha.slice(0,4);}selMes.value=+fecha.slice(5,7)-1;
