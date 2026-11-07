@@ -67,6 +67,32 @@
   .row input[type=text]{width:100%;min-width:0;background:transparent;border:1px solid transparent;border-radius:8px;padding:7px 6px;font-family:inherit;font-size:.92rem;font-weight:600;color:var(--text);outline:none}
   .row input[type=text]:focus{border-color:var(--accent);background:var(--surface)}
   .row input.imp{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+  /* menú para crear gasto */
+  .nuevo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:12px}
+  .nuevo[hidden]{display:none}
+  .nuevo label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.03em}
+  .nuevo .nv-cat{grid-column:1/-1}
+  .nuevo select,.nuevo input{font-family:inherit;font-size:1rem;font-weight:700;color:var(--text);background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:10px;outline:none;width:100%;box-sizing:border-box}
+  .nuevo select:focus,.nuevo input:focus{border-color:var(--accent)}
+  .nuevo .nv-imp input{text-align:right;font-variant-numeric:tabular-nums}
+  .nuevo .nv-bt{grid-column:1/-1;display:flex;gap:8px}
+  .nuevo .nv-bt .btn{flex:1}
+  /* hoja de categorías */
+  .cat-list{display:flex;flex-direction:column;gap:6px;max-height:52vh;overflow-y:auto}
+  .cat-it{display:flex;align-items:center;gap:8px;padding:4px 0}
+  .cat-it input{flex:1;min-width:0;font-family:inherit;font-size:.98rem;font-weight:700;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;outline:none}
+  .cat-it input:focus{border-color:var(--accent)}
+  .emo-b{width:44px;height:44px;flex-shrink:0;font-size:1.4rem;border-radius:12px;border:1px solid var(--border2);background:var(--surface);cursor:pointer}
+  .cat-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .cat-it .del{width:40px;height:40px;flex-shrink:0;border:none;background:none;color:var(--neg);font-size:1.15rem;cursor:pointer}
+  .cat-fija{width:40px;flex-shrink:0;text-align:center;font-size:.7rem;font-weight:800;color:var(--text2)}
+  .emo-grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+  .emo-grid button{aspect-ratio:1;font-size:1.35rem;border:none;background:var(--surface2);border-radius:10px;cursor:pointer}
+  .emo-otro{display:flex;flex-direction:column;gap:4px;font-size:.78rem;font-weight:700;color:var(--text2)}
+  .emo-otro input{font-size:1.3rem;padding:8px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);text-align:center;color:var(--text)}
+  /* se ve el emoji; al tocarlo se abre la lista con emoji y nombre */
+  .cat-pick{position:relative;display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:1.1rem}
+  .cat-pick select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;font-size:16px}
   .cat-select{appearance:none;-webkit-appearance:none;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-size:1.1rem;text-align:center;text-align-last:center;width:36px;height:36px;cursor:pointer;padding:0}
   .del{background:none;border:none;color:var(--text2);font-size:1.05rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .empty{text-align:center;padding:18px 0;color:var(--text2);font-size:.9rem}
@@ -153,9 +179,15 @@
     <button class="acc-h" onclick="openAcc('accGas')" aria-expanded="true"><i class="ti ti-receipt ic"></i> Gastos del mes <span class="sum" id="totGastos"></span><i class="ti ti-chevron-down chev"></i></button>
     <div class="acc-b">
     <div class="actions">
-      <button class="btn grow" onclick="agregarGasto()"><i class="ti ti-plus"></i> Gasto</button>
+      <button class="btn grow" id="bNuevo" onclick="toggleNuevo()" aria-expanded="false"><i class="ti ti-plus"></i> Gasto</button>
       <button class="btn ghost" onclick="copiarMesAnterior()"><i class="ti ti-copy"></i> Copiar mes ant.</button>
     </div>
+    <form class="nuevo" id="nuevo" hidden onsubmit="event.preventDefault();agregarGasto()">
+      <label class="nv-cat"><span>Categoría</span><select id="nvCat"></select></label>
+      <label class="nv-nom"><span>Nombre</span><input type="text" id="nvNom" placeholder="ej: Super" autocomplete="off"></label>
+      <label class="nv-imp"><span>Monto</span><input type="text" id="nvImp" inputmode="numeric" placeholder="0" autocomplete="off" oninput="this.value=this.value===''?'':fmtN(parseN(this.value))"></label>
+      <div class="nv-bt"><button type="button" class="btn ghost" onclick="toggleNuevo(false)">Cancelar</button><button type="submit" class="btn"><i class="ti ti-check"></i> Agregar</button></div>
+    </form>
     <div id="lista"></div>
     </div>
   </section>
@@ -197,8 +229,28 @@
     <button class="btn" onclick="descargarBackup()"><i class="ti ti-download"></i> Descargar backup</button>
     <button class="btn ghost" onclick="document.getElementById('fileIn').click()"><i class="ti ti-upload"></i> Cargar backup</button>
     <input type="file" id="fileIn" accept="application/json,.json" style="display:none">
+    <button class="btn ghost" onclick="cerrar('opts');abrirCats()"><i class="ti ti-category"></i> Categorías</button>
     <button class="btn danger" onclick="limpiarTodo()"><i class="ti ti-trash"></i> Limpiar todo</button>
     <button class="btn ghost" onclick="cerrar('opts')">Cerrar</button>
+  </div>
+</div>
+
+<!-- Categorías: nombre, emoji, crear y borrar -->
+<div class="bgm" id="cats" onclick="if(event.target===this)cerrarCats()">
+  <div class="sheet">
+    <h3>Categorías</h3>
+    <div id="catList" class="cat-list"></div>
+    <button class="btn" onclick="nuevaCat()"><i class="ti ti-plus"></i> Nueva categoría</button>
+    <button class="btn ghost" onclick="cerrarCats()">Listo</button>
+  </div>
+</div>
+<!-- elegir emoji -->
+<div class="bgm" id="emo" onclick="if(event.target===this)cerrar('emo')">
+  <div class="sheet">
+    <h3>Elegí un emoji</h3>
+    <div class="emo-grid" id="emoGrid"></div>
+    <label class="emo-otro"><span>O escribí cualquier emoji</span><input type="text" id="emoIn" maxlength="8" placeholder="😀" onkeydown="if(event.key==='Enter'){event.preventDefault();elegirEmoji(this.value)}"></label>
+    <div class="two"><button class="btn ghost" onclick="cerrar('emo')">Cancelar</button><button class="btn" onclick="elegirEmoji(document.getElementById('emoIn').value)">Usar</button></div>
   </div>
 </div>
 
@@ -227,7 +279,7 @@ function aviso(msg,titulo='Listo'){
   dlgSi.className='btn';dlgSi.textContent='Aceptar';dlgSi.onclick=()=>cerrar('dlg');abrir('dlg');
 }
 function confirmar(msg,cb,titulo='Confirmar',borrar=false){
-  dlgT.textContent=titulo;dlgM.textContent=msg;dlgNo.style.display='';
+  dlgT.textContent=titulo;dlgM.textContent=msg;dlgNo.style.display='';dlgNo.onclick=()=>cerrar('dlg');
   dlgSi.className='btn'+(borrar?' danger':'');dlgSi.textContent=borrar?'Eliminar':'Confirmar';
   dlgSi.onclick=()=>{cerrar('dlg');cb();};abrir('dlg');
 }
@@ -235,7 +287,7 @@ function confirmar(msg,cb,titulo='Confirmar',borrar=false){
 /* ---------- datos (se guardan en este celu, como en la app original) ---------- */
 const LS='gastos-mensuales';
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const CATS=[
+const CATS_BASE=[
   {id:'varios',icon:'📦',label:'Varios'},{id:'casa',icon:'🏠',label:'Casa'},{id:'comida',icon:'🍔',label:'Comida'},
   {id:'transporte',icon:'🚗',label:'Transp.'},{id:'servicios',icon:'💡',label:'Servic.'},{id:'tarjetas',icon:'💳',label:'Tarjetas'},
   {id:'salud',icon:'💊',label:'Salud'},{id:'ocio',icon:'🎉',label:'Ocio'},{id:'ahorro',icon:'🐷',label:'Ahorro'}
@@ -244,10 +296,20 @@ const rd=(k,d)=>{try{return JSON.parse(localStorage.getItem(k)||'')??d}catch(e){
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 let datos=rd(LS,{})||{};
 let colapsados=rd('grupos-colapsados',{})||{};
-let nombresCat=rd('nombres-categoria',{})||{};
-const nombreCat=id=>nombresCat[id]||(CATS.find(c=>c.id===id)||{label:id}).label;
-const colorCat=(id,a=1)=>{const i=CATS.findIndex(c=>c.id===id);return i<0?`hsla(210 10% 60% / ${a})`:`hsla(${(i*137.5+150)%360} 60% 52% / ${a})`;};
-const iconCat=id=>(CATS.find(c=>c.id===id)||{icon:'📂'}).icon;
+/* categorías: se pueden crear, borrar, renombrar y cambiar el emoji (se guardan en este celu, como los gastos).
+   Cada una tiene su color fijo (h) para que no cambie al borrar otras. "Varios" no se borra: es donde van los gastos sin categoría. */
+let CATS=(function(){
+  let l=rd('categorias',null);
+  if(!Array.isArray(l)||!l.length){const viejos=rd('nombres-categoria',{})||{};          // primera vez: las de siempre + los nombres que ya habías puesto
+    l=CATS_BASE.map((c,i)=>({id:c.id,icon:c.icon,label:viejos[c.id]||c.label,h:(i*137.5+150)%360}));wr('categorias',l);}
+  if(!l.some(c=>c.id==='varios'))l.unshift({id:'varios',icon:'📦',label:'Varios',h:150});
+  return l;
+})();
+const guardarCats=()=>wr('categorias',CATS);
+const catDe=id=>CATS.find(c=>c.id===id);
+const nombreCat=id=>(catDe(id)||{label:id}).label;
+const colorCat=(id,a=1)=>{const c=catDe(id);return !c?`hsla(210 10% 60% / ${a})`:`hsla(${c.h??150} 60% 52% / ${a})`;};
+const iconCat=id=>(catDe(id)||{icon:'📂'}).icon;
 const fmt=n=>(n<0?'-':'')+'$ '+Math.abs(Math.round(n)).toLocaleString('es-AR');
 const fmtN=n=>Math.round(n).toLocaleString('es-AR');
 const parseN=t=>parseInt(String(t).replace(/\./g,'').replace(/[^\d-]/g,''))||0;
@@ -291,7 +353,7 @@ function render(){
       </button>
       <div class="grp-b">${items.map(x=>`
         <div class="row${x.pagado?' paid':''}">
-          <select class="cat-select" onchange="cambiarCat(${x.i},this.value)" aria-label="Categoría">${CATS.map(k=>`<option value="${k.id}"${k.id===c?' selected':''}>${k.icon}</option>`).join('')}</select>
+          <span class="cat-pick">${iconCat(c)}<select onchange="cambiarCat(${x.i},this.value)" aria-label="Categoría">${CATS.map(k=>`<option value="${k.id}"${k.id===c?' selected':''}>${k.icon} ${esc(k.label)}</option>`).join('')}</select></span>
           <input type="text" value="${esc(x.nombre)}" onchange="cambiarNombre(${x.i},this.value)" onfocus="this.select()" aria-label="Gasto">
           <input type="text" class="imp" value="${fmtN(+x.importe||0)}" inputmode="numeric" oninput="cambiarImporte(${x.i},this)" onfocus="this.select()" aria-label="Importe">
           <button class="chk${x.pagado?' on':''}" onclick="togglePagado(${x.i})" aria-label="${x.pagado?'Pagado':'Sin pagar'}"><i class="ti ti-check"></i></button>
@@ -302,8 +364,18 @@ function render(){
   renderIngresos();totales();
 }
 function toggleGrupo(c){if(colapsados[c])delete colapsados[c];else colapsados[c]=true;wr('grupos-colapsados',colapsados);render();}
-function editarCat(e,c){e.stopPropagation();const n=prompt('Nuevo nombre para la categoría:',nombreCat(c));if(n&&n.trim()){nombresCat[c]=n.trim();wr('nombres-categoria',nombresCat);render();}}
-function agregarGasto(){asegurarMes();datos[periodo()].gastos.push({nombre:'Nuevo',importe:0,pagado:false,categoria:'varios'});delete colapsados.varios;wr('grupos-colapsados',colapsados);guardar();render();}
+function editarCat(e,c){e.stopPropagation();const n=prompt('Nuevo nombre para la categoría:',nombreCat(c));const k=catDe(c);if(k&&n&&n.trim()){k.label=n.trim();guardarCats();render();}}
+let ultCat=rd('ultima-categoria','varios');
+function opcionesCat(sel){return CATS.map(k=>`<option value="${k.id}"${k.id===sel?' selected':''}>${k.icon} ${esc(k.label)}</option>`).join('');}
+function toggleNuevo(abrirlo){const f=document.getElementById('nuevo'),b=document.getElementById('bNuevo');
+  const ab=abrirlo===undefined?f.hidden:abrirlo;f.hidden=!ab;b.setAttribute('aria-expanded',ab);
+  if(ab){if(!catDe(ultCat))ultCat='varios';document.getElementById('nvCat').innerHTML=opcionesCat(ultCat);
+    document.getElementById('nvNom').value='';document.getElementById('nvImp').value='';document.getElementById('nvNom').focus();}}
+function agregarGasto(){
+  asegurarMes();const c=document.getElementById('nvCat').value||'varios',nom=document.getElementById('nvNom').value.trim()||'Nuevo',imp=parseN(document.getElementById('nvImp').value);
+  datos[periodo()].gastos.push({nombre:nom,importe:imp,pagado:false,categoria:c});
+  ultCat=c;wr('ultima-categoria',c);delete colapsados[c];wr('grupos-colapsados',colapsados);guardar();toggleNuevo(false);render();
+}
 function cambiarNombre(i,v){datos[periodo()].gastos[i].nombre=v;guardar();}
 function cambiarCat(i,v){datos[periodo()].gastos[i].categoria=v;guardar();render();}
 function cambiarImporte(i,el){
@@ -450,6 +522,39 @@ document.getElementById('fileIn').addEventListener('change',e=>{
     catch(err){aviso('No se pudo leer el archivo.','Error');}};
   r.readAsText(f);e.target.value='';cerrar('opts');
 });
+/* ---------- categorías ---------- */
+const EMOJIS='📦 🏠 🍔 🚗 💡 💳 💊 🎉 🐷 🛒 ☕ 🍕 🍺 🎁 👕 👟 💇 🐶 🐱 📱 💻 🎮 📚 🎓 ✈️ 🏖️ 🚌 ⛽ 🔧 🏋️ ⚽ 🎬 🎵 🧾 🏦 💰 👶 🧸 🌱 🧴 🧹 🛠️ 📺 🍷 🍰 ❤️ ⭐'.split(' ');
+let emoPara=null;
+function abrirCats(){dibujarCats();abrir('cats');}
+function cerrarCats(){cerrar('cats');render();}
+function usosCat(id){let n=0;Object.values(datos).forEach(d=>(d.gastos||[]).forEach(g=>{if((g.categoria||'varios')===id)n++;}));return n;}
+function dibujarCats(){
+  document.getElementById('catList').innerHTML=CATS.map(c=>`<div class="cat-it">
+    <button class="emo-b" onclick="abrirEmo('${c.id}')" aria-label="Cambiar emoji de ${esc(c.label)}">${c.icon}</button>
+    <span class="cat-dot" style="background:${colorCat(c.id)}"></span>
+    <input type="text" value="${esc(c.label)}" maxlength="24" aria-label="Nombre de la categoría" onchange="renombrarCat('${c.id}',this.value)" onfocus="this.select()">
+    ${c.id==='varios'?'<span class="cat-fija" title="No se puede borrar">fija</span>':`<button class="del" onclick="borrarCat('${c.id}')" aria-label="Borrar ${esc(c.label)}"><i class="ti ti-trash"></i></button>`}
+  </div>`).join('');
+}
+function renombrarCat(id,v){const c=catDe(id);if(!c)return;v=v.trim();if(v)c.label=v;guardarCats();dibujarCats();}
+function nuevaCat(){
+  // color: el siguiente de la serie, salteando los que ya están en uso
+  const usados=CATS.map(c=>c.h);let i=CATS.length,h;do{h=(i*137.5+150)%360;i++;}while(usados.some(u=>Math.abs(u-h)<8)&&i<200);
+  const c={id:'c'+Date.now().toString(36),icon:'🏷️',label:'Nueva',h};CATS.push(c);guardarCats();dibujarCats();
+  const ins=document.querySelectorAll('#catList input');const last=ins[ins.length-1];if(last){last.focus();last.select();last.scrollIntoView({block:'center'});}
+}
+function borrarCat(id){const c=catDe(id),n=usosCat(id);
+  cerrar('cats');
+  confirmar(n?`"${c.label}" tiene ${n} gasto${n===1?'':'s'} cargado${n===1?'':'s'}. Esos gastos pasan a "${nombreCat('varios')}".`:`¿Borrar la categoría "${c.label}"?`,()=>{
+    Object.values(datos).forEach(d=>(d.gastos||[]).forEach(g=>{if((g.categoria||'varios')===id)g.categoria='varios';}));
+    CATS=CATS.filter(x=>x.id!==id);guardarCats();guardar();if(ultCat===id)ultCat='varios';render();abrirCats();
+  },'Borrar categoría',true);
+  dlgNo.onclick=()=>{cerrar('dlg');abrirCats();};
+}
+function abrirEmo(id){emoPara=id;document.getElementById('emoGrid').innerHTML=EMOJIS.map(e=>`<button onclick="elegirEmoji('${e}')" aria-label="${e}">${e}</button>`).join('');
+  document.getElementById('emoIn').value='';abrir('emo');}
+function elegirEmoji(e){e=(e||'').trim();if(!e)return;const c=catDe(emoPara);if(c){c.icon=[...e].slice(0,2).join('');guardarCats();dibujarCats();}cerrar('emo');}
+
 function limpiarTodo(){cerrar('opts');confirmar('¿Eliminar TODOS los gastos? No se pueden recuperar (descargá un backup antes si querés).',()=>{datos={};guardar();render();},'Atención',true);}
 
 selMes.addEventListener('change',render);selAnio.addEventListener('change',render);
