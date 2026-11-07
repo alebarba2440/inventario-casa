@@ -126,6 +126,33 @@
   .grid a.card:nth-child(5)::after{animation-delay:-4s}
   @media (prefers-reduced-motion:reduce){a.card::after{display:none}}
 
+  /* ===== Estilo POLAROID: fotos con marco blanco, un poco giradas, nombre en cursiva ===== */
+  .grid{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px;padding:6px 6px 10px}
+  a.card{flex-direction:column !important;align-items:stretch;gap:0;background:#fff !important;border:none;border-radius:2px;
+         padding:9px 9px 4px !important;box-shadow:0 6px 16px rgba(0,0,0,.13);transform:rotate(var(--rot,0deg));
+         transition:transform .18s ease, box-shadow .18s ease}
+  a.card::after{display:none !important}
+  a.card:hover{box-shadow:0 10px 22px rgba(0,0,0,.18)}
+  a.card:active{transform:rotate(0deg) scale(.97)}
+  .pic{width:100% !important;height:150px !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
+  .pic img{max-height:94%;padding-top:0}
+  .txt{text-align:center;padding:4px 0 2px}
+  .txt b{font-family:'Dancing Script',cursive;font-size:1.55rem;font-weight:700;color:#333;line-height:1.15}
+  .go{display:none !important}
+  .grid a.card:nth-child(1){--rot:-3deg}
+  .grid a.card:nth-child(2){--rot:2.5deg}
+  .grid a.card:nth-child(3){--rot:2deg}
+  .grid a.card:nth-child(4){--rot:-2.5deg}
+  .grid a.card:nth-child(5){--rot:-1.5deg}
+  /* la última (si quedan impares) va sola y centrada */
+  .grid a.card:last-child:nth-child(odd){grid-column:1 / span 2;justify-self:center;width:calc(50% - 8px)}
+  @media (min-width:760px){
+    .grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:26px}
+    .pic{height:220px !important}
+    .grid a.card:last-child:nth-child(odd){grid-column:auto;width:auto;justify-self:stretch}
+  }
+  @media (prefers-reduced-motion:reduce){a.card{transform:none}}
+
   /* ===== Animación de inicio: ustedes dos, corazoncitos, "JuntOS" y "El arte de construir" ===== */
   #intro{position:fixed;inset:0;z-index:10000;background:#fff;color:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;transition:opacity .5s;padding:20px}
   #intro.fin{opacity:0;pointer-events:none}
