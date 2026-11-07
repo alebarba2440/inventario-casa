@@ -203,6 +203,17 @@
   @media (prefers-reduced-motion:reduce){#intro{display:none}}
 </style>
 <link rel="stylesheet" href="fondo.css">
+<style>
+  /* en el inicio el fondo son las dos caras del ícono, grandes, suaves y con los bordes esfumados */
+  html::before{
+    background:url("img/fondo-caras.webp?v=1") center 55% no-repeat !important;
+    background-size:min(125vw, 78vh) auto !important;
+    opacity:.2 !important;
+    /* el esfumado tiene el mismo tamaño y lugar que la imagen, así no quedan cortes rectos */
+    -webkit-mask:radial-gradient(closest-side, #000 55%, transparent 100%) center 55% / min(125vw, 78vh) min(125vw, 78vh) no-repeat;
+            mask:radial-gradient(closest-side, #000 55%, transparent 100%) center 55% / min(125vw, 78vh) min(125vw, 78vh) no-repeat;
+  }
+</style>
 <link rel="stylesheet" href="comun.css">
 </head>
 <body>
