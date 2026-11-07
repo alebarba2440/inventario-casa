@@ -47,3 +47,10 @@ html,body{overflow-x:clip;max-width:100%}
 
 /* títulos largos (nombre propio de la sección) no se salen de la barra */
 .top h1,.top-header-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* campos de fecha: en el iPhone tienen un ancho mínimo propio y se salían de su casilla.
+   Se les saca ese ancho y se ajustan al espacio que tienen, en todas las secciones. */
+input[type="date"],input[type="time"],input[type="month"],input[type="datetime-local"]{
+  -webkit-appearance:none;appearance:none;min-width:0;max-width:100%;width:100%;box-sizing:border-box;display:block;min-height:2.6em}
+input[type="date"]::-webkit-date-and-time-value,input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
+*:has(> input[type="date"]),*:has(> input[type="time"]){min-width:0}
