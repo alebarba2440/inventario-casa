@@ -183,7 +183,7 @@ window.ptsCampo = function (el) {
    el título de arriba de la página muestra ese nombre en lugar del original. */
 (function () {
   const k = (location.pathname.split('/').pop() || '').replace(/\.html$/, '');
-  const SECC = ['inventario', 'ahorros', 'vacaciones', 'copito', 'gastos'];
+  const SECC = ['inventario', 'ahorros', 'vacaciones', 'copito', 'gastos', 'compartidos'];
   function propio() {
     if (!SECC.includes(k)) return '';
     try { const c = JSON.parse(localStorage.getItem('cfg_v2') || '{}'); return ((c.accesos || {})[k] || {}).nombre || ''; } catch (e) { return ''; }

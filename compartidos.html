@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Compartidos">
+<link rel="apple-touch-icon" href="img/apple-touch.png?v=9">
+<link rel="icon" type="image/png" href="img/icono.png?v=9">
+<title>Gastos compartidos</title>
+<script src="tema.js"></script>
+<script src="sonidos.js"></script>
+<script src="firebase-config.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--pos:#1D9E75;--neg:#E24B4A;
+        --bg:#f5f5f0;--surface:#fff;--surface2:#f5f5f0;--border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);--text:#1a1a1a;--text2:#666;
+        --juli:#DB2777;--juli-l:#FCE7F3;--ale:#0284C7;--ale-l:#E0F2FE}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--juli:#F472B6;--juli-l:rgba(244,114,182,.16);--ale:#38BDF8;--ale-l:rgba(56,189,248,.16)}}
+  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa;--juli:#F472B6;--juli-l:rgba(244,114,182,.16);--ale:#38BDF8;--ale-l:rgba(56,189,248,.16)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+  .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+  .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
+  main{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 30px)}
+  input,select,button{font-family:inherit;color:var(--text)}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* mes y año */
+  .periodo{display:flex;gap:8px}
+  .sel{flex:1;font-size:1rem;font-weight:800;color:var(--accent-dark);background:var(--accent-light);border:1px solid var(--accent);border-radius:999px;padding:9px 14px;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center}
+  .sel.anio{flex:0 0 110px}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sel{color:#fff;background:rgba(29,158,117,.2)}}
+  :root[data-theme="dark"] .sel{color:#fff;background:rgba(29,158,117,.2)}
+
+  .card{background:var(--surface);border:.5px solid var(--border);border-radius:18px;padding:14px}
+
+  /* resumen: quién pagó cuánto y quién le debe a quién */
+  .tot{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .tot span{font-weight:800;color:var(--text2);font-size:.85rem}
+  .tot b{font-size:1.5rem;font-weight:900}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .per{border-radius:14px;padding:10px 12px}
+  .per.j{background:var(--juli-l)} .per.a{background:var(--ale-l)}
+  .per small{display:block;font-size:.75rem;font-weight:800}
+  .per.j small{color:var(--juli)} .per.a small{color:var(--ale)}
+  .per b{font-size:1.15rem;font-weight:900}
+  .per i{display:block;font-style:normal;font-size:.75rem;color:var(--text2);font-weight:700;margin-top:2px}
+  .barra{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface2);margin:12px 0 10px}
+  .barra .j{background:var(--juli)} .barra .a{background:var(--ale)}
+  .saldo{text-align:center;font-weight:900;font-size:1.02rem;padding:10px;border-radius:12px;background:var(--surface2)}
+  .saldo.ok{color:var(--pos);background:var(--accent-light)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .saldo.ok{background:rgba(29,158,117,.18)}}
+
+  /* botón y formulario de nuevo gasto */
+  .btn{border:none;border-radius:14px;padding:13px;font-size:1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff}
+  .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+  .btn.danger{background:var(--neg)}
+  .btn:active{transform:scale(.97)}
+  .form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .form[hidden]{display:none}
+  .form label{display:flex;flex-direction:column;gap:4px;font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.03em}
+  .form .w{grid-column:1/-1}
+  .form input{font-size:1rem;font-weight:700;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px;outline:none;width:100%}
+  .form input:focus{border-color:var(--accent)}
+  .form input.imp{text-align:right}
+  .quien{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .quien button{border:2px solid var(--border2);background:var(--surface);border-radius:12px;padding:11px;font-weight:900;font-size:1rem;cursor:pointer}
+  .quien button.j.on{border-color:var(--juli);background:var(--juli-l);color:var(--juli)}
+  .quien button.a.on{border-color:var(--ale);background:var(--ale-l);color:var(--ale)}
+  .form .bt{grid-column:1/-1;display:flex;gap:8px}
+  .form .bt .btn{flex:1}
+
+  /* lista de gastos del mes */
+  .lista{display:flex;flex-direction:column}
+  .it{display:flex;align-items:center;gap:10px;padding:10px 2px;border-top:1px solid var(--border)}
+  .it:first-child{border-top:none}
+  .it .q{width:38px;height:38px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem}
+  .it .q.j{background:var(--juli-l);color:var(--juli)} .it .q.a{background:var(--ale-l);color:var(--ale)}
+  .it .tx{flex:1;min-width:0;cursor:pointer}
+  .it .tx b{display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .it .tx small{color:var(--text2);font-weight:700;font-size:.78rem}
+  .it .m{font-weight:900}
+  .it .del{width:38px;height:38px;flex-shrink:0;border:none;background:none;color:var(--neg);font-size:1.15rem;cursor:pointer;border-radius:10px}
+  .vacio{text-align:center;color:var(--text2);padding:18px 0;font-weight:700}
+  h2{font-size:.95rem;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  h2 i{color:var(--accent)}
+
+  /* diálogo */
+  .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .bgm.show{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px}
+  .sheet h3{text-align:center;font-weight:900}
+  .sheet p{text-align:center;color:var(--text2);font-weight:600}
+  .sheet .two{display:flex;gap:8px}.sheet .two .btn{flex:1}
+</style>
+<link rel="stylesheet" href="fondo.css">
+<link rel="stylesheet" href="comun.css">
+</head>
+<body>
+<div class="top">
+  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
+  <h1>GASTOS COMPARTIDOS</h1>
+</div>
+
+<main>
+  <div class="periodo">
+    <select id="mes" class="sel" aria-label="Mes"></select>
+    <select id="anio" class="sel anio" aria-label="Año"></select>
+  </div>
+
+  <section class="card">
+    <div class="tot"><span>Total del mes</span><b class="num" id="total">$ 0</b></div>
+    <div class="dos">
+      <div class="per j"><small id="nJ">JULI PAGÓ</small><b class="num" id="pJ">$ 0</b><i id="cJ"></i></div>
+      <div class="per a"><small id="nA">ALE PAGÓ</small><b class="num" id="pA">$ 0</b><i id="cA"></i></div>
+    </div>
+    <div class="barra" aria-hidden="true"><div class="j" id="bJ" style="width:50%"></div><div class="a" id="bA" style="width:50%"></div></div>
+    <div class="saldo" id="saldo">Sin gastos este mes</div>
+  </section>
+
+  <button class="btn" id="bNuevo" onclick="abrirForm()" aria-expanded="false"><i class="ti ti-plus"></i> Agregar gasto</button>
+
+  <form class="card form" id="form" hidden onsubmit="event.preventDefault();guardarGasto()">
+    <div class="w"><div style="font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.03em;margin-bottom:4px">¿QUIÉN PAGÓ?</div>
+      <div class="quien"><button type="button" class="j" id="qJ" onclick="setQuien('j')">Juli</button><button type="button" class="a" id="qA" onclick="setQuien('a')">Ale</button></div></div>
+    <label class="w">Descripción<input type="text" id="fDesc" placeholder="ej: Super, nafta, cena" autocomplete="off" maxlength="60"></label>
+    <label>Monto<input type="text" id="fMonto" class="imp num" inputmode="numeric" placeholder="0" autocomplete="off" oninput="this.value=this.value===''?'':fmtN(parseN(this.value))"></label>
+    <label>Fecha<input type="date" id="fFecha"></label>
+    <div class="bt"><button type="button" class="btn ghost" onclick="cerrarForm()">Cancelar</button><button type="submit" class="btn" id="fOk"><i class="ti ti-check"></i> Agregar</button></div>
+  </form>
+
+  <section class="card">
+    <h2><i class="ti ti-receipt"></i> Gastos del mes</h2>
+    <div class="lista" id="lista"></div>
+  </section>
+</main>
+
+<div class="bgm" id="dlg" onclick="if(event.target===this)cerrarDlg()">
+  <div class="sheet">
+    <h3 id="dT"></h3><p id="dM"></p>
+    <div class="two"><button class="btn ghost" onclick="cerrarDlg()">Cancelar</button><button class="btn danger" id="dOk">Eliminar</button></div>
+  </div>
+</div>
+
+<script>
+/* ===== Gastos compartidos: cada uno carga lo que pagó y la app calcula cuánto tiene que poner cada uno (mitad y mitad) ===== */
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const LS='compartidos_v1';
+const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
+const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const parseN=v=>+String(v||'').replace(/\D/g,'')||0;
+const fmtN=n=>Math.round(n).toLocaleString('es-AR');
+const fmt=n=>'$ '+fmtN(n);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const hoyISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const fFecha=f=>{const [y,m,d]=f.split('-');return `${+d}/${+m}`;};
+
+/* nombres: los mismos que en Ahorros */
+const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};return {j:n.j||'Juli',a:n.a||'Ale'};})();
+
+/* cada gasto se guarda por separado ({id: gasto}) para que si los dos cargan a la vez no se pise nada */
+let G=rd(LS,{})||{};
+const selMes=document.getElementById('mes'),selAnio=document.getElementById('anio');
+let quien=rd('compartidos_quien','j'),editando=null;
+
+function llenarPeriodo(){
+  const h=new Date(),y=h.getFullYear();
+  selMes.innerHTML=MESES.map((m,i)=>`<option value="${i}">${m}</option>`).join('');
+  const anios=new Set([y-1,y,y+1]);Object.values(G).forEach(g=>anios.add(+g.fecha.slice(0,4)));
+  selAnio.innerHTML=[...anios].sort().map(a=>`<option value="${a}">${a}</option>`).join('');
+  selMes.value=h.getMonth();selAnio.value=y;
+}
+const pref=()=>`${selAnio.value}-${String(+selMes.value+1).padStart(2,'0')}`;
+
+function render(){
+  const p=pref(),l=Object.values(G).filter(g=>g&&g.fecha&&g.fecha.startsWith(p)).sort((x,z)=>z.fecha.localeCompare(x.fecha)||(z.creado||0)-(x.creado||0));
+  const pj=l.filter(g=>g.quien==='j').reduce((s,g)=>s+(+g.monto||0),0),pa=l.filter(g=>g.quien==='a').reduce((s,g)=>s+(+g.monto||0),0),tot=pj+pa,mitad=tot/2;
+  document.getElementById('total').textContent=fmt(tot);
+  document.getElementById('nJ').textContent=NOM.j.toUpperCase()+' PAGÓ';document.getElementById('nA').textContent=NOM.a.toUpperCase()+' PAGÓ';
+  document.getElementById('pJ').textContent=fmt(pj);document.getElementById('pA').textContent=fmt(pa);
+  document.getElementById('cJ').textContent=tot?`Le toca ${fmt(mitad)}`:'';document.getElementById('cA').textContent=tot?`Le toca ${fmt(mitad)}`:'';
+  document.getElementById('bJ').style.width=(tot?pj/tot*100:50)+'%';document.getElementById('bA').style.width=(tot?pa/tot*100:50)+'%';
+  const s=document.getElementById('saldo'),dif=Math.round(pj-mitad);
+  if(!tot){s.className='saldo';s.textContent='Sin gastos este mes';}
+  else if(Math.abs(dif)<1){s.className='saldo ok';s.textContent='¡Están a mano!';}
+  else{s.className='saldo';const debe=dif>0?NOM.a:NOM.j,cobra=dif>0?NOM.j:NOM.a;
+    s.innerHTML=`<span style="color:var(--${dif>0?'ale':'juli'})">${esc(debe)}</span> le tiene que pasar <span class="num">${fmt(Math.abs(dif))}</span> a <span style="color:var(--${dif>0?'juli':'ale'})">${esc(cobra)}</span>`;}
+  document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it">
+      <span class="q ${g.quien}" title="Pagó ${esc(NOM[g.quien])}">${esc(NOM[g.quien].slice(0,1))}</span>
+      <div class="tx" onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}</b><small>${fFecha(g.fecha)} · pagó ${esc(NOM[g.quien])}</small></div>
+      <span class="m num">${fmt(+g.monto||0)}</span>
+      <button class="del" onclick="borrar('${g.id}')" aria-label="Eliminar ${esc(g.desc)}"><i class="ti ti-trash"></i></button>
+    </div>`).join(''):'<p class="vacio">Todavía no hay gastos en este mes</p>';
+}
+
+/* formulario */
+function setQuien(q){quien=q;document.getElementById('qJ').classList.toggle('on',q==='j');document.getElementById('qA').classList.toggle('on',q==='a');}
+function abrirForm(g){
+  editando=g?g.id:null;const f=document.getElementById('form');f.hidden=false;document.getElementById('bNuevo').hidden=true;
+  document.getElementById('qJ').textContent=NOM.j;document.getElementById('qA').textContent=NOM.a;
+  setQuien(g?g.quien:quien);
+  document.getElementById('fDesc').value=g?g.desc:'';document.getElementById('fMonto').value=g?fmtN(+g.monto||0):'';
+  // fecha: hoy si estás viendo el mes actual, si no el día 1 del mes que estás viendo
+  const p=pref();document.getElementById('fFecha').value=g?g.fecha:(hoyISO().startsWith(p)?hoyISO():p+'-01');
+  document.getElementById('fOk').innerHTML=g?'<i class="ti ti-check"></i> Guardar':'<i class="ti ti-check"></i> Agregar';
+  document.getElementById('fDesc').focus();
+}
+function cerrarForm(){document.getElementById('form').hidden=true;document.getElementById('bNuevo').hidden=false;editando=null;}
+function guardarGasto(){
+  const monto=parseN(document.getElementById('fMonto').value),fecha=document.getElementById('fFecha').value||hoyISO();
+  if(!monto){document.getElementById('fMonto').focus();return;}
+  const g={id:editando||uid(),quien,desc:document.getElementById('fDesc').value.trim(),monto,fecha,creado:editando&&G[editando]?G[editando].creado:Date.now()};
+  G[g.id]=g;wr(LS,G);wr('compartidos_quien',quien);subir(g);
+  // si el gasto es de otro mes, te lleva a ese mes
+  selAnio.value=fecha.slice(0,4);if(selAnio.value!==fecha.slice(0,4)){llenarPeriodo();selAnio.value=fecha.slice(0,4);}selMes.value=+fecha.slice(5,7)-1;
+  cerrarForm();render();
+}
+function editar(id){const g=G[id];if(g){abrirForm(g);window.scrollTo({top:0,behavior:'smooth'});}}
+function borrar(id){const g=G[id];if(!g)return;
+  document.getElementById('dT').textContent='Eliminar gasto';
+  document.getElementById('dM').textContent=`¿Eliminar "${g.desc||'este gasto'}" de ${fmt(+g.monto||0)}?`;
+  document.getElementById('dOk').onclick=()=>{cerrarDlg();delete G[id];wr(LS,G);bajar(id);render();};
+  document.getElementById('dlg').classList.add('show');}
+function cerrarDlg(){document.getElementById('dlg').classList.remove('show');}
+
+/* ===== nube (Firebase): colección "ahorros", documento "compartidos", campo g.{id} ===== */
+let db=null;
+const ref=()=>db.collection('ahorros').doc('compartidos');
+function aviso(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#c0392b;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:999;font-size:.9rem';document.body.appendChild(d);setTimeout(()=>d.remove(),4000);}
+function subir(g){if(!db)return;ref().set({g:{[g.id]:g},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(()=>aviso('No se pudo guardar en la nube. Revisá la conexión.'));}
+function bajar(id){if(!db)return;ref().update({['g.'+id]:firebase.firestore.FieldValue.delete()}).catch(()=>aviso('No se pudo borrar en la nube. Revisá la conexión.'));}
+function aplicar(doc){
+  if(!doc.exists){Object.values(G).forEach(subir);return;}     // primera vez: sube lo que haya en este celu
+  const r=(doc.data()||{}).g||{};G=r;wr(LS,G);
+  const a=document.activeElement;if(!(a&&a.tagName==='INPUT'))render();
+}
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+async function initFb(){const c=window.getFbConfig&&window.getFbConfig();if(!c)return;
+  try{if(typeof firebase==='undefined'){await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');}
+    if(!firebase.apps.length)firebase.initializeApp(c);db=firebase.firestore();
+    ref().onSnapshot(d=>{if(d.metadata.hasPendingWrites)return;aplicar(d);},e=>console.warn(e));
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')ref().get({source:'server'}).then(aplicar).catch(()=>{});});
+  }catch(e){}}
+
+llenarPeriodo();
+selMes.addEventListener('change',()=>{cerrarForm();render();});selAnio.addEventListener('change',()=>{cerrarForm();render();});
+render();initFb();
+</script>
+</body>
+</html>
