@@ -104,6 +104,21 @@
   .pr.ok{background:var(--pos-l)} .pr.ok b{color:var(--pos)}
   .pr.cerca{background:var(--warn-l)} .pr.cerca b{color:var(--warn)}
   .pr.venc{background:var(--neg-l)} .pr.venc b{color:var(--neg)}
+  /* cada auto es un acordeón */
+  #autos{display:flex;flex-direction:column;gap:12px}
+  .car{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--accent);border-radius:18px;overflow:hidden}
+  .car-h{width:100%;display:flex;align-items:center;gap:10px;padding:14px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .car-h>i.ic{color:var(--accent);font-size:1.5rem}
+  .car-h .ct{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .car-h .ct b{font-size:1rem;font-weight:900;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .car-h .ct small{font-size:.78rem;color:var(--text2);font-weight:700}
+  .car-h .chev{color:var(--text2);transition:transform .2s}
+  .car.open>.car-h .chev{transform:rotate(180deg)}
+  .car-b{display:none;flex-direction:column;gap:10px;padding:0 10px 12px}
+  .car.open>.car-b{display:flex}
+  .car-b>.card{background:var(--surface2);border:none}
+  .car-b .regs{display:flex;flex-direction:column;gap:10px}
+  .car-b .del-auto{background:none;border:none;color:var(--neg);font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px;margin-top:2px}
   .reg{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--border2);border-radius:16px;overflow:hidden}
   .reg.ok{border-left-color:var(--pos)} .reg.cerca{border-left-color:var(--warn)} .reg.venc{border-left-color:var(--neg)}
   .reg-h{width:100%;display:flex;align-items:center;gap:8px;padding:12px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
@@ -150,12 +165,11 @@
     .anio.open>.anio-b{display:block !important;columns:2;column-gap:14px}
     .anio-b>.mes{break-inside:avoid;margin-bottom:12px}
     #tabG>.add{max-width:640px;width:100%;margin:0 auto}
-    #tabM{display:none}
-    #tabM.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
-    #tabM>.auto,#tabM>.prox{grid-column:auto}
-    #regs{grid-column:1/-1;display:block !important;columns:2;column-gap:14px}
-    #regs>.reg{break-inside:avoid;margin-bottom:12px}
-    #tabM>.add{grid-column:1/-1;max-width:640px;width:100%;margin:0 auto}
+    #tabM>.add{max-width:640px;width:100%;margin:0 auto}
+    .car.open>.car-b{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+    .car-b .regs{grid-column:1/-1;display:block;columns:2;column-gap:14px}
+    .car-b .regs>.reg{break-inside:avoid;margin-bottom:12px}
+    .car-b>.add,.car-b>.del-auto{grid-column:1/-1;max-width:640px;width:100%;margin:0 auto}
     .hdr,.row,.tot{grid-template-columns:1fr 110px 96px 28px}
   }
   /* botón PDF a la derecha del header (solo en Mantenimiento) */
@@ -192,14 +206,8 @@
   </section>
 
   <section class="tab" id="tabM">
-    <div class="card auto">
-      <h2><i class="ti ti-car"></i><input class="modelo" id="modelo" oninput="D.auto.modelo=this.value;guardar()"></h2>
-      <div class="kmact"><label for="kmAct">Km actuales</label><input id="kmAct" inputmode="numeric" oninput="setKm(this)"><span>km</span></div>
-      <div class="kmfecha" id="kmFecha"></div>
-    </div>
-    <div class="card prox"><h3><i class="ti ti-alert-circle"></i> Próximos</h3><div id="prox"></div></div>
-    <div id="regs" style="display:flex;flex-direction:column;gap:10px"></div>
-    <button class="add" onclick="agregarReg()" style="flex:none"><i class="ti ti-plus"></i> Agregar mantenimiento</button>
+    <div id="autos"></div>
+    <button class="add" onclick="agregarAuto()" style="flex:none"><i class="ti ti-car"></i> Agregar auto</button>
   </section>
 </main>
 
@@ -219,6 +227,8 @@ function ev(x){let s=String(x??'').trim();if(!s)return 0;s=s.replace(/\.(?=\d{3}
 const n0=x=>{const v=ev(x);return isNaN(v)?0:v};
 const fmt=n=>(n<0?'-':'')+'$ '+Math.abs(Math.round(n)).toLocaleString('es-AR');
 const fkm=n=>Math.round(n).toLocaleString('es-AR');
+/* fecha de hoy en hora de Argentina (toISOString usa UTC y de noche daba el día siguiente) */
+const hoyLocal=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const fFecha=f=>{if(!f)return '';const [y,m,d]=f.split('-');return `${+d}/${+m}/${y}`};
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
@@ -244,7 +254,13 @@ function semilla(){
       {id:uid(),fecha:'2026-07-31',km:'213500',tipo:'Servicio completo',com:'Servicio Premium',taller:'YPF BOXES',costo:'108000',proxKm:'223500',proxFecha:''}]
   };
 }
-let D=rd(LS,null);if(!D||!Array.isArray(D.meses))D=semilla();
+/* antes había un solo auto (D.auto + D.mant); ahora D.autos = [{id, modelo, km, kmFecha, mant:[…]}] */
+function migrar(d){
+  if(!Array.isArray(d.autos)){d.autos=[{id:'a_'+uid(),...(d.auto||{}),mant:Array.isArray(d.mant)?d.mant:[]}];delete d.auto;delete d.mant;}
+  d.autos.forEach(a=>{if(!Array.isArray(a.mant))a.mant=[];});
+  return d;
+}
+let D=rd(LS,null);if(!D||!Array.isArray(D.meses))D=semilla();migrar(D);
 let tabAct=rd('copito_tab','g'),openMes;
 
 /* ================= pestañas ================= */
@@ -338,58 +354,85 @@ function copiarAnterior(mid){
 }
 function borrarMes(mid){const m=mesDe(mid);confirmar('Borrar mes',`¿Borrar ${MESES[m.k]} ${m.y} con sus gastos?`,()=>{D.meses=D.meses.filter(x=>x.id!==mid);guardar();renderGastos();});}
 
-/* ================= MANTENIMIENTO ================= */
-function estado(r){
-  const km=n0(D.auto.km),pk=n0(r.proxKm),hoy=new Date().toISOString().slice(0,10);
+/* ================= MANTENIMIENTO (un acordeón por auto) ================= */
+const auto=id=>D.autos.find(a=>a.id===id);
+let openAuto=rd('copito_auto',null),openReg=null;
+const ORD={venc:0,cerca:1,ok:2};
+function estado(r,a){
+  const km=n0(a.km),pk=n0(r.proxKm),hoy=hoyLocal();
   if(pk){const f=pk-km;const d=`A los ${fkm(pk)} km`;if(f<0)return{c:'venc',t:`+${fkm(-f)} km`,d:d+` · pasado por ${fkm(-f)} km`,u:f/1500};return{c:f<=1500?'cerca':'ok',t:`${fkm(f)} km`,d,u:f/1500};}
   if(r.proxFecha){if(r.proxFecha<hoy)return{c:'venc',t:'Vencido',d:`Venció el ${fFecha(r.proxFecha)}`,u:(new Date(r.proxFecha)-new Date(hoy))/864e5/30};
     const dias=Math.round((new Date(r.proxFecha)-new Date(hoy))/864e5);return{c:dias<=30?'cerca':'ok',t:`${dias} días`,d:`El ${fFecha(r.proxFecha)}`,u:dias/30};}
   return null;
 }
+const proximos=a=>a.mant.map(r=>({r,e:estado(r,a)})).filter(x=>x.e).sort((x,y)=>ORD[x.e.c]-ORD[y.e.c]||x.e.u-y.e.u);
+const regsOrd=a=>a.mant.slice().sort((x,y)=>(y.fecha||'9999').localeCompare(x.fecha||'9999')||n0(y.km)-n0(x.km));
+function resumenAuto(a){const n=a.mant.length;return (a.km?fkm(n0(a.km))+' km':'— km')+' · '+n+' mantenimiento'+(n===1?'':'s');}
 function renderMant(){
-  document.getElementById('modelo').value=D.auto.modelo||'';
-  document.getElementById('kmAct').value=D.auto.km?fkm(n0(D.auto.km)):'';
-  document.getElementById('kmFecha').textContent=D.auto.kmFecha?'Actualizado el '+fFecha(D.auto.kmFecha):'';
-  // más nuevo arriba, más viejo abajo; los que no tienen fecha (recién agregados) van primero
-  const regs=D.mant.slice().sort((a,b)=>(b.fecha||'9999').localeCompare(a.fecha||'9999')||n0(b.km)-n0(a.km));
-  document.getElementById('regs').innerHTML=regs.map(r=>{const e=estado(r),op=r.id===openReg;
-    const badge=e?`<span class="badge ${e.c}">${e.t}</span>`:'';
-    return `<div class="reg${op?' open':''}${e?' '+e.c:''}" id="reg_${r.id}">
+  if(!D.autos.length){document.getElementById('autos').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px 0">Todavía no hay autos. Tocá "Agregar auto".</p>';return;}
+  if(openAuto!==null&&!auto(openAuto))openAuto=D.autos[0].id;
+  if(openAuto===null&&D.autos.length===1)openAuto=D.autos[0].id;
+  document.getElementById('autos').innerHTML=D.autos.map(a=>{const op=a.id===openAuto,p=proximos(a),peor=p.length?p[0].e:null;
+    const badge=peor&&peor.c!=='ok'?`<span class="badge ${peor.c}">${peor.c==='venc'?'Vencido':'Próximo'}</span>`:'';
+    return `<section class="car${op?' open':''}" id="car_${a.id}">
+      <button class="car-h" onclick="toggleAuto('${a.id}')" aria-expanded="${op}"><i class="ti ti-car ic"></i>
+        <span class="ct"><b data-cm="${a.id}">${esc(a.modelo)||'Auto sin nombre'}</b><small data-cr="${a.id}">${resumenAuto(a)}</small></span>${badge}<i class="ti ti-chevron-down chev"></i></button>
+      <div class="car-b">
+        <div class="card auto">
+          <h2><i class="ti ti-pencil"></i><input class="modelo" value="${esc(a.modelo)}" placeholder="Nombre del auto" aria-label="Nombre del auto" oninput="setModelo('${a.id}',this)"></h2>
+          <div class="kmact"><label for="kmAct_${a.id}">Km actuales</label><input id="kmAct_${a.id}" inputmode="numeric" value="${a.km?fkm(n0(a.km)):''}" oninput="setKm('${a.id}',this)"><span>km</span></div>
+          <div class="kmfecha" id="kmFecha_${a.id}">${a.kmFecha?'Actualizado el '+fFecha(a.kmFecha):''}</div>
+        </div>
+        <div class="card prox"><h3><i class="ti ti-alert-circle"></i> Próximos</h3><div id="prox_${a.id}"></div></div>
+        <div class="regs">${regsOrd(a).map(r=>regHTML(a,r)).join('')}</div>
+        <button class="add" onclick="agregarReg('${a.id}')" style="flex:none"><i class="ti ti-plus"></i> Agregar mantenimiento</button>
+        <button class="del-auto" onclick="borrarAuto('${a.id}')"><i class="ti ti-trash"></i> Eliminar este auto</button>
+      </div></section>`;}).join('');
+  D.autos.forEach(renderProx);
+}
+function regHTML(a,r){const e=estado(r,a),op=r.id===openReg,A=a.id;
+  const badge=e?`<span class="badge ${e.c}">${e.t}</span>`:'';
+  return `<div class="reg${op?' open':''}${e?' '+e.c:''}" id="reg_${r.id}">
       <button class="reg-h" onclick="toggleReg('${r.id}')" aria-expanded="${op}">
         <span class="rt"><b data-rt="${r.id}">${esc(r.tipo)||'<i style="color:var(--text2)">Sin título</i>'}</b>
           <small>${r.fecha?fFecha(r.fecha):'Sin fecha'} · ${r.km?fkm(n0(r.km))+' km':'— km'}${r.costo?' · '+fmt(n0(r.costo)):''}</small></span>
         ${badge}<i class="ti ti-chevron-down chev"></i></button>
       <div class="reg-b">
-        <label class="f w"><span>Qué se hizo</span><input class="tipo" value="${esc(r.tipo)}" placeholder="ej: Cambio de aceite y filtro" oninput="setR('${r.id}','tipo',this)"></label>
-        <label class="f"><span>Fecha</span><input type="date" value="${esc(r.fecha)}" onchange="setR('${r.id}','fecha',this,true)"></label>
-        <label class="f"><span>Km</span><input class="n" inputmode="numeric" value="${r.km?fkm(n0(r.km)):''}" placeholder="0" onchange="setR('${r.id}','km',this,true)"></label>
-        <label class="f w"><span>Comentarios</span><input value="${esc(r.com)}" placeholder="Detalle" oninput="setR('${r.id}','com',this)"></label>
-        <label class="f"><span>Taller</span><input value="${esc(r.taller)}" oninput="setR('${r.id}','taller',this)"></label>
-        <label class="f"><span>Costo</span><input class="n" inputmode="decimal" value="${r.costo?fmt(n0(r.costo)).replace('$ ',''):''}" placeholder="$ 0" onchange="setR('${r.id}','costo',this,true)"></label>
-        <label class="f"><span>Próximo (km)</span><input class="n" inputmode="numeric" value="${r.proxKm?fkm(n0(r.proxKm)):''}" placeholder="—" onchange="setR('${r.id}','proxKm',this,true)"></label>
-        <label class="f"><span>Próximo (fecha)</span><input type="date" value="${esc(r.proxFecha)}" onchange="setR('${r.id}','proxFecha',this,true)"></label>
-        <button class="delmes w" onclick="borrarR('${r.id}')"><i class="ti ti-trash"></i> Borrar este mantenimiento</button>
-      </div></div>`}).join('');
-  renderProx();
+        <label class="f w"><span>Qué se hizo</span><input class="tipo" value="${esc(r.tipo)}" placeholder="ej: Cambio de aceite y filtro" oninput="setR('${A}','${r.id}','tipo',this)"></label>
+        <label class="f"><span>Fecha</span><input type="date" value="${esc(r.fecha)}" onchange="setR('${A}','${r.id}','fecha',this,true)"></label>
+        <label class="f"><span>Km</span><input class="n" inputmode="numeric" value="${r.km?fkm(n0(r.km)):''}" placeholder="0" onchange="setR('${A}','${r.id}','km',this,true)"></label>
+        <label class="f w"><span>Comentarios</span><input value="${esc(r.com)}" placeholder="Detalle" oninput="setR('${A}','${r.id}','com',this)"></label>
+        <label class="f"><span>Taller</span><input value="${esc(r.taller)}" oninput="setR('${A}','${r.id}','taller',this)"></label>
+        <label class="f"><span>Costo</span><input class="n" inputmode="decimal" value="${r.costo?fmt(n0(r.costo)).replace('$ ',''):''}" placeholder="$ 0" onchange="setR('${A}','${r.id}','costo',this,true)"></label>
+        <label class="f"><span>Próximo (km)</span><input class="n" inputmode="numeric" value="${r.proxKm?fkm(n0(r.proxKm)):''}" placeholder="—" onchange="setR('${A}','${r.id}','proxKm',this,true)"></label>
+        <label class="f"><span>Próximo (fecha)</span><input type="date" value="${esc(r.proxFecha)}" onchange="setR('${A}','${r.id}','proxFecha',this,true)"></label>
+        <button class="delmes w" onclick="borrarR('${A}','${r.id}')"><i class="ti ti-trash"></i> Borrar este mantenimiento</button>
+      </div></div>`;
 }
-function renderProx(){
-  const l=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||a.e.u-b.e.u});
-  document.getElementById('prox').innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}" onclick="this.classList.toggle('ab')"><span>${esc(x.r.tipo||'Mantenimiento')}</span><b>${x.e.t}</b><span class="det">${x.e.d}</span></div>`).join('')
+function renderProx(a){const el=document.getElementById('prox_'+a.id);if(!el)return;const l=proximos(a);
+  el.innerHTML=l.length?l.map(x=>`<div class="pr ${x.e.c}" onclick="this.classList.toggle('ab')"><span>${esc(x.r.tipo||'Mantenimiento')}</span><b>${x.e.t}</b><span class="det">${x.e.d}</span></div>`).join('')
     :'<p style="color:var(--text2);font-size:.88rem">Cargá "Próximo (km)" o "Próximo (fecha)" en un mantenimiento para verlo acá.</p>';
 }
-function setKm(el){const v=el.value.replace(/\D/g,'');D.auto.km=v;D.auto.kmFecha=new Date().toISOString().slice(0,10);
-  document.getElementById('kmFecha').textContent='Actualizado el '+fFecha(D.auto.kmFecha);guardar();
-  clearTimeout(setKm.t);setKm.t=setTimeout(()=>{const a=document.activeElement;renderMant();document.getElementById('kmAct').focus();},700);}
-let openReg=null;
+/* abrir un auto cierra los demás */
+function toggleAuto(id){openAuto=openAuto===id?'':id;wr('copito_auto',openAuto);
+  document.querySelectorAll('.car').forEach(el=>{const o=el.id==='car_'+openAuto;el.classList.toggle('open',o);el.querySelector('.car-h').setAttribute('aria-expanded',o)});}
+function setModelo(id,el){auto(id).modelo=el.value;const b=document.querySelector(`[data-cm="${id}"]`);if(b)b.textContent=el.value||'Auto sin nombre';guardar();}
+function setKm(id,el){const a=auto(id),v=el.value.replace(/\D/g,'');a.km=v;a.kmFecha=hoyLocal();
+  document.getElementById('kmFecha_'+id).textContent='Actualizado el '+fFecha(a.kmFecha);guardar();
+  clearTimeout(setKm.t);setKm.t=setTimeout(()=>{renderMant();const k=document.getElementById('kmAct_'+id);if(k)k.focus();},700);}
 function toggleReg(id){openReg=openReg===id?null:id;
   document.querySelectorAll('.reg').forEach(el=>{const o=el.id==='reg_'+openReg;el.classList.toggle('open',o);el.querySelector('.reg-h').setAttribute('aria-expanded',o)});}
-function setR(id,campo,el,re){const r=D.mant.find(x=>x.id===id);
+function setR(aid,id,campo,el,re){const a=auto(aid),r=a.mant.find(x=>x.id===id);
   r[campo]=['km','proxKm','costo'].includes(campo)?el.value.replace(/[^\d,]/g,'').replace(',','.'):el.value;
   if(campo==='tipo'){const t=document.querySelector(`[data-rt="${id}"]`);if(t)t.textContent=el.value||'Sin título';}
-  guardar();if(re){renderMant();const f=document.querySelector(`#reg_${id} [onchange*="'${campo}'"]`);}else renderProx();}
-function agregarReg(){const r={id:uid(),fecha:new Date().toISOString().slice(0,10),km:D.auto.km||'',tipo:'',com:'',taller:'',costo:'',proxKm:'',proxFecha:''};
-  D.mant.push(r);openReg=r.id;guardar();renderMant();const t=document.querySelectorAll('.reg .tipo');const el=[...t].find(x=>x.closest('.reg').innerHTML.includes(r.id));if(el){el.scrollIntoView({block:'center'});el.focus();}}
-function borrarR(id){const r=D.mant.find(x=>x.id===id);confirmar('Borrar mantenimiento',`¿Borrar "${r.tipo||'este registro'}"?`,()=>{D.mant=D.mant.filter(x=>x.id!==id);guardar();renderMant();});}
+  guardar();if(re)renderMant();else renderProx(a);}
+function agregarReg(aid){const a=auto(aid),r={id:uid(),fecha:hoyLocal(),km:a.km||'',tipo:'',com:'',taller:'',costo:'',proxKm:'',proxFecha:''};
+  a.mant.push(r);openReg=r.id;guardar();renderMant();const el=document.querySelector(`#reg_${r.id} .tipo`);if(el){el.scrollIntoView({block:'center'});el.focus();}}
+function borrarR(aid,id){const a=auto(aid),r=a.mant.find(x=>x.id===id);confirmar('Borrar mantenimiento',`¿Borrar "${r.tipo||'este registro'}"?`,()=>{a.mant=a.mant.filter(x=>x.id!==id);guardar();renderMant();});}
+function agregarAuto(){const a={id:'a_'+uid(),modelo:'',km:'',kmFecha:'',mant:[]};D.autos.push(a);openAuto=a.id;wr('copito_auto',a.id);guardar();renderMant();
+  const el=document.querySelector(`#car_${a.id} .modelo`);if(el){el.scrollIntoView({block:'center'});el.focus();}}
+function borrarAuto(id){const a=auto(id);
+  confirmar('Eliminar auto',`¿Eliminar "${a.modelo||'este auto'}" con sus ${a.mant.length} mantenimiento${a.mant.length===1?'':'s'}?`,()=>{D.autos=D.autos.filter(x=>x.id!==id);guardar();renderMant();});}
 
 /* ================= exportar PDF (Mantenimiento) ================= */
 /* PDF con todo lo de la pestaña Mantenimiento: datos del auto, próximos y el historial completo */
@@ -418,78 +461,82 @@ async function exportarPDF(){
       doc.setDrawColor(...acc);doc.setLineWidth(.5);doc.line(MX,y+2.5,W-MX,y+2.5);y+=8;};
     header();y=50;
 
-    /* --- el auto --- */
-    doc.setFillColor(...mezcla(acc,.08));doc.roundedRect(MX,y-4,W-MX*2,22,3,3,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(30,30,30);
-    doc.text(doc.splitTextToSize(D.auto.modelo||'Copito',W-MX*2-70)[0],MX+5,y+3.5);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);gris(110);
-    doc.text(D.auto.kmFecha?'Km actualizados el '+fFecha(D.auto.kmFecha):'Kilometraje actual',MX+5,y+10.5);
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(...acc);
-    doc.text((D.auto.km?fkm(n0(D.auto.km)):'—')+' km',W-MX-5,y+6.5,{align:'right'});
-    doc.setFont('helvetica','normal');doc.setFontSize(8.5);gris(110);doc.text('KM ACTUALES',W-MX-5,y+11.5,{align:'right'});
-    y+=28;
-
-    /* --- próximos --- */
-    titulo('Próximos');
-    const prox=D.mant.map(r=>({r,e:estado(r)})).filter(x=>x.e).sort((a,b)=>{const o={venc:0,cerca:1,ok:2};return o[a.e.c]-o[b.e.c]||a.e.u-b.e.u});
-    if(!prox.length){doc.setFont('helvetica','italic');doc.setFontSize(9.5);gris(150);doc.text('No hay próximos cargados.',MX+2,y+1);y+=8;}
-    prox.forEach(({r,e})=>{
-      if(y+10>fin){nuevaPag();titulo('Próximos (cont.)');}
-      const c=COL[e.c];
-      doc.setFillColor(...mezcla(c,.1));doc.roundedRect(MX,y-4.5,W-MX*2,9,2,2,'F');
-      doc.setFillColor(...c);doc.circle(MX+4,y-.1,1.6,'F');
-      doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(30,30,30);doc.text(r.tipo||'Mantenimiento',MX+8,y+1.2);
+    if(!D.autos.length){doc.setFont('helvetica','italic');doc.setFontSize(10);gris(150);doc.text('Todavía no hay autos cargados.',MX,y);}
+    D.autos.forEach((A,ai)=>{
+      if(ai>0)nuevaPag();
+      /* --- el auto --- */
+      doc.setFillColor(...mezcla(acc,.08));doc.roundedRect(MX,y-4,W-MX*2,22,3,3,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(12.5);doc.setTextColor(30,30,30);
+      doc.text(doc.splitTextToSize(A.modelo||'Copito',W-MX*2-70)[0],MX+5,y+3.5);
       doc.setFont('helvetica','normal');doc.setFontSize(9);gris(110);
-      doc.text(e.d.replace(/·/g,'-'),MX+75,y+1.2);
-      doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...c);
-      doc.text(e.c==='venc'?(e.t==='Vencido'?'Vencido':'Pasado por '+e.t.replace('+','')):'Faltan '+e.t,W-MX-4,y+1.2,{align:'right'});
-      y+=11;
-    });
-    y+=4;
+      doc.text(A.kmFecha?'Km actualizados el '+fFecha(A.kmFecha):'Kilometraje actual',MX+5,y+10.5);
+      doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(...acc);
+      doc.text((A.km?fkm(n0(A.km)):'—')+' km',W-MX-5,y+6.5,{align:'right'});
+      doc.setFont('helvetica','normal');doc.setFontSize(8.5);gris(110);doc.text('KM ACTUALES',W-MX-5,y+11.5,{align:'right'});
+      y+=28;
 
-    /* --- historial --- */
-    const regs=D.mant.slice().sort((a,b)=>(b.fecha||'9999').localeCompare(a.fecha||'9999')||n0(b.km)-n0(a.km));
-    const cab=()=>{doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...acc);
-      doc.text('FECHA',MX+2,y);doc.text('KM',MX+24,y);doc.text('QUÉ SE HIZO',MX+46,y);doc.text('COSTO',W-MX-2,y,{align:'right'});
-      doc.setDrawColor(220,220,220);doc.setLineWidth(.2);doc.line(MX,y+2,W-MX,y+2);y+=7;};
-    titulo('Historial de mantenimientos');cab();
-    const xT=MX+46,anchoT=W-MX-2-30-xT;let total=0;
-    if(!regs.length){doc.setFont('helvetica','italic');doc.setFontSize(9.5);gris(150);doc.text('Todavía no hay mantenimientos cargados.',MX+2,y);y+=8;}
-    regs.forEach((r,i)=>{
-      doc.setFont('helvetica','bold');doc.setFontSize(10.5);
-      const tit=doc.splitTextToSize(r.tipo||'Sin título',anchoT);
-      doc.setFont('helvetica','normal');doc.setFontSize(9);
-      const com=r.com?doc.splitTextToSize(r.com,anchoT):[];
-      const extra=[r.taller?'Taller: '+r.taller:'',r.proxKm?'Próximo: '+fkm(n0(r.proxKm))+' km':'',r.proxFecha?'Próximo: '+fFecha(r.proxFecha):''].filter(Boolean).join('   -   ');
-      const ex=extra?doc.splitTextToSize(extra,anchoT):[];
-      const alto=Math.max(11,4+tit.length*4.8+com.length*4+ex.length*4+3);
-      if(y+alto>fin){nuevaPag();titulo('Historial (cont.)');cab();}
-      if(i%2===0){doc.setFillColor(...mezcla(acc,.06));doc.rect(MX,y-4.5,W-MX*2,alto,'F');}
-      doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(50,50,50);
-      doc.text(r.fecha?fFecha(r.fecha):'Sin fecha',MX+2,y+.5);
-      doc.setFont('helvetica','normal');doc.text(r.km?fkm(n0(r.km)):'—',MX+24,y+.5);
-      doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(30,30,30);doc.text(tit,xT,y+.5);
-      let yy=y+.5+tit.length*4.8;
-      if(com.length){doc.setFont('helvetica','normal');doc.setFontSize(9);gris(95);doc.text(com,xT,yy-.4);yy+=com.length*4;}
-      if(ex.length){doc.setFont('helvetica','normal');doc.setFontSize(8.3);gris(135);doc.text(ex,xT,yy-.4);}
-      const c=n0(r.costo);total+=c;
-      doc.setFont('helvetica','bold');doc.setFontSize(10.5);
-      if(c){doc.setTextColor(30,30,30);doc.text(fmt(c),W-MX-2,y+.5,{align:'right'});}else{gris(160);doc.text('—',W-MX-2,y+.5,{align:'right'});}
-      doc.setDrawColor(225,225,225);doc.setLineWidth(.2);doc.line(MX,y-4.5+alto,W-MX,y-4.5+alto);
-      y+=alto;
+      /* --- próximos --- */
+      titulo('Próximos');
+      const prox=proximos(A);
+      if(!prox.length){doc.setFont('helvetica','italic');doc.setFontSize(9.5);gris(150);doc.text('No hay próximos cargados.',MX+2,y+1);y+=8;}
+      prox.forEach(({r,e})=>{
+        if(y+10>fin){nuevaPag();titulo('Próximos (cont.)');}
+        const c=COL[e.c];
+        doc.setFillColor(...mezcla(c,.1));doc.roundedRect(MX,y-4.5,W-MX*2,9,2,2,'F');
+        doc.setFillColor(...c);doc.circle(MX+4,y-.1,1.6,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(30,30,30);doc.text(r.tipo||'Mantenimiento',MX+8,y+1.2);
+        doc.setFont('helvetica','normal');doc.setFontSize(9);gris(110);
+        doc.text(e.d.replace(/·/g,'-'),MX+75,y+1.2);
+        doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...c);
+        doc.text(e.c==='venc'?(e.t==='Vencido'?'Vencido':'Pasado por '+e.t.replace('+','')):'Faltan '+e.t,W-MX-4,y+1.2,{align:'right'});
+        y+=11;
+      });
+      y+=4;
+
+      /* --- historial --- */
+      const regs=regsOrd(A);
+      const cab=()=>{doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...acc);
+        doc.text('FECHA',MX+2,y);doc.text('KM',MX+24,y);doc.text('QUÉ SE HIZO',MX+46,y);doc.text('COSTO',W-MX-2,y,{align:'right'});
+        doc.setDrawColor(220,220,220);doc.setLineWidth(.2);doc.line(MX,y+2,W-MX,y+2);y+=7;};
+      titulo('Historial de mantenimientos');cab();
+      const xT=MX+46,anchoT=W-MX-2-30-xT;let total=0;
+      if(!regs.length){doc.setFont('helvetica','italic');doc.setFontSize(9.5);gris(150);doc.text('Todavía no hay mantenimientos cargados.',MX+2,y);y+=8;}
+      regs.forEach((r,i)=>{
+        doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+        const tit=doc.splitTextToSize(r.tipo||'Sin título',anchoT);
+        doc.setFont('helvetica','normal');doc.setFontSize(9);
+        const com=r.com?doc.splitTextToSize(r.com,anchoT):[];
+        const extra=[r.taller?'Taller: '+r.taller:'',r.proxKm?'Próximo: '+fkm(n0(r.proxKm))+' km':'',r.proxFecha?'Próximo: '+fFecha(r.proxFecha):''].filter(Boolean).join('   -   ');
+        const ex=extra?doc.splitTextToSize(extra,anchoT):[];
+        const alto=Math.max(11,4+tit.length*4.8+com.length*4+ex.length*4+3);
+        if(y+alto>fin){nuevaPag();titulo('Historial (cont.)');cab();}
+        if(i%2===0){doc.setFillColor(...mezcla(acc,.06));doc.rect(MX,y-4.5,W-MX*2,alto,'F');}
+        doc.setFont('helvetica','bold');doc.setFontSize(9.5);doc.setTextColor(50,50,50);
+        doc.text(r.fecha?fFecha(r.fecha):'Sin fecha',MX+2,y+.5);
+        doc.setFont('helvetica','normal');doc.text(r.km?fkm(n0(r.km)):'—',MX+24,y+.5);
+        doc.setFont('helvetica','bold');doc.setFontSize(10.5);doc.setTextColor(30,30,30);doc.text(tit,xT,y+.5);
+        let yy=y+.5+tit.length*4.8;
+        if(com.length){doc.setFont('helvetica','normal');doc.setFontSize(9);gris(95);doc.text(com,xT,yy-.4);yy+=com.length*4;}
+        if(ex.length){doc.setFont('helvetica','normal');doc.setFontSize(8.3);gris(135);doc.text(ex,xT,yy-.4);}
+        const c=n0(r.costo);total+=c;
+        doc.setFont('helvetica','bold');doc.setFontSize(10.5);
+        if(c){doc.setTextColor(30,30,30);doc.text(fmt(c),W-MX-2,y+.5,{align:'right'});}else{gris(160);doc.text('—',W-MX-2,y+.5,{align:'right'});}
+        doc.setDrawColor(225,225,225);doc.setLineWidth(.2);doc.line(MX,y-4.5+alto,W-MX,y-4.5+alto);
+        y+=alto;
+      });
+      if(y+16>fin)nuevaPag();
+      y-=1;doc.setFillColor(...acc);doc.roundedRect(MX,y,W-MX*2,12,2.5,2.5,'F');
+      doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);
+      doc.text('TOTAL EN MANTENIMIENTO',MX+5,y+7.8);doc.setFontSize(13);doc.text(fmt(total),W-MX-5,y+7.9,{align:'right'});
     });
-    if(y+16>fin)nuevaPag();
-    y-=1;doc.setFillColor(...acc);doc.roundedRect(MX,y,W-MX*2,12,2.5,2.5,'F');
-    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(11);
-    doc.text('TOTAL EN MANTENIMIENTO',MX+5,y+7.8);doc.setFontSize(13);doc.text(fmt(total),W-MX-5,y+7.9,{align:'right'});
 
     const n=doc.getNumberOfPages();
     for(let p=1;p<=n;p++){doc.setPage(p);doc.setFont('helvetica','normal');doc.setFontSize(8);gris(150);
       doc.setDrawColor(230,230,230);doc.setLineWidth(.2);doc.line(MX,H-12,W-MX,H-12);
       doc.text('JuntOS · Mantenimiento',MX,H-7.5);doc.text(`Página ${p} de ${n}`,W-MX,H-7.5,{align:'right'});}
 
-    const auto=String(D.auto.modelo||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
-    const nombre=(auto?'Mantenimiento - '+auto:'Mantenimiento')+'.pdf';
+    const uno=D.autos.length===1?String(D.autos[0].modelo||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim():'';
+    const nombre=(uno?'Mantenimiento - '+uno:D.autos.length>1?'Mantenimiento - autos':'Mantenimiento')+'.pdf';
     const file=new File([doc.output('blob')],nombre,{type:'application/pdf'});
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:nombre.replace(/\.pdf$/,'')});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
@@ -526,7 +573,7 @@ function guardarPago(m){wr(LS,D);if(!db)return;
   ref().set({pagos:{[m.id]:m.pagado},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(fallo);}
 function aplicar(doc){
   if(!doc.exists){listo=true;guardar();return}
-  try{const x=doc.data(),d=JSON.parse(x.json||'null');if(d&&Array.isArray(d.meses)){
+  try{const x=doc.data(),d=JSON.parse(x.json||'null');if(d&&Array.isArray(d.meses)){migrar(d);
     const pg=x.pagos||{};d.meses.forEach(m=>{if(m.id in pg)m.pagado=!!pg[m.id];});
     D=d;wr(LS,D);listo=true;
     const a=document.activeElement;if(!(a&&a.tagName==='INPUT'&&a.type!=='checkbox')){renderGastos();renderMant();}}}catch(e){}
