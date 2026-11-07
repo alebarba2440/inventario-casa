@@ -372,11 +372,10 @@ function renderMant(){
   if(!D.autos.length){document.getElementById('autos').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px 0">Todavía no hay autos. Tocá "Agregar auto".</p>';return;}
   if(openAuto!==null&&!auto(openAuto))openAuto=D.autos[0].id;
   if(openAuto===null&&D.autos.length===1)openAuto=D.autos[0].id;
-  document.getElementById('autos').innerHTML=D.autos.map(a=>{const op=a.id===openAuto,p=proximos(a),peor=p.length?p[0].e:null;
-    const badge=peor&&peor.c!=='ok'?`<span class="badge ${peor.c}">${peor.c==='venc'?'Vencido':'Próximo'}</span>`:'';
+  document.getElementById('autos').innerHTML=D.autos.map(a=>{const op=a.id===openAuto;
     return `<section class="car${op?' open':''}" id="car_${a.id}">
       <button class="car-h" onclick="toggleAuto('${a.id}')" aria-expanded="${op}"><i class="ti ti-car ic"></i>
-        <span class="ct"><b data-cm="${a.id}">${esc(a.modelo)||'Auto sin nombre'}</b><small data-cr="${a.id}">${resumenAuto(a)}</small></span>${badge}<i class="ti ti-chevron-down chev"></i></button>
+        <span class="ct"><b data-cm="${a.id}">${esc(a.modelo)||'Auto sin nombre'}</b><small data-cr="${a.id}">${resumenAuto(a)}</small></span><i class="ti ti-chevron-down chev"></i></button>
       <div class="car-b">
         <div class="card auto">
           <h2><i class="ti ti-pencil"></i><input class="modelo" value="${esc(a.modelo)}" placeholder="Nombre del auto" aria-label="Nombre del auto" oninput="setModelo('${a.id}',this)"></h2>
