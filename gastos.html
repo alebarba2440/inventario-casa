@@ -337,14 +337,39 @@ function grafico(){
   const pct=v=>{const p=total?v/total*100:0;return p>0&&p<1?'<1%':Math.round(p)+'%';};
   const labels=e.map(([c,v])=>`${iconCat(c)} ${nombreCat(c)} ${pct(v)}`),vals=e.map(x=>x[1]);
   const cols=e.map((_,i)=>`hsl(${(i*137.5+150)%360} 60% 55%)`);
+  /* comparación de cada categoría con el mes anterior: 1 = gasté más, -1 = gasté menos, 0 = igual */
+  const idx=MESES.indexOf(selMes.value),y=+selAnio.value,[mA,yA]=idx===0?[MESES[11],y-1]:[MESES[idx-1],y];
+  const gAnt=(datos[`${mA}-${yA}`]||{}).gastos||[],ant={};
+  gAnt.forEach(g=>{const v=+g.importe||0;if(v>0){const c=g.categoria||'varios';ant[c]=(ant[c]||0)+v;}});
+  const flechas=gAnt.length?e.map(([c,v])=>{const a=ant[c]||0;return Math.round(v)>Math.round(a)?1:Math.round(v)<Math.round(a)?-1:0;}):[];
+  const difs=e.map(([c,v])=>v-(ant[c]||0));
   const txt=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#1a1a1a';
-  if(chart){chart.data.labels=labels;chart.data.datasets[0].data=vals;chart.data.datasets[0].backgroundColor=cols;chart.options.plugins.legend.labels.color=txt;chart.update();return;}
-  chart=new Chart(document.getElementById('grafico'),{type:'doughnut',
+  if(chart){chart.$flechas=flechas;chart.$difs=difs;chart.$mA=mA;chart.data.labels=labels;chart.data.datasets[0].data=vals;chart.data.datasets[0].backgroundColor=cols;chart.options.plugins.legend.labels.color=txt;chart.update();return;}
+  chart=new Chart(document.getElementById('grafico'),{type:'doughnut',plugins:[flechasPlugin],
     data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:0}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
       plugins:{legend:{position:'right',labels:{color:txt,boxWidth:10,font:{family:'Nunito',size:11,weight:'600'}}},
-        tooltip:{callbacks:{label:c=>' '+fmt(c.parsed)}}}}});
+        tooltip:{callbacks:{label:c=>' '+fmt(c.parsed),
+          afterLabel:c=>{const f=(chart.$flechas||[])[c.dataIndex];if(f===undefined)return '';const d=(chart.$difs||[])[c.dataIndex];
+            return f>0?` ▲ ${fmt(d)} más que en ${chart.$mA}`:f<0?` ▼ ${fmt(-d)} menos que en ${chart.$mA}`:` = igual que en ${chart.$mA}`;}}}}}});
+  chart.$flechas=flechas;chart.$difs=difs;chart.$mA=mA;chart.update();
 }
+/* dibuja en cada color del gráfico: flechita verde (gasté menos), roja (gasté más) o rayita (igual) */
+const flechasPlugin={id:'flechas',afterDatasetsDraw(ch){
+  const f=ch.$flechas;if(!f||!f.length)return;const ctx=ch.ctx;
+  ch.getDatasetMeta(0).data.forEach((arc,i)=>{
+    if(f[i]===undefined||arc.circumference<.22)return; // en porciones muy finitas no entra
+    const {x,y}=arc.tooltipPosition(),r=9;
+    ctx.save();
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.95)';ctx.shadowColor='rgba(0,0,0,.2)';ctx.shadowBlur=3;ctx.fill();ctx.shadowBlur=0;
+    if(f[i]===0){ctx.strokeStyle='#888';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x-4.5,y);ctx.lineTo(x+4.5,y);ctx.stroke();}
+    else{ctx.fillStyle=f[i]>0?'#E24B4A':'#1D9E75';ctx.beginPath();
+      if(f[i]>0){ctx.moveTo(x,y-5.5);ctx.lineTo(x+5,y+3.5);ctx.lineTo(x-5,y+3.5);}   // ▲ gasté más
+      else{ctx.moveTo(x,y+5.5);ctx.lineTo(x+5,y-3.5);ctx.lineTo(x-5,y-3.5);}         // ▼ gasté menos
+      ctx.closePath();ctx.fill();}
+    ctx.restore();
+  });
+}};
 
 /* ---------- backup ---------- */
 async function descargarBackup(){
