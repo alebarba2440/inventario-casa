@@ -89,6 +89,9 @@
   .lista{display:flex;flex-direction:column}
   .it{display:flex;align-items:center;gap:10px;padding:10px 2px;border-top:1px solid var(--border)}
   .it:first-child{border-top:none}
+  /* gastos fijos: fondo gris para diferenciarlos de los normales */
+  .it.fx{background:color-mix(in srgb,var(--text) 7%,var(--surface));border-top:none;border-radius:12px;padding:10px 8px;margin:4px 0}
+  .it.fx+.it{border-top:none}
   /* foto de quien pagó */
   .av{width:40px;height:40px;flex-shrink:0;border-radius:50%;object-fit:cover;display:block;border:2.5px solid transparent}
   .av.j{border-color:var(--juli)} .av.a{border-color:var(--ale)}
@@ -239,7 +242,7 @@ function render(){
   const pend=l.filter(g=>!g.quien),tp=pend.reduce((x,g)=>x+(+g.monto||0),0);
   let pt=document.getElementById('pendTot');if(!pt){pt=document.createElement('div');pt.id='pendTot';pt.className='pend-tot';s.after(pt);}
   pt.textContent=pend.length?`Falta asignar ${pend.length} gasto${pend.length===1?'':'s'} fijo${pend.length===1?'':'s'}: ${fmt(tp)}`:'';
-  document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it${g.quien?'':' pend'}">
+  document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it${g.quien?'':' pend'}${g.serie?' fx':''}">
       ${g.quien?`<img class="av ${g.quien}" src="${FOTO[g.quien]}" alt="Pagó ${esc(NOM[g.quien])}">`:'<span class="q-none" aria-label="Sin pagar">?</span>'}
       <div class="tx" onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}${g.serie?'<span class="fijo-tag"><i class="ti ti-repeat"></i> fijo</span>':''}</b>
         <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}</small></div>
