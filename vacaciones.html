@@ -358,6 +358,22 @@ function nuevoViaje(lugar,moneda,cot,nota){
 let tab=rd('viaje_tab','e');if(tab!=='e'&&tab!=='r')tab='e';
 let openAcc='gastos';
 
+/* ================= plata ahorrada REAL: sale del total de la app Ahorros ================= */
+const MES_N=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+let AHO=null; // {j, a, nj, na}
+function leerAhorros(st){
+  if(!st||!Array.isArray(st.months))return;
+  const suma=l=>(l||[]).reduce((x,y)=>x+(+y.amt||0),0);
+  const esMes=m=>{const x=String(m.label||'').match(/^(\p{L}+)/u);return !!x&&MES_N.includes(x[1].toLowerCase());};
+  const tieneMov=m=>m.mov&&((m.mov.j||[]).length||(m.mov.a||[]).length);
+  // los mismos meses que suma el total de Ahorros: los de "Ahorrado" (no ocultos, agregados a mano o con movimientos)
+  const ms=st.months.filter(m=>esMes(m)&&!m.oculto&&(m.enAho||tieneMov(m)));
+  const n=st.names||{};
+  AHO={j:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.j),0),a:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.a),0),nj:n.j||'Juli',na:n.a||'Ale'};
+  if(cur()){const a=document.activeElement;if(tab==='r'&&!(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')))render();else recalc();}
+}
+leerAhorros(rd('ahorros_v1',null));
+
 /* ================= cálculos ================= */
 function cotOf(v){return v.moneda==='ARS'?1:(n0(v.cot)||0)}
 const campos=modo=>modo==='r'?['rmonto','rext']:['monto','ext'];
@@ -373,7 +389,8 @@ function calcular(v){
   K.e=K.e_gastos+K.e_exc+K.e_diarioTot;  // estimado del viaje: gastos + excursiones + gasto diario × días
   K.r=K.r_gastos+K.r_exc+K.dias;        // lo gastado de verdad
   K.ahJ=v.aho.j.reduce((a,x)=>a+n0(x.monto),0);K.ahA=v.aho.a.reduce((a,x)=>a+n0(x.monto),0);K.aho=K.ahJ+K.ahA;
-  K.bal=K.aho-K.e;K.rest=K.aho-K.r;
+  K.ahoR=AHO?AHO.j+AHO.a:0;          // real: lo que dice Ahorros
+  K.bal=K.aho-K.e;K.rest=K.ahoR-K.r;
   return K;
 }
 
@@ -530,7 +547,11 @@ function render(after){
   const tag=R?'<span class="rtag">REAL</span>':'<span class="rtag">ESTIMADO</span>';
   const sec=(l,cl,ic,tE,tR,ph,txt,extra)=>acc(l,cl+(R?' real':''),ic,(R?tR:tE)+tag,
     filas(v,l,ph,M)+totRow(R?'TOTAL REAL':'TOTAL ESTIMADO',M+'_'+l)+cmp(l)+addB(l,txt)+(extra||''));
-  const aho=`<div class="cols">
+  const ahoReal=`<div class="cols">
+      <div class="col j"><h4>${esc((AHO?AHO.nj:'Juli').toUpperCase())}</h4><div class="ct" data-ar="j">—</div></div>
+      <div class="col a"><h4>${esc((AHO?AHO.na:'Ale').toUpperCase())}</h4><div class="ct" data-ar="a">—</div></div>
+    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">${AHO?'Se completa solo con el total ahorrado de cada uno en Ahorros.':'Abrí Ahorros una vez (con internet) para traer lo ahorrado.'}</p>`;
+  const aho=R?ahoReal:`<div class="cols">
       ${['j','a'].map(p=>`<div class="col ${p}"><h4>${p==='j'?'JULI':'ALE'}</h4>
         ${v.aho[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
@@ -597,9 +618,11 @@ function recalc(){
     put(`[data-dd="${d.id}"]`,(x>0?'+':'')+P(x),x,true);put(`[data-dd2="${d.id}"]`,P(x),x,true);});
   document.querySelectorAll('[data-cc]').forEach(e=>{const [did,cid]=e.dataset.cc.split(':'),d=v.dias.find(x=>x.id===did),it=d&&d.items.find(x=>x.id===cid);if(!it)return;
     const x=n0(it.monto);e.textContent=it.ext?fmt(x*cotOf(v)):fmt(aExt(v,x),m);});
-  put('[data-t="aho"]',P(K.aho),0,false);put('[data-tx="aho"]',O(K.aho),0,false);put('[data-h="aho"]',P(K.aho),0,false);
+  const ahoV=tab==='r'?K.ahoR:K.aho;
+  put('[data-t="aho"]',P(ahoV),0,false);put('[data-tx="aho"]',O(ahoV),0,false);put('[data-h="aho"]',P(ahoV),0,false);
+  if(AHO){put('[data-ar="j"]',P(AHO.j),0,false);put('[data-ar="a"]',P(AHO.a),0,false);}
   put('[data-a="j"]',P(K.ahJ),0,false);put('[data-a="a"]',P(K.ahA),0,false);
-  const RR={aho:K.aho,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario,e_diarioTot:K.e_diarioTot};
+  const RR={aho:ahoV,e:K.e,bal:K.bal,r:K.r,rest:K.rest,dif:K.e-K.r,e_gastos:K.e_gastos,e_exc:K.e_exc,e_diario:K.e_diario,e_diarioTot:K.e_diarioTot};
   Object.entries(RR).forEach(([k,n])=>{put(`[data-r="${k}"]`,P(n),n,k==='bal'||k==='rest'||k==='dif');put(`[data-rx="${k}"]`,O(n),0,false);});
 }
 
@@ -725,6 +748,7 @@ async function initFb(){
     }
     if(!firebase.apps.length)firebase.initializeApp(c);
     db=firebase.firestore();startSync();
+    db.collection('ahorros').doc('data').onSnapshot(d=>{try{if(d.exists)leerAhorros(JSON.parse(d.data().json))}catch(e){}},()=>{});
   }catch(e){}
 }
 if(!cur()&&viajes.length)selId=viajes.slice().sort((a,b)=>(b.creado||0)-(a.creado||0))[0].id;
