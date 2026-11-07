@@ -92,6 +92,12 @@
   /* gastos fijos: fondo gris para diferenciarlos de los normales */
   .it.fx{background:color-mix(in srgb,var(--text) 7%,var(--surface));border-top:none;border-radius:12px;padding:10px 8px;margin:4px 0}
   .it.fx+.it{border-top:none}
+  /* check de "ya lo dividimos" */
+  .chk{width:32px;height:32px;flex-shrink:0;border-radius:50%;border:2px solid var(--border2);background:var(--surface);color:transparent;font-size:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .chk.on{background:var(--pos);border-color:var(--pos);color:#fff}
+  .chk-esp{width:32px;flex-shrink:0}
+  .it.sald .tx b,.it.sald .m{text-decoration:line-through;text-decoration-thickness:2px;color:var(--text2)}
+  .it.sald .av{opacity:.5}
   /* foto de quien pagó */
   .av{width:40px;height:40px;flex-shrink:0;border-radius:50%;object-fit:cover;display:block;border:2.5px solid transparent}
   .av.j{border-color:var(--juli)} .av.a{border-color:var(--ale)}
@@ -108,6 +114,7 @@
   .it .tx{flex:1;min-width:0;cursor:pointer}
   .it .tx b{display:block;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .it .tx small{color:var(--text2);font-weight:700;font-size:.78rem}
+  .it{gap:8px}
   .it .m{font-weight:900}
   .it .del{width:38px;height:38px;flex-shrink:0;border:none;background:none;color:var(--neg);font-size:1.15rem;cursor:pointer;border-radius:10px}
   .vacio{text-align:center;color:var(--text2);padding:18px 0;font-weight:700}
@@ -229,15 +236,17 @@ const pref=()=>`${selAnio.value}-${String(+selMes.value+1).padStart(2,'0')}`;
 
 function render(){
   const p=pref();generarFijos(p);
-  const l=Object.values(G).filter(g=>g&&g.fecha&&g.fecha.startsWith(p)).sort((x,z)=>(!!x.quien-!!z.quien)||z.fecha.localeCompare(x.fecha)||(z.creado||0)-(x.creado||0));
-  const pj=l.filter(g=>g.quien==='j').reduce((s,g)=>s+(+g.monto||0),0),pa=l.filter(g=>g.quien==='a').reduce((s,g)=>s+(+g.monto||0),0),tot=pj+pa,mitad=tot/2;
+  const l=Object.values(G).filter(g=>g&&g.fecha&&g.fecha.startsWith(p)).sort((x,z)=>(!!x.saldado-!!z.saldado)||(!!x.quien-!!z.quien)||z.fecha.localeCompare(x.fecha)||(z.creado||0)-(x.creado||0));
+  // los gastos ya divididos (saldados) no cuentan en el resumen
+  const cuenta=l.filter(g=>!g.saldado),sald=l.filter(g=>g.saldado&&g.quien),tSald=sald.reduce((x,g)=>x+(+g.monto||0),0);
+  const pj=cuenta.filter(g=>g.quien==='j').reduce((s,g)=>s+(+g.monto||0),0),pa=cuenta.filter(g=>g.quien==='a').reduce((s,g)=>s+(+g.monto||0),0),tot=pj+pa,mitad=tot/2;
   document.getElementById('total').textContent=fmt(tot);
   document.getElementById('nJ').textContent=NOM.j.toUpperCase()+' PAGÓ';document.getElementById('nA').textContent=NOM.a.toUpperCase()+' PAGÓ';
   document.getElementById('pJ').textContent=fmt(pj);document.getElementById('pA').textContent=fmt(pa);
   document.getElementById('cJ').textContent=tot?`Le toca ${fmt(mitad)}`:'';document.getElementById('cA').textContent=tot?`Le toca ${fmt(mitad)}`:'';
   document.getElementById('bJ').style.width=(tot?pj/tot*100:50)+'%';document.getElementById('bA').style.width=(tot?pa/tot*100:50)+'%';
   const s=document.getElementById('saldo'),dif=Math.round(pj-mitad);
-  if(!tot){s.className='saldo';s.textContent='Sin gastos este mes';}
+  if(!tot){s.className=sald.length?'saldo ok':'saldo';s.textContent=sald.length?'¡Están a mano!':'Sin gastos este mes';}
   else if(Math.abs(dif)<1){s.className='saldo ok';s.textContent='¡Están a mano!';}
   else{s.className='saldo';const debe=dif>0?NOM.a:NOM.j,cobra=dif>0?NOM.j:NOM.a;
     s.innerHTML=`<span style="color:var(--${dif>0?'ale':'juli'})">${esc(debe)}</span> le tiene que pasar <span class="num">${fmt(Math.abs(dif))}</span> a <span style="color:var(--${dif>0?'juli':'ale'})">${esc(cobra)}</span>`;}
@@ -245,12 +254,14 @@ function render(){
   const lejos=p>mesSiguiente()&&hayFijos;
   const pend=l.filter(g=>!g.quien),tp=pend.reduce((x,g)=>x+(+g.monto||0),0);
   let pt=document.getElementById('pendTot');if(!pt){pt=document.createElement('div');pt.id='pendTot';pt.className='pend-tot';s.after(pt);}
-  pt.textContent=pend.length?`Falta asignar ${pend.length} gasto${pend.length===1?'':'s'} fijo${pend.length===1?'':'s'}: ${fmt(tp)}`:'';
-  document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it${g.quien?'':' pend'}${g.serie?' fx':''}">
+  pt.innerHTML=[pend.length?`Falta asignar ${pend.length} gasto${pend.length===1?'':'s'} fijo${pend.length===1?'':'s'}: ${fmt(tp)}`:'',
+    sald.length?`<span style="color:var(--pos)">✓ Ya dividido: ${fmt(tSald)} (${sald.length} gasto${sald.length===1?'':'s'})</span>`:''].filter(Boolean).join('<br>');
+  document.getElementById('lista').innerHTML=l.length?l.map(g=>`<div class="it${g.quien?'':' pend'}${g.serie?' fx':''}${g.saldado?' sald':''}">
       ${g.quien?`<img class="av ${g.quien}" src="${FOTO[g.quien]}" alt="Pagó ${esc(NOM[g.quien])}">`:'<span class="q-none" aria-label="Sin pagar">?</span>'}
       <div class="tx" onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}${g.serie?'<span class="fijo-tag"><i class="ti ti-repeat"></i> fijo</span>':''}</b>
-        <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}</small></div>
+        <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}${g.saldado?' · <span style="color:var(--pos)">ya dividido</span>':''}</small></div>
       <span class="m num">${fmt(+g.monto||0)}</span>
+      ${g.quien?`<button class="chk${g.saldado?' on':''}" onclick="toggleSaldado('${g.id}')" aria-pressed="${!!g.saldado}" aria-label="${g.saldado?'Marcar como no dividido':'Marcar como ya dividido mitad y mitad'}"><i class="ti ti-check"></i></button>`:'<span class="chk-esp"></span>'}
       <button class="del" onclick="borrar('${g.id}')" aria-label="Eliminar ${esc(g.desc)}"><i class="ti ti-trash"></i></button>
     </div>`).join('')+(lejos?'<p class="vacio" style="font-size:.82rem">Los gastos fijos aparecen acá cuando falte un mes.</p>':''):(lejos?'<p class="vacio">Los gastos fijos aparecen acá cuando falte un mes.</p>':'<p class="vacio">Todavía no hay gastos en este mes</p>');
 }
@@ -262,6 +273,8 @@ function toggleFijo(v){fijo=v===undefined?!fijo:v;const b=document.getElementByI
   // en un gasto fijo se puede dejar "Nadie aún" y asignarlo después
   document.getElementById('qN').hidden=!fijo;document.getElementById('quienBox').classList.toggle('tres',fijo);
   if(!fijo&&quien===null)setQuien(rd('compartidos_quien','j'));}
+/* check: ese gasto ya lo dividieron mitad y mitad, deja de contar en el resumen */
+function toggleSaldado(id){const g=G[id];if(!g)return;g.saldado=!g.saldado;subir(g);render();}
 function asignar(id,q){const g=G[id];if(!g)return;g.quien=q;subir(g);render();}
 function abrirForm(g){
   editando=g?g.id:null;const f=document.getElementById('form');f.hidden=false;document.getElementById('bNuevo').hidden=true;
@@ -279,6 +292,7 @@ function guardarGasto(){
   // se puede guardar sin monto (queda en $ 0 y se completa después)
   const ant=editando?G[editando]:null,desc=document.getElementById('fDesc').value.trim();
   let g={id:editando||uid(),quien,desc,monto,fecha,creado:ant?ant.creado:Date.now()};
+  if(ant&&ant.saldado&&quien)g.saldado=true;
   if(ant&&ant.serie){
     g.serie=ant.serie;
     if(!fijo){const sr=S[ant.serie];if(sr){sr.hasta=mesDe(fecha);subirS(sr);}}   // apagaste "gasto fijo": deja de repetirse desde el mes que viene
