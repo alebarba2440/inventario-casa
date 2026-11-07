@@ -173,6 +173,14 @@
     .grid.una a.card.sola{width:auto}
   }
   @media (prefers-reduced-motion:reduce){a.card{transform:none}}
+  /* al abrir el inicio, las polaroids caen una por una sobre la mesa */
+  .grid.antes a.card{opacity:0}
+  .grid.repartir a.card{animation:caerFoto .38s cubic-bezier(.25,.9,.35,1.15) both;animation-delay:calc(var(--n,0) * 90ms)}
+  @keyframes caerFoto{
+    0%{opacity:0;transform:translateY(-34px) scale(1.4) rotate(calc(var(--rot,0deg) * -3));box-shadow:0 26px 40px rgba(0,0,0,.25)}
+    55%{opacity:1}
+    100%{opacity:1;transform:rotate(var(--rot,0deg)) scale(1);box-shadow:0 6px 16px rgba(0,0,0,.13)}}
+  @media (prefers-reduced-motion:reduce){.grid.antes a.card{opacity:1}.grid.repartir a.card{animation:none}}
 
   /* ===== Animación de inicio: ustedes dos, corazoncitos, "JuntOS" y "El arte de construir" ===== */
   #intro{position:fixed;inset:0;z-index:10000;background:#fff;color:#1a1a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;transition:opacity .5s;padding:20px}
@@ -209,7 +217,7 @@
 (function(){const el=document.getElementById('intro');let visto=false;try{visto=sessionStorage.getItem('intro_ok')==='1'}catch(e){}
   if(visto){el.remove();return}
   try{sessionStorage.setItem('intro_ok','1')}catch(e){}
-  window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);};
+  window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);if(window.repartirFotos)setTimeout(repartirFotos,250);};
   const anims=()=>el.getAnimations({subtree:true});anims().forEach(a=>a.pause());
   const img=new Image();img.onload=img.onerror=()=>{anims().forEach(a=>a.play());setTimeout(finIntro,5400);};img.src='img/intro-juntos.webp?v=5';
   setTimeout(finIntro,8000);
@@ -234,7 +242,7 @@
       if(a&&b)t.style.fontSize=(parseFloat(getComputedStyle(t).fontSize)*b/a)+'px';}
     igualarMarca();if(document.fonts)document.fonts.ready.then(igualarMarca);addEventListener('resize',igualarMarca);window.igualarMarca=igualarMarca;})();
   </script>
-  <nav class="grid" id="grid">
+  <nav class="grid antes" id="grid">
     <a class="card" href="inventario.html" data-k="inventario">
       <div class="pic"><img src="img/inventario.webp?v=2" alt="" width="520" height="513"></div>
       <div class="txt"><b>Inventario</b></div>
@@ -436,7 +444,7 @@ function aplicarAccesos(){
   const A=accCfg();let vis=[];
   cards().forEach(a=>{const c=A[a.dataset.k]||{},on=c.on!==false;defNombre(a);
     a.querySelector('.txt b').textContent=c.nombre||a.dataset.def;a.classList.toggle('oculta',!on);a.classList.remove('sola');if(on)vis.push(a);});
-  vis.forEach((a,i)=>a.style.setProperty('--rot',ROT[i%ROT.length]));
+  vis.forEach((a,i)=>{a.style.setProperty('--rot',ROT[i%ROT.length]);a.style.setProperty('--n',i);});
   const g=document.getElementById('grid');g.classList.toggle('una',vis.length===1);
   if(vis.length%2===1)vis[vis.length-1].classList.add('sola');
   document.getElementById('sinAcc').hidden=vis.length>0;
@@ -486,6 +494,12 @@ function toggleAccCfg(btn){const b=btn.closest('.acc'),abrir=!b.classList.contai
   document.querySelectorAll('.sheet .acc').forEach(x=>{x.classList.remove('open');x.querySelector('.acc-h').setAttribute('aria-expanded','false');});
   if(abrir){b.classList.add('open');btn.setAttribute('aria-expanded','true');if(window.syncSwitches)syncSwitches();}}
 aplicarAccesos();dibujarAccesos();
+/* efecto "poner las fotos en la mesa": una por una, rápido. Si está la intro, arranca cuando termina */
+function repartirFotos(){const g=document.getElementById('grid');if(!g.classList.contains('antes'))return;
+  g.classList.remove('antes');g.classList.add('repartir');
+  const n=cards().filter(a=>!a.classList.contains('oculta')).length;
+  setTimeout(()=>g.classList.remove('repartir'),380+90*Math.max(0,n-1)+60);}  // después se puede tocar normal
+if(!document.getElementById('intro'))requestAnimationFrame(()=>setTimeout(repartirFotos,80));
 addEventListener('resize',llenarPantalla);addEventListener('load',llenarPantalla);
 if(document.fonts)document.fonts.ready.then(llenarPantalla);
 document.querySelectorAll('#grid img').forEach(im=>{if(!im.complete)im.addEventListener('load',llenarPantalla,{once:true});});
