@@ -503,9 +503,9 @@ function quitarAho(p,id){preguntar('Borrar ahorro','¿Borrar este monto de plata
 function traerAhorros(){
   if(!AHO){preguntar('Sin datos de Ahorros','Abrí Ahorros una vez (con internet) y volvé a probar.',()=>{},'Entendido');return;}
   const v=cur(),hoy=new Date().toLocaleDateString('es-AR');
-  preguntar('Agregar ahorros actuales',`Se agrega ${AHO.nj}: ${fmt(AHO.j)} y ${AHO.na}: ${fmt(AHO.a)} (total de Ahorros al ${hoy}).`,()=>{
-    ['j','a'].forEach(p=>{const l=v.ahoR[p].filter(x=>String(x.monto??'').trim());l.push({id:uid(),monto:String(Math.round(AHO[p]))});v.ahoR[p]=l;});
-    cambio();render();},'Agregar');
+  preguntar('Agregar ahorros actuales',`Se reemplaza lo que hay por ${AHO.nj}: ${fmt(AHO.j)} y ${AHO.na}: ${fmt(AHO.a)} (total de Ahorros al ${hoy}).`,()=>{
+    ['j','a'].forEach(p=>{v.ahoR[p]=[{id:uid(),monto:String(Math.round(AHO[p]))}];});
+    cambio();render();},'Reemplazar');
 }
 function cambio(re=true){const v=cur();guardar(v);if(re)recalc();}
 function toggleAcc(k){openAcc=openAcc===k?null:k;
@@ -565,7 +565,7 @@ function render(after){
         ${AL[p].map(x=>`<div class="ar"><input type="text" inputmode="decimal" value="${esc(cp(x.monto))}" placeholder="$ 0" oninput="setAho('${p}','${x.id}',this)"><button class="x" onclick="quitarAho('${p}','${x.id}')" aria-label="Borrar"><i class="ti ti-x"></i></button></div>`).join('')}
         <button class="add" onclick="agregarAho('${p}')"><i class="ti ti-plus"></i></button>
         <div class="ct" data-a="${p}"></div></div>`).join('')}
-    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">Montos en pesos.${R?' "Agregar ahorros actuales" suma lo que tiene cada uno hoy en Ahorros.':''}</p>`;
+    </div>${totRow('TOTAL DE LOS DOS','aho')}<p class="hint">Montos en pesos.${R?' "Agregar ahorros actuales" reemplaza estos montos por lo que tiene cada uno hoy en Ahorros.':''}</p>`;
   if(openDia===undefined&&v.dias.length)openDia=v.dias[v.dias.length-1].id;
   const diaHTML=d=>{const op=d.id===openDia;return `<div class="dia${op?' open':''}" id="dia_${d.id}">
       <button class="dia-h" onclick="toggleDia('${d.id}')" aria-expanded="${op}">
