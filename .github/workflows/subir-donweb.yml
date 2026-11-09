@@ -33,5 +33,5 @@ jobs:
         continue-on-error: true
         run: |
           set +e
-          for u in https://barbamanger.website/juntos/ http://barbamanger.website/juntos/ http://barbamanger.website/ https://barbamanger.website/; do
+          for u in https://barbamanager.website/juntos/ http://barbamanager.website/juntos/ https://www.barbamanager.website/juntos/; do
             echo "== $u"; curl -sk -m 20 -o /tmp/r.html -w '%{http_code} %{url_effective} ssl=%{ssl_verify_result}\n' -L "$u" || echo "falló la conexión (código $?)"; head -c 300 /tmp/r.html; echo; done
