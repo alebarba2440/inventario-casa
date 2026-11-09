@@ -26,8 +26,11 @@ jobs:
             set ftp:passive-mode true;
             set net:max-retries 2;
             set net:timeout 30;
-            echo '== htaccess ==';cat public_html/.htaccess;
-            echo '== juntos ==';cls -la public_html/juntos;
+            echo '== sw ==';cat public_html/sw.js;
             mkdir -p public_html/juntos;
             mirror -R --verbose --exclude-glob .git* ./juntos/ public_html/juntos/;
             bye"
+      - name: Probar la página publicada
+        run: |
+          for u in https://barbamanger.website/juntos/ http://barbamanger.website/juntos/ https://www.barbamanger.website/juntos/index.html; do
+            echo "== $u"; curl -s -o /tmp/r.html -w '%{http_code} %{url_effective}\n' -L "$u"; head -c 300 /tmp/r.html; echo; done
