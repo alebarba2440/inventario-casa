@@ -4,11 +4,16 @@ const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.goo
 const DIAS_PRUEBA = 30;
 const VERSION_ESQUEMA = 1;
 
+function config(): array {
+  static $c = null;
+  if ($c === null) $c = require (getenv('JUNTOS_CONFIG') ?: dirname(__DIR__, 3) . '/juntos-config.php');
+  return $c;
+}
+
 function db(): PDO {
   static $db = null;
   if ($db) return $db;
-  $ruta = getenv('JUNTOS_CONFIG') ?: dirname(__DIR__, 3) . '/juntos-config.php';
-  $c = require $ruta;
+  $c = config();
   $db = new PDO("mysql:host={$c['host']};dbname={$c['name']};charset=utf8mb4", $c['user'], $c['pass'], [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

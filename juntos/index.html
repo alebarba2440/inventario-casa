@@ -84,6 +84,7 @@
   </section>
 
   <p class="err" id="err"></p>
+  <a class="link" id="bPanel" href="admin/" hidden>Panel de administración</a>
   <button class="link" id="bSalir" onclick="salir()" hidden>Cerrar sesión</button>
 </main>
 
@@ -112,6 +113,7 @@ async function api(accion, datos){
 
 function mostrar(e){
   EST = e; err('');
+  $('bPanel').hidden = !e.usuario?.admin;
   if (!e.usuario){ ver('vIngresar'); botonGoogle(); return; }
   if (!e.pareja){
     $('yoFoto').innerHTML = avatar(e.usuario); $('yoNombre').textContent = e.usuario.nombre; $('yoMail').textContent = e.usuario.email;

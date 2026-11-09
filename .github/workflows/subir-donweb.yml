@@ -20,11 +20,12 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
         run: |
           mkdir -p /tmp/cfg
-          php -r 'echo "<?php\nreturn " . var_export(["host"=>getenv("DB_HOST"),"name"=>getenv("DB_NAME"),"user"=>getenv("DB_USER"),"pass"=>getenv("DB_PASS")], true) . ";\n";' > /tmp/cfg/juntos-config.php
+          php -r 'echo "<?php\nreturn " . var_export(["host"=>getenv("DB_HOST"),"name"=>getenv("DB_NAME"),"user"=>getenv("DB_USER"),"pass"=>getenv("DB_PASS"),"admins"=>getenv("ADMIN_EMAILS")], true) . ";\n";' > /tmp/cfg/juntos-config.php
           php -l /tmp/cfg/juntos-config.php
-          [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ -n "$DB_USER" ] && [ -n "$DB_PASS" ] && echo "Secretos DB: los 4 cargados" || { echo "::error::Falta algún secreto DB_*"; exit 1; }
+          [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ -n "$DB_USER" ] && [ -n "$DB_PASS" ] && echo "Secretos DB: los 4 cargados"; [ -n "$ADMIN_EMAILS" ] && echo "Admins: cargado" || echo "::warning::ADMIN_EMAILS vacío: nadie puede entrar al panel" || { echo "::error::Falta algún secreto DB_*"; exit 1; }
       - name: Copiar archivos por FTPS (conexión cifrada, la que exige DonWeb)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}

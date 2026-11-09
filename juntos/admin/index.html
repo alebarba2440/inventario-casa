@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>JuntOS · Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;font-family:'Nunito',system-ui,sans-serif;color:#1a1a1a;background:#f6f5f1;padding:18px 14px calc(30px + env(safe-area-inset-bottom))}
+  main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  h1{font-family:'Dancing Script',cursive;font-size:2.2rem;margin:0}
+  h1 b{color:#DB2777}
+  h1 small{font-family:'Nunito';font-size:.9rem;color:#9a9a92;font-weight:600;margin-left:6px}
+  h2{font-size:1.05rem;margin:8px 0 0}
+  .card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .kpi{background:#fff;border-radius:16px;padding:12px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.05)}
+  .kpi b{display:block;font-size:1.7rem}
+  .kpi span{font-size:.8rem;color:#6b6b63}
+  .kpi.prueba b{color:#CA8A04}.kpi.pago b{color:#15803d}.kpi.vencida b{color:#b91c1c}
+  input.buscar{width:100%;font:inherit;padding:12px 14px;border:1.5px solid #e5e5df;border-radius:14px;outline:none;background:#fff}
+  input.buscar:focus{border-color:#DB2777}
+  .filtros{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font:inherit;font-size:.85rem;font-weight:700;border:1.5px solid #e5e5df;background:#fff;border-radius:99px;padding:6px 12px;cursor:pointer}
+  .chip.on{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+  .par{background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:10px}
+  .par-h{display:flex;align-items:center;gap:8px}
+  .par-h b{flex:1;font-size:1.05rem}
+  .est{font-size:.75rem;font-weight:800;padding:4px 10px;border-radius:99px}
+  .est.prueba{background:#FEF3C7;color:#92400E}.est.pago{background:#DCFCE7;color:#166534}.est.vencida{background:#FEE2E2;color:#991B1B}
+  .ms{display:flex;flex-direction:column;gap:6px}
+  .m{display:flex;align-items:center;gap:10px;font-size:.92rem;min-width:0}
+  .m img,.m .ini{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0}
+  .ini{background:#FCE7F3;color:#DB2777;font-weight:800;display:grid;place-items:center}
+  .m div{min-width:0}
+  .m small{display:block;color:#9a9a92;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .m.falta{color:#9a9a92;font-style:italic}
+  .det{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.85rem;color:#55554f}
+  .det b{color:#1a1a1a}
+  .acc{display:flex;gap:8px}
+  .btn{flex:1;font:inherit;font-weight:800;font-size:.9rem;padding:10px;border:0;border-radius:12px;cursor:pointer;background:#15803d;color:#fff}
+  .btn.sec{background:#fff;color:#b91c1c;border:1.5px solid #f3c4c4;flex:0 0 auto}
+  .btn.rosa{background:#DB2777}
+  .vacio{color:#9a9a92;text-align:center;padding:10px}
+  .err{color:#b91c1c;font-weight:600;text-align:center}
+  .link{background:none;border:0;color:#9a9a92;font:inherit;text-decoration:underline;cursor:pointer}
+  #gbtn{display:flex;justify-content:center;margin-top:10px}
+  dialog{border:0;border-radius:18px;padding:20px;max-width:340px;width:90%}
+  dialog::backdrop{background:rgba(0,0,0,.35)}
+  dialog p{margin:0 0 16px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Junt<b>OS</b><small>Panel</small></h1>
+    <button class="link" id="bAct" onclick="cargar()" hidden>↻ Actualizar</button>
+  </header>
+
+  <section class="card" id="vCargando">Cargando…</section>
+
+  <section class="card" id="vIngresar" hidden>
+    <b>Ingresá con tu Google de administrador</b>
+    <div id="gbtn"></div>
+  </section>
+
+  <section class="card" id="vSinAcceso" hidden>
+    <p>🔒 La cuenta <b id="saMail"></b> no tiene acceso al panel.</p>
+    <button class="link" onclick="salir()">Entrar con otra cuenta</button>
+  </section>
+
+  <div id="vPanel" hidden style="display:flex;flex-direction:column;gap:14px">
+    <div class="kpis" id="kpis"></div>
+    <input class="buscar" id="q" placeholder="Buscar por nombre, mail o código" oninput="dibujar()">
+    <div class="filtros" id="filtros"></div>
+    <div id="lista" style="display:flex;flex-direction:column;gap:10px"></div>
+    <h2 id="tSueltos"></h2>
+    <div class="card" id="sueltos"></div>
+    <button class="link" onclick="salir()">Cerrar sesión</button>
+  </div>
+
+  <p class="err" id="err"></p>
+</main>
+
+<dialog id="dlg"><p id="dTxt"></p><div class="acc"><button class="btn sec" style="flex:1;color:#1a1a1a;border-color:#e5e5df" onclick="dlg.close()">Cancelar</button><button class="btn" id="dOk">Confirmar</button></div></dialog>
+
+<script>
+const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
+const $ = id => document.getElementById(id);
+let D = null, FILTRO = 'todas';
+const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas'};
+
+function ver(v){ ['vCargando','vIngresar','vSinAcceso','vPanel'].forEach(x => $(x).hidden = x !== v); $('bAct').hidden = v !== 'vPanel'; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fecha(iso, hora){ if(!iso) return '—'; const d = new Date(iso); return d.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'2-digit'}) + (hora ? ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}) : ''); }
+function hace(iso){ if(!iso) return '—'; const m = (Date.now() - new Date(iso)) / 60000;
+  return m < 60 ? 'hace ' + Math.max(1, Math.round(m)) + ' min' : m < 1440 ? 'hace ' + Math.round(m/60) + ' h' : 'hace ' + Math.round(m/1440) + ' días'; }
+function avatar(u){ const ini = esc((u.nombre || u.email || '?').trim()[0].toUpperCase());
+  return u.foto ? `<img src="${esc(u.foto)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=ini>${ini}</div>'">` : `<div class="ini">${ini}</div>`; }
+
+async function api(accion, datos){
+  const op = datos === undefined ? {credentials:'same-origin'} :
+    {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Juntos':'1'}, body:JSON.stringify(datos)};
+  const r = await fetch('../api/?a=' + accion, op);
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok) { const e = new Error(j.error || 'No se pudo conectar'); e.status = r.status; throw e; }
+  return j;
+}
+
+async function inicio(){
+  $('err').textContent = '';
+  try {
+    const yo = await api('yo');
+    if (!yo.usuario) { ver('vIngresar'); botonGoogle(); return; }
+    if (!yo.usuario.admin) { $('saMail').textContent = yo.usuario.email; ver('vSinAcceso'); return; }
+    await cargar();
+  } catch(e){ $('err').textContent = e.message; }
+}
+async function cargar(){
+  try { D = await api('admin_datos'); dibujar(); ver('vPanel'); }
+  catch(e){ $('err').textContent = e.message; }
+}
+
+function dibujar(){
+  const r = D.resumen;
+  $('kpis').innerHTML = [
+    ['', r.parejas, 'Parejas'], ['', r.usuarios, 'Usuarios'], ['', r.altas_semana, 'Altas (7 días)'],
+    ['prueba', r.prueba, 'En prueba'], ['pago', r.pago, 'Pagas'], ['vencida', r.vencidas, 'Vencidas'],
+  ].map(([c,n,t]) => `<div class="kpi ${c}"><b>${n}</b><span>${t}</span></div>`).join('');
+  $('filtros').innerHTML = Object.keys(NOM).map(k => `<button class="chip ${k===FILTRO?'on':''}" onclick="FILTRO='${k}';dibujar()">${NOM[k]}</button>`).join('');
+
+  const q = $('q').value.trim().toLowerCase();
+  const coincide = p => !q || [p.nombre, p.codigo, ...p.miembros.flatMap(m => [m.nombre, m.email])].some(x => String(x||'').toLowerCase().includes(q));
+  const ps = D.parejas.filter(p => (FILTRO === 'todas' || p.estado === FILTRO) && coincide(p));
+  $('lista').innerHTML = ps.length ? ps.map(p => {
+    const ms = p.miembros.map(m => `<div class="m">${avatar(m)}<div><b>${esc(m.nombre || '—')}</b><small>${esc(m.email)}</small></div></div>`);
+    if (p.miembros.length < 2) ms.push('<div class="m falta">Falta que se una la pareja</div>');
+    const quedan = p.estado === 'vencida' ? `venció ${fecha(p.activo_hasta)}` : `${p.dias} días (hasta ${fecha(p.activo_hasta)})`;
+    return `<div class="par">
+      <div class="par-h"><b>${esc(p.nombre)}</b><span class="est ${p.estado}">${NOM[p.estado].replace('En prueba','Prueba').replace('Pagas','Paga').replace('Vencidas','Vencida')}</span></div>
+      <div class="ms">${ms.join('')}</div>
+      <div class="det">
+        <span>Alta: <b>${fecha(p.creado)}</b></span><span>Código: <b>${esc(p.codigo)}</b></span>
+        <span>Le quedan: <b>${quedan}</b></span><span>Último ingreso: <b>${hace(p.ultimo_ingreso)}</b></span>
+      </div>
+      <div class="acc">
+        <button class="btn" onclick="pago(${p.id},'sumar_mes')">+1 mes pago</button>
+        ${p.pago_hasta ? `<button class="btn sec" onclick="pago(${p.id},'anular')">Anular pago</button>` : ''}
+      </div>
+    </div>`;
+  }).join('') : '<div class="card vacio">No hay parejas para mostrar</div>';
+
+  const ss = D.sin_pareja.filter(m => !q || [m.nombre, m.email].some(x => String(x||'').toLowerCase().includes(q)));
+  $('tSueltos').textContent = `Usuarios sin pareja (${ss.length})`;
+  $('sueltos').innerHTML = ss.length ? `<div class="ms">${ss.map(m => `<div class="m">${avatar(m)}<div><b>${esc(m.nombre || '—')}</b><small>${esc(m.email)} · alta ${fecha(m.creado)}</small></div></div>`).join('')}</div>`
+    : '<div class="vacio">Ninguno</div>';
+}
+
+function pago(id, op){
+  const p = D.parejas.find(x => x.id === id);
+  $('dTxt').innerHTML = op === 'sumar_mes'
+    ? `¿Registrar <b>1 mes pago</b> para <b>${esc(p.nombre)}</b>?<br><small>Se suma a partir de que termine lo que ya tienen.</small>`
+    : `¿Anular los pagos registrados de <b>${esc(p.nombre)}</b>?<br><small>Vuelve a quedar solo con la prueba.</small>`;
+  $('dOk').className = 'btn' + (op === 'anular' ? ' rosa' : '');
+  $('dOk').onclick = async () => { dlg.close(); try { await api('admin_pago', {pareja_id: id, op}); await cargar(); } catch(e){ $('err').textContent = e.message; } };
+  dlg.showModal();
+}
+
+let gIniciado = false;
+function botonGoogle(){
+  if (!window.google?.accounts?.id){ setTimeout(botonGoogle, 200); return; }
+  if (!gIniciado){ google.accounts.id.initialize({client_id: CLIENT_ID, ux_mode: 'popup', callback: async r => {
+    try { await api('login', {credencial: r.credential}); inicio(); } catch(e){ $('err').textContent = e.message; } }}); gIniciado = true; }
+  google.accounts.id.renderButton($('gbtn'), {theme:'outline', size:'large', shape:'pill', text:'continue_with', locale:'es'});
+}
+async function salir(){ try { await api('salir', {}); } catch(e){} window.google?.accounts?.id?.disableAutoSelect?.(); ver('vIngresar'); botonGoogle(); }
+
+inicio();
+</script>
+</body>
+</html>

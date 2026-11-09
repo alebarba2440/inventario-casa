@@ -10,6 +10,7 @@ const DIAS_SESION = 60;
 
 function responder($datos, int $estado = 200): void { http_response_code($estado); echo json_encode($datos, JSON_UNESCAPED_UNICODE); exit; }
 function error_(string $msg, int $estado = 400): void { responder(['error' => $msg], $estado); }
+function iso(?string $f): ?string { return $f ? str_replace(' ', 'T', $f) . 'Z' : null; }
 function ahora(): string { return gmdate('Y-m-d H:i:s'); }
 function entrada(): array { $j = json_decode(file_get_contents('php://input') ?: '{}', true); return is_array($j) ? $j : []; }
 
@@ -47,7 +48,7 @@ function usuarioActual(): ?array {
 function requerirUsuario(): array { $u = usuarioActual(); if (!$u) error_('Tenés que ingresar', 401); return $u; }
 
 function estado(array $u): array {
-  $out = ['usuario' => ['nombre' => $u['nombre'], 'email' => $u['email'], 'foto' => $u['foto']], 'pareja' => null];
+  $out = ['usuario' => ['nombre' => $u['nombre'], 'email' => $u['email'], 'foto' => $u['foto'], 'admin' => esAdmin($u)], 'pareja' => null];
   if ($u['pareja_id']) {
     $p = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $p->execute([$u['pareja_id']]); $p = $p->fetch();
     $m = db()->prepare('SELECT nombre, foto, email FROM usuarios WHERE pareja_id = ? ORDER BY id'); $m->execute([$u['pareja_id']]);
@@ -63,6 +64,12 @@ function estado(array $u): array {
   }
   return $out;
 }
+
+function esAdmin(array $u): bool {
+  $lista = array_filter(array_map(fn($m) => strtolower(trim($m)), explode(',', (string)(config()['admins'] ?? ''))));
+  return in_array(strtolower($u['email']), $lista, true);
+}
+function requerirAdmin(): array { $u = requerirUsuario(); if (!esAdmin($u)) error_('No tenés acceso al panel', 403); return $u; }
 
 function codigoNuevo(): string {
   $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -132,6 +139,46 @@ try {
       $db->prepare('UPDATE usuarios SET pareja_id = ? WHERE id = ?')->execute([$pid, $u['id']]);
       $db->commit();
       responder(estado(requerirUsuario()));
+
+    case 'GET admin_datos':
+      requerirAdmin();
+      $ps = db()->query('SELECT * FROM parejas ORDER BY creado DESC')->fetchAll();
+      $us = db()->query('SELECT id, email, nombre, foto, pareja_id, creado, ultimo_ingreso FROM usuarios ORDER BY creado DESC')->fetchAll();
+      $porPareja = []; $sueltos = [];
+      foreach ($us as $x) { if ($x['pareja_id']) $porPareja[$x['pareja_id']][] = $x; else $sueltos[] = $x; }
+      $t = time(); $res = ['usuarios' => count($us), 'parejas' => count($ps), 'prueba' => 0, 'pago' => 0, 'vencidas' => 0,
+        'altas_semana' => count(array_filter($us, fn($x) => strtotime($x['creado'] . ' UTC') > $t - 7 * 86400))];
+      $lista = [];
+      foreach ($ps as $p) {
+        $pago = $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0;
+        $prueba = strtotime($p['prueba_hasta'] . ' UTC');
+        $hasta = max($pago, $prueba);
+        $estado = $pago > $t ? 'pago' : ($prueba > $t ? 'prueba' : 'vencida');
+        $res[$estado === 'vencida' ? 'vencidas' : $estado]++;
+        $ms = $porPareja[$p['id']] ?? [];
+        $lista[] = ['id' => (int)$p['id'], 'nombre' => $p['nombre'], 'codigo' => $p['codigo'], 'creado' => iso($p['creado']),
+          'estado' => $estado, 'activo_hasta' => gmdate('c', $hasta), 'dias' => (int)ceil(($hasta - $t) / 86400),
+          'pago_hasta' => iso($p['pago_hasta']),
+          'ultimo_ingreso' => $ms ? iso(max(array_column($ms, 'ultimo_ingreso'))) : null,
+          'miembros' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto']], $ms)];
+      }
+      responder(['resumen' => $res, 'parejas' => $lista,
+        'sin_pareja' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto'], 'creado' => iso($m['creado'])], $sueltos)]);
+
+    case 'POST admin_pago':
+      requerirAdmin();
+      $in = entrada(); $pid = (int)($in['pareja_id'] ?? 0); $op = $in['op'] ?? '';
+      $q = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $q->execute([$pid]); $p = $q->fetch();
+      if (!$p) error_('No existe esa pareja', 404);
+      if ($op === 'sumar_mes') {
+        // El mes pago arranca cuando termina lo que ya tienen (prueba o pago), así no pierden días.
+        $base = max(time(), strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0);
+        $nuevo = (new DateTime('@' . $base))->modify('+1 month')->format('Y-m-d H:i:s');
+      } elseif ($op === 'anular') {
+        $nuevo = null;
+      } else error_('Operación inválida');
+      db()->prepare('UPDATE parejas SET pago_hasta = ? WHERE id = ?')->execute([$nuevo, $pid]);
+      responder(['ok' => true]);
 
     default:
       error_('Acción desconocida', 404);
