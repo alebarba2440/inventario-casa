@@ -53,6 +53,11 @@
 
   /* categorías (acordeón) y gastos */
   .grp{border:.5px solid var(--border2);border-radius:14px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
+  /* mantener apretado un grupo para cambiarlo de lugar */
+  .grp-h{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  .grp.arrastrando{position:relative;z-index:5;transform:scale(1.03);box-shadow:0 12px 28px rgba(0,0,0,.25);outline:2px solid var(--accent);transition:transform .15s,box-shadow .15s}
+  body.ordenando .grp-b{display:none !important}
+  body.ordenando{-webkit-user-select:none;user-select:none}
   .grp-h{width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;background:var(--surface2);border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left;font-size:.95rem;font-weight:700}
   .grp-h .ic{font-size:1.15rem}
   .grp-h .lbl{flex:1;min-width:0}
@@ -149,7 +154,9 @@
   /* hojas (ajustes / confirmar) */
   .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
   .bgm.show{display:flex}
-  .sheet{background:var(--surface);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px;max-height:88dvh;overflow-y:auto}
+  .sheet{background:var(--surface);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:10px;max-height:88dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  /* en pantallas bajas la hoja se desplaza; antes achicaba las partes y cortaba el botón "Nueva categoría" */
+  .sheet>*,.oacc-b>*{flex-shrink:0}
   .sheet h3{font-size:1.1rem;text-align:center}
   .sheet p{color:var(--text2);text-align:center;line-height:1.4}
   .sheet .two{display:flex;gap:8px}
@@ -353,7 +360,7 @@ function render(){
   const orden=CATS.map(c=>c.id).concat(Object.keys(grupos).filter(k=>!CATS.some(c=>c.id===k)));
   const html=orden.filter(c=>grupos[c]&&grupos[c].length).map(c=>{
     const items=grupos[c],sub=items.reduce((a,x)=>a+(+x.importe||0),0),todo=items.every(x=>x.pagado),op=!colapsados[c];
-    return `<div class="grp${op?' open':''}">
+    return `<div class="grp${op?' open':''}" data-c="${c}">
       <button class="grp-h" onclick="toggleGrupo('${c}')" aria-expanded="${op}">
         <span class="ic">${iconCat(c)}</span>
         <span class="lbl"><span onclick="editarCat(event,'${c}')">${esc(nombreCat(c))}</span></span>
@@ -372,6 +379,34 @@ function render(){
   lista.innerHTML=html||'<p class="empty">No hay gastos cargados</p>';
   renderIngresos();totales();
 }
+/* ===== mantener apretado el título de un grupo y arrastrarlo para ordenar (el orden es el de las categorías) ===== */
+(function(){
+  const L=document.getElementById('lista');let t=null,drag=null,y0=0,sinClick=false;
+  const cancelar=()=>{clearTimeout(t);t=null;};
+  L.addEventListener('pointerdown',e=>{const h=e.target.closest('.grp-h');if(!h||e.button>0)return;y0=e.clientY;
+    t=setTimeout(()=>empezar(h.parentElement),450);});
+  L.addEventListener('pointermove',e=>{if(t&&Math.abs(e.clientY-y0)>8)cancelar();});   // si se mueve antes, es para desplazar la pantalla
+  ['pointerup','pointercancel'].forEach(ev=>L.addEventListener(ev,cancelar));
+  L.addEventListener('contextmenu',e=>{if(e.target.closest('.grp-h'))e.preventDefault();});
+  // mientras se ordena, la pantalla no se desplaza con el dedo
+  document.addEventListener('touchmove',e=>{if(drag)e.preventDefault();},{passive:false});
+  // el toque que termina el arrastre no abre/cierra el grupo ni edita el nombre
+  L.addEventListener('click',e=>{if(sinClick){e.stopPropagation();e.preventDefault();sinClick=false;}},true);
+  function empezar(g){t=null;const y=g.getBoundingClientRect().top;drag={g};sinClick=true;
+    document.body.classList.add('ordenando');g.classList.add('arrastrando');
+    window.scrollBy(0,g.getBoundingClientRect().top-y);              // que el grupo quede bajo el dedo al cerrarse los demás
+    if(navigator.vibrate)navigator.vibrate(15);
+    document.addEventListener('pointermove',mover);document.addEventListener('pointerup',soltar);document.addEventListener('pointercancel',soltar);}
+  function mover(e){if(!drag)return;const y=e.clientY,gs=[...L.querySelectorAll('.grp')],i=gs.indexOf(drag.g),prev=gs[i-1],next=gs[i+1];
+    if(next){const r=next.getBoundingClientRect();if(y>r.top+r.height/2)L.insertBefore(next,drag.g);}
+    if(prev){const r=prev.getBoundingClientRect();if(y<r.top+r.height/2)L.insertBefore(drag.g,prev);}
+    if(y<90)window.scrollBy(0,-10);else if(y>innerHeight-90)window.scrollBy(0,10);}
+  function soltar(){if(!drag)return;
+    document.removeEventListener('pointermove',mover);document.removeEventListener('pointerup',soltar);document.removeEventListener('pointercancel',soltar);
+    const nuevo=[...L.querySelectorAll('.grp')].map(g=>g.dataset.c).filter(id=>catDe(id)),vis=new Set(nuevo);let k=0;
+    CATS=CATS.map(c=>vis.has(c.id)?catDe(nuevo[k++]):c);           // las categorías sin gastos este mes quedan donde estaban
+    guardarCats();drag=null;document.body.classList.remove('ordenando');render();setTimeout(()=>{sinClick=false;},400);}
+})();
 function toggleGrupo(c){if(colapsados[c])delete colapsados[c];else colapsados[c]=true;wr('grupos-colapsados',colapsados);render();}
 function editarCat(e,c){e.stopPropagation();const n=prompt('Nuevo nombre para la categoría:',nombreCat(c));const k=catDe(c);if(k&&n&&n.trim()){k.label=n.trim();guardarCats();render();}}
 let ultCat=rd('ultima-categoria','varios');
