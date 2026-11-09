@@ -474,7 +474,9 @@ function compTabla(){
   const kA=`${mA}-${yA}`,act=porCat(periodo()),ant=porCat(kA),T=document.getElementById('compTabla');
   document.getElementById('compT').textContent='Comparado con '+mA.toLowerCase();
   if(!((datos[kA]||{}).gastos||[]).length){T.innerHTML='<p style="color:var(--text2);font-size:.88rem;text-align:center">Sin datos del mes anterior para comparar.</p>';return;}
-  const cats=[...new Set([...Object.keys(act),...Object.keys(ant)])].sort((x,z)=>(act[z]||0)-(act[x]||0)||(ant[z]||0)-(ant[x]||0));
+  // mismo orden que las categorías (el que elegiste arrastrando los grupos)
+  const usadas=new Set([...Object.keys(act),...Object.keys(ant)]);
+  const cats=CATS.map(c=>c.id).filter(id=>usadas.has(id)).concat([...usadas].filter(id=>!catDe(id)));
   const filas=cats.map(c=>{const a=ant[c]||0,b=act[c]||0,v=varPct(a,b);
     return `<div class="ct-row"><span>${iconCat(c)} ${esc(nombreCat(c))}</span><span>${fmt(a)}</span><span>${fmt(b)}</span><span class="v ${v.c}">${v.t}</span></div>`;}).join('');
   const tA=Object.values(ant).reduce((x,z)=>x+z,0),tB=Object.values(act).reduce((x,z)=>x+z,0),v=varPct(tA,tB),d=tB-tA;
