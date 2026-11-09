@@ -19,3 +19,5 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           local-dir: ./juntos/
           server-dir: public_html/juntos/
+          protocol: ftps          # DonWeb exige conexión cifrada
+          security: loose         # el certificado del servidor compartido no siempre coincide con el nombre
