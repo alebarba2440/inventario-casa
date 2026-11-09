@@ -1,4 +1,4 @@
-# Sube la carpeta juntos/ al hosting de DonWeb (barbamanger.website/juntos) cada vez que cambia algo ahí.
+# Sube la carpeta juntos/ al hosting de DonWeb (barbamanager.website/juntos) cada vez que cambia algo ahí.
 # Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
 name: Subir JuntOS a DonWeb
 on:
@@ -29,9 +29,3 @@ jobs:
             mkdir -p public_html/juntos;
             mirror -R --verbose --exclude-glob .git* ./juntos/ public_html/juntos/;
             bye"
-      - name: Probar la página publicada
-        continue-on-error: true
-        run: |
-          set +e
-          for u in https://barbamanager.website/juntos/ http://barbamanager.website/juntos/ https://www.barbamanager.website/juntos/; do
-            echo "== $u"; curl -sk -m 20 -o /tmp/r.html -w '%{http_code} %{url_effective} ssl=%{ssl_verify_result}\n' -L "$u" || echo "falló la conexión (código $?)"; head -c 300 /tmp/r.html; echo; done
