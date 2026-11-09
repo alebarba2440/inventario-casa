@@ -1,0 +1,21 @@
+# Sube la carpeta juntos/ al hosting de DonWeb (barbamanger.website/juntos) cada vez que cambia algo ahí.
+# Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
+name: Subir JuntOS a DonWeb
+on:
+  push:
+    branches: [main]
+    paths: ['juntos/**', '.github/workflows/subir-donweb.yml']
+  workflow_dispatch:   # también se puede lanzar a mano desde la pestaña Actions
+jobs:
+  ftp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copiar archivos por FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./juntos/
+          server-dir: public_html/juntos/
