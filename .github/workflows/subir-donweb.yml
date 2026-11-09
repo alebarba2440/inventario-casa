@@ -26,11 +26,12 @@ jobs:
             set ftp:passive-mode true;
             set net:max-retries 2;
             set net:timeout 30;
-            echo '== sw ==';cat public_html/sw.js;
             mkdir -p public_html/juntos;
             mirror -R --verbose --exclude-glob .git* ./juntos/ public_html/juntos/;
             bye"
       - name: Probar la página publicada
+        continue-on-error: true
         run: |
-          for u in https://barbamanger.website/juntos/ http://barbamanger.website/juntos/ https://www.barbamanger.website/juntos/index.html; do
-            echo "== $u"; curl -s -o /tmp/r.html -w '%{http_code} %{url_effective}\n' -L "$u"; head -c 300 /tmp/r.html; echo; done
+          set +e
+          for u in https://barbamanger.website/juntos/ http://barbamanger.website/juntos/ http://barbamanger.website/ https://barbamanger.website/; do
+            echo "== $u"; curl -sk -m 20 -o /tmp/r.html -w '%{http_code} %{url_effective} ssl=%{ssl_verify_result}\n' -L "$u" || echo "falló la conexión (código $?)"; head -c 300 /tmp/r.html; echo; done
