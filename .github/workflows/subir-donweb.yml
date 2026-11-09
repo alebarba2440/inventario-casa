@@ -1,4 +1,5 @@
 # Sube la carpeta juntos/ al hosting de DonWeb (barbamanager.website/juntos) cada vez que cambia algo ahí.
+# La configuración de la base se arma con los secretos DB_* y se guarda FUERA de public_html (no accesible desde la web).
 # Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
 name: Subir JuntOS a DonWeb
 on:
