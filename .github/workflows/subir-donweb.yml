@@ -26,8 +26,8 @@ jobs:
             set ftp:passive-mode true;
             set net:max-retries 2;
             set net:timeout 30;
-            echo '== raiz ==';cls -la;
-            echo '== public_html ==';cls -la public_html;
+            echo '== htaccess ==';cat public_html/.htaccess;
+            echo '== juntos ==';cls -la public_html/juntos;
             mkdir -p public_html/juntos;
             mirror -R --verbose --exclude-glob .git* ./juntos/ public_html/juntos/;
             bye"
