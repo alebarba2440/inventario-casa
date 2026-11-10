@@ -1,7 +1,7 @@
 <?php
 // Avisos del calendario por notificación. Lo llama cron-job.org cada 5 minutos:
 //   https://barbamanager.website/juntos/api/avisos.php
-// Con hora: 1 hora antes y a la hora justa. Todo el día / cumples: el día anterior a las 20 y ese día a las 9.
+// Todos: el día anterior a las 20. Con hora: además 1 hora antes y a la hora justa. Sin hora: además ese día a las 9.
 // Cada aviso se manda una sola vez (tabla avisos), así que llamarlo de más no repite nada.
 require __DIR__ . '/db.php';
 require __DIR__ . '/push.php';
@@ -60,7 +60,8 @@ try {
       foreach ([$hoy, $manana] as $dia) {
         if (!cae($e, $dia)) continue;
         $pasos = $hora
-          ? [['antes', new DateTime("$dia $hora", $tz), -ANTES_MIN, 'En 1 hora · ' . $hora . ' hs'], ['ahora', new DateTime("$dia $hora", $tz), 0, 'Ahora · ' . $hora . ' hs']]
+          ? [['vispera', (new DateTime($dia . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 0, 'Mañana · ' . $hora . ' hs'],
+             ['antes', new DateTime("$dia $hora", $tz), -ANTES_MIN, 'En 1 hora · ' . $hora . ' hs'], ['ahora', new DateTime("$dia $hora", $tz), 0, 'Ahora · ' . $hora . ' hs']]
           : [['vispera', (new DateTime($dia . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 0, ($e['tipo'] ?? '') === 'cumple' ? 'Mañana es el cumple 🎂' : 'Mañana, todo el día'],
              ['dia', new DateTime($dia . ' ' . HORA_DIA, $tz), 0, ($e['tipo'] ?? '') === 'cumple' ? '¡Hoy es el cumple! 🎉' : 'Hoy, todo el día']];
         foreach ($pasos as [$tipo, $t, $min, $texto]) {
