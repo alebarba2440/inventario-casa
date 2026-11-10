@@ -189,9 +189,12 @@
   }
   function irAIngresar() { location.href = '../entrar.html'; }
   function aplicarDocs(r) {
-    var cambiadas = [];
+    var cambiadas = [], vk = cache.vk || (cache.vk = {});
     (r.docs || []).forEach(function (d) {
       var k = clave(d.c, d.i);
+      // Una respuesta vieja (pedida antes de un cambio) no puede pisar algo más nuevo: así lo borrado no "revive"
+      if (d.v && vk[k] && d.v < vk[k]) return;
+      if (d.v) vk[k] = d.v;
       if (d.d === null) delete cache.srv[k]; else cache.srv[k] = d.d;
       cambiadas.push(k);
     });

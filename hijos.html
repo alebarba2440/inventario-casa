@@ -57,18 +57,6 @@
   .acc-b{display:none;flex-direction:column;gap:10px;padding:0 10px 12px}
   .acc.open>.acc-b{display:flex}
 
-  /* emergencia: siempre arriba y a la vista */
-  .emer{background:rgba(226,75,74,.09);border:1.5px solid rgba(226,75,74,.35);border-radius:6px 20px 6px 20px;padding:12px}
-  .emer h3{display:flex;align-items:center;gap:6px;font-size:.95rem;font-weight:900;color:var(--neg);margin-bottom:8px}
-  .emer h3 button{margin-left:auto}
-  .emer .g{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .emer .g div{background:var(--surface);border-radius:4px 14px 4px 14px;padding:7px 9px;min-width:0}
-  .emer .g small{display:block;font-size:.66rem;font-weight:900;color:var(--text2);letter-spacing:.04em}
-  .emer .g b{display:block;font-size:.9rem;font-weight:800;overflow-wrap:anywhere}
-  .emer .g .w{grid-column:1/-1}
-  .tel{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:4px 14px 4px 14px;padding:8px 10px;margin-top:6px;text-decoration:none;color:var(--text)}
-  .tel .tx{flex:1;min-width:0}.tel .tx b{display:block;font-weight:800;font-size:.92rem}.tel .tx small{color:var(--text2);font-weight:700;font-size:.76rem}
-  .tel .ll{background:var(--pos,#1D9E75);color:#fff;border-radius:4px 14px 4px 14px;padding:8px 12px;font-weight:900;font-size:.85rem;white-space:nowrap}
   .mini{border:none;background:var(--accent);color:#fff;padding:6px 11px;font-weight:800;font-size:.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit}
   .mini.gris{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
 
@@ -168,14 +156,17 @@
 </div>
 <!-- ver una foto o documento -->
 <div class="visor" id="visor" onclick="if(event.target===this)cerrarVisor()">
+  <b id="visorNom" style="color:#fff;font-weight:900;text-align:center"></b>
   <img id="visorImg" alt="">
-  <div class="bt"><button type="button" class="btn ghost" onclick="cerrarVisor()">Cerrar</button><button type="button" class="btn ghost" onclick="editarVisor()">Editar</button><a class="btn" id="visorAbrir" target="_blank" rel="noopener">Abrir / descargar</a></div>
+  <div id="visorPdf" style="font-size:5rem" hidden>📄</div>
+  <div class="bt"><button type="button" class="btn ghost" onclick="cerrarVisor()">Cerrar</button><a class="btn" id="visorAbrir" target="_blank" rel="noopener">Abrir</a></div>
+  <div class="bt"><button type="button" class="btn ghost" onclick="editarVisor()"><i class="ti ti-pencil"></i> Editar</button><button type="button" class="btn danger" onclick="eliminarVisor()"><i class="ti ti-trash"></i> Eliminar</button></div>
 </div>
 <input type="file" id="fileIn" accept="image/*,application/pdf" hidden>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===== Hijos: datos, salud, vacunas, crecimiento, documentos, fechas importantes y emergencia ===== */
+/* ===== Hijos: datos, salud, vacunas, crecimiento, documentos, y fechas importantes ===== */
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -252,20 +243,11 @@ function render(){
 }
 function dato(t,v,w){return `<div${w?' class="w"':''}><small>${t}</small><b${v?'':' class="nd"'}>${v?esc(v):'—'}</b></div>`;}
 function cuerpo(c){
-  const s=c.salud||{},e=c.emer||{};
-  // emergencia
-  let h=`<section class="emer"><h3>🚨 Emergencia <button class="mini gris" onclick="formEmer('${c.id}')"><i class="ti ti-pencil"></i> Editar</button></h3>
-    <div class="g">${dato('GRUPO SANGUÍNEO',c.sangre)}${dato('OBRA SOCIAL',[s.obra,s.afiliado?'N° '+s.afiliado:''].filter(Boolean).join(' · '))}
-    ${dato('ALERGIAS',s.alergias,1)}${dato('MEDICACIÓN',s.meds,1)}</div>
-    ${[['c1','Contacto 1'],['c2','Contacto 2']].map(([k,t])=>{const x=e[k]||{};return x.tel||x.nombre?telHTML(x.nombre||t,x.rel,x.tel):''}).join('')}
-    ${s.pediatra||s.telPed?telHTML(s.pediatra||'Pediatra','Pediatra',s.telPed):''}
-    ${!(e.c1&&e.c1.tel)&&!(e.c2&&e.c2.tel)?'<div class="vacio">Cargá los contactos de emergencia con "Editar".</div>':''}</section>`;
+  let h='';
   h+=`<div class="secs">${SECS.map(([k,ic,t,sub])=>`<div class="sec${secAbierta===k?' open':''}"><button class="sec-h" onclick="toggleSec('${k}')"><span class="ic">${ic}</span><span class="tx"><b>${t}</b><small>${sub}</small></span><i class="ti ti-chevron-down chev"></i></button>
     <div class="sec-b">${secAbierta===k?seccion(k,c):''}</div></div>`).join('')}</div>`;
   return h;
 }
-function telHTML(nom,rel,tel){const t=String(tel||'').replace(/[^\d+]/g,'');
-  return `<a class="tel" ${t?`href="tel:${esc(t)}"`:''}><span class="tx"><b>${esc(nom)}</b><small>${esc([rel,tel].filter(Boolean).join(' · '))}</small></span>${t?'<span class="ll">📞 Llamar</span>':''}</a>`;}
 function seccion(k,c){
   const s=c.salud||{};
   if(k==='personal')return `<div class="datos">${dato('NOMBRE Y APELLIDO',[c.nombre,c.apellido].filter(Boolean).join(' '),1)}${dato('NACIMIENTO',fLarga(c.nac))}${dato('EDAD',edad(c.nac))}
@@ -355,7 +337,7 @@ $('fileIn').addEventListener('change',async e=>{const f=e.target.files&&e.target
     $('f_'+k+'_pv').innerHTML=r.tipo==='application/pdf'?'📄':`<img src="${URLA(r.id)}" alt="">`;tx.textContent='¡Listo! Archivo cargado';snd('agregar');}
   catch(err){tx.textContent='No se pudo subir: '+(err.message||err);}
   FORM&&(FORM.subiendo=false);});
-function quitarArchivo(k,t){if(!FORM)return;FORM.archivos[k]='';FORM.archivos[k+'Mime']='';$('f_'+k+'_pv').innerHTML=t==='foto'?'🧒':'📎';$('f_'+k+'_tx').textContent='Se quita al guardar';}
+function quitarArchivo(k,t){if(!FORM)return;FORM.archivos[k]='';FORM.archivos[k+'Mime']='';$('f_'+k+'_pv').innerHTML=t==='foto'?'🧒':'📎';$('f_'+k+'_tx').textContent='Se borra al tocar Guardar';}
 async function subir(file,max){
   let blob=file;
   if(file.type!=='application/pdf'){blob=await achicar(file,max).catch(()=>file);}
@@ -380,7 +362,7 @@ function formPersonal(id){const c=id?D.hijos[id]:null;
       ['x','','dos',[['sexo','SEXO (OPCIONAL)','sel',['','Femenino','Masculino','Otro']],['sangre','GRUPO SANGUÍNEO','sel',SANGRE.map(s=>[s,s||'—'])]]],
       ['x','','dos',[['lugar','LUGAR DE NACIMIENTO','text'],['nac2','NACIONALIDAD','text',{ph:'Ej: Argentina'}]]]],
     guardar:o=>{const n=Object.assign({},c||{id:nid('h'),creado:Date.now()},o);cambioArchivo(c&&c.foto,n.foto);guardar('hijos',n);
-      if(!c){abierto=n.id;wr('hijo_abierto',n.id);secAbierta='';toast('¡Listo! Completá su salud y contactos de emergencia');}snd(c?'aceptar':'agregar');},
+      if(!c){abierto=n.id;wr('hijo_abierto',n.id);secAbierta='';toast('¡Listo! Ahora podés completar su salud, vacunas y más');}snd(c?'aceptar':'agregar');},
     borrar:c?()=>{if(!confirm('¿Eliminar a '+c.nombre+' con todos sus datos, vacunas, mediciones, documentos y fechas?'))return;
       ['vac','med','doc','fecha'].forEach(k=>de(k,c.id).forEach(x=>{borrarArchivo(x.cert||x.archivo);borrar(k,x.id);}));borrarArchivo(c.foto);borrar('hijos',c.id);cerrarForm();render();snd('borrar');}:null,
     textoBorrar:'Eliminar hijo/a'});}
@@ -390,11 +372,6 @@ function formSalud(id){const c=D.hijos[id];
       ['x','','dos',[['obra','OBRA SOCIAL O PREPAGA','text'],['afiliado','N° DE AFILIADO','text']]],
       ['x','','dos',[['pediatra','PEDIATRA DE CABECERA','text'],['telPed','TELÉFONO DEL MÉDICO','tel']]],['centro','CENTRO MÉDICO HABITUAL','text']],
     guardar:o=>{const n=Object.assign({},c);n.sangre=o.sangre;delete o.sangre;n.salud=o;guardar('hijos',n);snd('aceptar');}});}
-function formEmer(id){const c=D.hijos[id],e=c.emer||{},v={};['c1','c2'].forEach(k=>{const x=e[k]||{};v[k+'n']=x.nombre||'';v[k+'r']=x.rel||'';v[k+'t']=x.tel||'';});
-  abrirForm({titulo:'Contactos de emergencia',valores:v,
-    campos:[['c1n','CONTACTO 1 · NOMBRE','text'],['x','','dos',[['c1r','VÍNCULO','text',{ph:'Ej: Abuela'}],['c1t','TELÉFONO','tel']]],
-      ['c2n','CONTACTO 2 · NOMBRE','text'],['x','','dos',[['c2r','VÍNCULO','text',{ph:'Ej: Tío'}],['c2t','TELÉFONO','tel']]]],
-    guardar:o=>{const n=Object.assign({},c,{emer:{c1:{nombre:o.c1n,rel:o.c1r,tel:o.c1t},c2:{nombre:o.c2n,rel:o.c2r,tel:o.c2t}}});guardar('hijos',n);snd('aceptar');}});}
 function formVac(hijo,id){const v=id?D.vac[id]:null;
   abrirForm({titulo:v?'Vacuna':'Nueva vacuna',valores:v||{fecha:hoyS()},requerido:'nombre',
     campos:[['nombre','NOMBRE DE LA VACUNA','text',{ph:'Ej: Triple viral'}],['x','','dos',[['fecha','FECHA DE APLICACIÓN','date'],['dosis','N° DE DOSIS','text',{ph:'Ej: 1ª dosis'}]]],
@@ -417,10 +394,12 @@ function formDoc(hijo,id){const d=id?D.doc[id]:null;
       const n=Object.assign({},d||{id:nid('d'),hijo,creado:Date.now()},{tipo:o.tipo,nombre:o.nombre,archivo:o.archivo,mime:o.archivoMime||(d&&d.mime)||'image/jpeg'});
       cambioArchivo(d&&d.archivo,n.archivo);guardar('doc',n);snd(d?'aceptar':'agregar');},
     borrar:d?()=>{if(!confirm('¿Eliminar este documento?'))return;borrarArchivo(d.archivo);borrar('doc',d.id);cerrarForm();cerrarVisor();render();snd('borrar');}:null});}
-function verDoc(id){const d=D.doc[id];if(!d)return;
-  if(d.mime==='application/pdf'){window.open(URLA(d.archivo),'_blank');return}
-  $('visorImg').src=URLA(d.archivo);$('visorAbrir').href=URLA(d.archivo);
+function verDoc(id){const d=D.doc[id];if(!d)return;const pdf=d.mime==='application/pdf';
+  $('visorImg').hidden=pdf;$('visorPdf').hidden=!pdf;$('visorNom').textContent=d.nombre||TD[d.tipo]||'Documento';
+  if(!pdf)$('visorImg').src=URLA(d.archivo);$('visorAbrir').href=URLA(d.archivo);
   $('visor').dataset.id=id;$('visor').classList.add('show');}
+function eliminarVisor(){const d=D.doc[$('visor').dataset.id];if(!d||!confirm('¿Eliminar "'+(d.nombre||TD[d.tipo]||'documento')+'"? Se borra del servidor.'))return;
+  borrarArchivo(d.archivo);borrar('doc',d.id);cerrarVisor();render();snd('borrar');toast('Documento eliminado');}
 function editarVisor(){const d=D.doc[$('visor').dataset.id];cerrarVisor();if(d)formDoc(d.hijo,d.id);}
 function cerrarVisor(){$('visor').classList.remove('show');}
 function formFecha(hijo,id,tipo){const f=id?D.fecha[id]:null;
