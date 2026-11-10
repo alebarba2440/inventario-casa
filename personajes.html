@@ -10,7 +10,7 @@
 <title>Mi avatar</title>
 <script src="tema.js"></script>
 <script src="sonidos.js"></script>
-<script src="personajes.js?v=2"></script>
+<script src="personajes.js?v=3"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -41,6 +41,11 @@
   .pj.on .fig{background:var(--accent-light)}
   .pj .ok{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;font-style:normal;display:none;place-items:center;font-size:.9rem;box-shadow:0 2px 6px rgba(0,0,0,.2)}
   .pj.on .ok{display:grid}
+  .def{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;border:2.5px solid var(--border2);background:var(--surface);border-radius:16px;padding:12px;cursor:pointer;font-family:inherit;color:var(--text)}
+  .def b{font-size:1rem;font-weight:900}.def small{color:var(--text2);font-weight:700;font-size:.82rem}
+  .def.on{border-color:var(--accent);background:var(--accent-light)}
+  .def .ok{position:absolute;top:50%;right:12px;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
+  .def.on .ok{display:grid}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1a1a;color:#fff;font-weight:800;padding:11px 18px;border-radius:999px;transition:all .25s;pointer-events:none;z-index:60;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -54,6 +59,7 @@
 </div>
 <main>
   <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small></div></section>
+  <button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Default</b><small>Juli y Ale, como viene la app</small></button>
   <h2>Mujeres</h2><div class="grid" id="gF"></div>
   <h2>Hombres</h2><div class="grid" id="gM"></div>
 </main>
@@ -63,15 +69,16 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function pintar(){
   const yo=miPersonaje();
   document.getElementById('yoFig').innerHTML=yo?`<img src="${yo.img}" alt="">`:'';
-  document.getElementById('yoNom').textContent=yo?yo.nombre:'Elegí tu personaje';
-  ['f','m'].forEach(g=>{document.getElementById(g==='f'?'gF':'gM').innerHTML=PERSONAJES.filter(p=>p.g===g).map(p=>
-    `<button class="pj${yo&&yo.id===p.id?' on':''}" onclick="elegir('${p.id}')" aria-pressed="${!!(yo&&yo.id===p.id)}"><div class="fig"><img src="${p.img}" alt="" loading="lazy"></div><span>${esc(p.nombre)}</span><i class="ok">✓</i></button>`).join('')});
+  document.getElementById('yoNom').textContent=esDefault()?'Default':yo?yo.nombre:'Elegí tu personaje';
+  const def=esDefault();document.getElementById('bDef').classList.toggle('on',def);
+  ['f','m'].forEach(g=>{document.getElementById(g==='f'?'gF':'gM').innerHTML=PERSONAJES.filter(p=>p.g===g&&!p.oculto).map(p=>
+    `<button class="pj${!def&&yo&&yo.id===p.id?' on':''}" onclick="elegir('${p.id}')" aria-pressed="${!!(!def&&yo&&yo.id===p.id)}"><div class="fig"><img src="${p.img}" alt="" loading="lazy"></div><span>${esc(p.nombre)}</span><i class="ok">✓</i></button>`).join('')});
 }
 function elegir(id){
   try{localStorage.setItem('personaje',id)}catch(e){}
   try{window.sonido&&sonido('aceptar')}catch(e){}
   pintar();
-  const t=document.getElementById('toast');t.textContent='¡Listo! Ahora sos '+personaje(id).nombre;t.classList.add('show');
+  const t=document.getElementById('toast');t.textContent=id==='default'?'¡Listo! Volviste al Default':'¡Listo! Ahora sos '+personaje(id).nombre;t.classList.add('show');
   clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);
 }
 pintar();window.addEventListener('juntos',pintar);
