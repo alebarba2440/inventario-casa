@@ -55,6 +55,7 @@
       nombres: (ms[0] || ms[1]) ? { j: pn(ms[0]) || 'Yo', a: pn(ms[1]) || 'Pareja' } : null,
       fotos: (ms[0] || ms[1]) ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
       miSlot: mail ? (ms[0] && ms[0].email === mail ? 'j' : ms[1] && ms[1].email === mail ? 'a' : null) : null,
+      emails: { j: (ms[0] && ms[0].email) || '', a: (ms[1] && ms[1].email) || '' },
       invertido: !!perfil().invertido,
       soloLectura: !!(y && y.pareja && y.pareja.solo_lectura)
     };
