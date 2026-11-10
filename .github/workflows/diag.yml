@@ -6,6 +6,10 @@ jobs:
   d:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          for u in https://juntosapp.com.ar/juntos/app/img/logo-texto.png https://juntosapp.com.ar/icon.png https://juntosapp.com.ar/app/comun.css https://juntosapp.com.ar/app/inventario.html https://juntosapp.com.ar/juntos/entrar.html; do
-            echo "=== $u"; curl -s -I -m 20 "$u" | grep -iE "^(HTTP|server|content-type|location)" ; done
+      - env:
+          S: ${{ secrets.FTP_SERVER }}
+          U: ${{ secrets.FTP_USERNAME }}
+          P: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          sudo apt-get install -y -qq lftp >/dev/null 2>&1
+          lftp -u "$U","$P" "$S" -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set ftp:passive-mode true; set cmd:fail-exit no; echo --- APP; cls -1a public_html/app/; echo --- APPHT; cat public_html/app/.htaccess; echo --- APIHT; cat public_html/api/.htaccess; echo --- IMGHT; cat public_html/img/.htaccess; echo --- FIN; bye" 2>&1
