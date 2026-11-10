@@ -12,6 +12,7 @@
 <link rel="icon" type="image/png" href="img/icono.png?v=10">
 <title>JuntOS</title>
 <script src="tema.js"></script>
+<script src="personajes.js?v=2"></script>
 <script src="sonidos.js"></script>
 <script src="firebase-config.js"></script>
 <link rel="preload" as="image" href="img/inventario.webp?v=2">
@@ -296,7 +297,7 @@
       <div class="go" aria-hidden="true">›</div>
     </a>
     <a class="card" href="gastos.html" data-k="gastos">
-      <div class="pic"><img src="img/gastos.webp" alt="" width="309" height="520"></div>
+      <div class="pic"><img src="img/gastos.webp" id="imgGastos" alt="" width="309" height="520"></div>
       <div class="txt"><b>Gastos personales</b></div>
       <div class="go" aria-hidden="true">›</div>
     </a>
@@ -336,9 +337,9 @@
       <div class="acc-b"><div id="accList"></div><p class="acc-hint">Tocá el lápiz para cambiar el nombre. Con el interruptor apagado, la tarjeta no aparece en el inicio.</p></div>
     </div>
 
-    <div class="block" style="display:none"><!-- oculto por ahora: creador de personajes (personajes.html) -->
-      <h3><i class="ti ti-user-heart"></i> Personajes</h3>
-      <a class="btn pri" href="personajes.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none"><i class="ti ti-wand"></i> Personalizar personajes</a>
+    <div class="block">
+      <h3><i class="ti ti-user-heart"></i> Personalizar</h3>
+      <a class="btn pri" href="personajes.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none"><i class="ti ti-mood-smile"></i> Elegir mi avatar</a>
     </div>
 
     <div class="block acc">
@@ -506,6 +507,10 @@ async function compartirCodigo(){const p=(window.JUNTOS||{}).pareja;if(!p)return
 async function salirCuenta(){if(!confirm('¿Cerrar sesión en este celu?'))return;
   try{await fetch('../api/?a=salir',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Juntos':'1'},body:'{}'})}catch(e){}
   location.href='../entrar.html';}
+/* tarjeta de Gastos personales con mi personaje */
+function aplicarPersonaje(){const i=document.getElementById('imgGastos');if(!i||!window.miPersonaje)return;const p=miPersonaje();if(!p)return;
+  const src=imagenPersonaje(p,'gastos');if(i.getAttribute('src')!==src){i.removeAttribute('width');i.removeAttribute('height');i.src=src;}}
+aplicarPersonaje();window.addEventListener('juntos',aplicarPersonaje);
 window.addEventListener('juntos',pintarCuentaBtn);document.addEventListener('DOMContentLoaded',pintarCuentaBtn);
 function closeCfg(){document.getElementById('cfgOverlay').classList.remove('open');if(location.hash==='#ajustes')history.replaceState(null,'',location.pathname);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfg();closeCuenta()}});

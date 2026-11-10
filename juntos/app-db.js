@@ -9,7 +9,7 @@
   var K_DOCS = 'juntos_docs', K_PEND = 'juntos_pend', K_YO = 'juntos_yo', K_PPEND = 'juntos_ppend';
   // Claves de localStorage que son de cada persona y se guardan en su cuenta.
   var PERSONAL = ['cfg_v2', 'gastos-mensuales', 'categorias', 'nombres-categoria', 'grupos-colapsados', 'tend-cat',
-    'ultima-categoria', 'sonidos', 'personajes_v1', 'copito_anios', 'viaje_sel'];
+    'ultima-categoria', 'sonidos', 'personajes_v1', 'copito_anios', 'viaje_sel', 'personaje'];
 
   var LS = window.localStorage;
   var P = 'jx:';   // todo lo de JuntOS va con este prefijo: así no se mezcla con otros sitios del mismo dominio
