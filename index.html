@@ -320,8 +320,6 @@
     <h2>Mi cuenta</h2>
     <div class="cta-yo" id="ctaYo"></div>
     <div class="block"><h3><i class="ti ti-heart"></i> <span id="ctaParNom">Pareja</span></h3><div id="ctaPar"></div></div>
-    <div class="block" id="ctaColBox"><h3><i class="ti ti-palette"></i> Colores de cada uno</h3><div id="ctaCol"></div>
-      <p class="acc-hint">Cada uno se ve con el color que eligió en <b>Ajustes › Color</b>.</p></div>
     <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div></div>
     <a class="cta-b" id="ctaAdmin" href="../admin/" hidden><i class="ti ti-chart-bar"></i> Panel de administración</a>
     <button class="cta-b salir" onclick="salirCuenta()"><i class="ti ti-logout"></i> Cerrar sesión</button>
@@ -500,11 +498,7 @@ function openCuenta(){const J=window.JUNTOS||{},u=J.usuario||{},p=J.pareja;
     document.getElementById('ctaPlan').innerHTML=p.solo_lectura?'⏸️ Tu período terminó.<br>Podés ver todo, pero no cargar cosas nuevas.'
       :p.plan==='pago'?`✅ Suscripción activa<br>hasta el <b>${f}</b>`
       :`🎁 Prueba gratis: te quedan <b>${p.dias_restantes} ${p.dias_restantes===1?'día':'días'}</b><br>(hasta el ${f})`;}
-  pintarColores();document.getElementById('cuentaOverlay').classList.add('open');}
-function pintarColores(){const J=window.JUNTOS||{},N=J.nombres||{},F=J.fotos||{},C=J.colores||{},box=document.getElementById('ctaCol');if(!box)return;
-  document.getElementById('ctaColBox').hidden=!(J.pareja&&(J.pareja.miembros||[]).length>=2);
-  box.innerHTML='<div class="cta-par">'+['j','a'].map(k=>{const c=C[k]||'#999';
-    return '<div><span style="display:block;border-radius:50%;box-shadow:0 0 0 3px '+c+'">'+avCuenta({nombre:N[k],foto:F[k]},'cta-av')+'</span><span style="color:'+c+'">'+esc(N[k]||'')+'</span></div>';}).join('')+'</div>';}
+  document.getElementById('cuentaOverlay').classList.add('open');}
 function closeCuenta(){document.getElementById('cuentaOverlay').classList.remove('open');}
 async function compartirCodigo(){const p=(window.JUNTOS||{}).pareja;if(!p)return;
   const t=`Sumate a nuestro espacio en Juntos 💞\nEntrá a ${location.origin}${location.pathname.replace(/app\/.*$/,'')}entrar.html y usá el código: ${p.codigo}`;
