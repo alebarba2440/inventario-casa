@@ -71,7 +71,7 @@ try {
           $msg = ['title' => $emoji . ' ' . $e['titulo'], 'body' => $texto . ($notas !== '' ? ' · ' . mb_substr($notas, 0, 120) : ''),
             'url' => 'calendario.html', 'tag' => 'cal-' . $r['id'] . '-' . $dia];
           foreach (array_unique(array_filter($para)) as $uid) {
-            $marca->execute([hash('sha256', "$pid|{$r['id']}|$dia|$tipo|$uid")]);
+            $marca->execute([hash('sha256', "$pid|{$r['id']}|$dia|$hora|$tipo|$uid")]);
             if ($marca->rowCount() === 0) continue;   // ya se mandó
             $enviados += pushUsuario($uid, $msg);
           }
