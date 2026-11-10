@@ -1,0 +1,13 @@
+name: Diagnostico pwa
+on:
+  push:
+    branches: [diag-pwa]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in https://juntosapp.com.ar/manifest.webmanifest https://juntosapp.com.ar/app/img/icono-grande.png?v=10 https://juntosapp.com.ar/app/img/icono-512.png?v=10 https://juntosapp.com.ar/app/img/icono.png?v=10 https://juntosapp.com.ar/instalar.js?v=1 "https://juntosapp.com.ar/app/index.html?origen=app"; do
+            echo "=== $u"; curl -s -I -m 20 "$u" | grep -iE "^(HTTP|content-type|location)"; done
+          curl -s https://juntosapp.com.ar/manifest.webmanifest | head -c 300; echo
+          curl -s https://juntosapp.com.ar/ | grep -o '<link rel="manifest"[^>]*>'
