@@ -211,6 +211,9 @@
   @keyframes relleno{to{fill-opacity:1;stroke-width:2}}
   @keyframes sube{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){#intro{display:none}}
+  .logo{display:inline-block;position:relative;height:1em;width:calc(1em * 2.866);vertical-align:middle;line-height:0}
+  .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(img/logo-texto.png) center/contain no-repeat;mask:url(img/logo-texto.png) center/contain no-repeat}
+  .logo i.c{background:var(--accent);-webkit-mask-image:url(img/logo-corazon.png);mask-image:url(img/logo-corazon.png)}
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">
@@ -236,7 +239,7 @@
 <div class="wrap">
   <header>
     <div class="marca">
-      <h1 id="marcaT">Junt<b>OS</b></h1>
+      <h1 id="marcaT"><span class="logo" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></h1>
       <p class="sub" id="marcaS">El arte de construir</p>
     </div>
     <button class="gear" onclick="openCfg()" aria-label="Ajustes"><svg class="perillas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">

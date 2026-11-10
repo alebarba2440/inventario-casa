@@ -28,7 +28,9 @@
   nav{position:sticky;top:0;z-index:10;background:rgba(255,253,248,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
   nav.sombra{border-bottom-color:var(--borde)}
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
-  nav .marca{font-size:2rem;text-decoration:none}
+  nav .marca{font-size:2.3rem;text-decoration:none;display:flex}
+  .logo.enh1{height:1.25em;width:calc(1.25em * 2.866);vertical-align:-.28em}
+  footer .marca{display:flex}
   nav .links{display:flex;gap:22px;margin-left:auto;font-weight:700;font-size:.95rem}
   nav .links a{text-decoration:none;color:var(--gris)}
   nav .links a:hover{color:var(--tinta)}
@@ -139,13 +141,16 @@
     .sec .pic{height:130px}.sec .pic img{max-height:122px}
     .hero .ctas .btn{width:100%}
   }
+  .logo{display:inline-block;position:relative;height:1em;width:calc(1em * 2.866);vertical-align:middle;line-height:0}
+  .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(app/img/logo-texto.png) center/contain no-repeat;mask:url(app/img/logo-texto.png) center/contain no-repeat}
+  .logo i.c{background:var(--rosa);-webkit-mask-image:url(app/img/logo-corazon.png);mask-image:url(app/img/logo-corazon.png)}
 </style>
 </head>
 <body>
 
 <nav id="nav">
   <div class="wrap">
-    <a class="marca" href="#">Junt<b>OS</b></a>
+    <a class="marca" href="#" style="color:var(--tinta)"><span class="logo" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></a>
     <div class="links"><a href="#que">Qué hace</a><a href="#como">Cómo funciona</a><a href="#precio">Precio</a><a href="#preguntas">Preguntas</a></div>
     <a class="btn sec chico jx-entrar" href="entrar.html">Ingresar</a>
   </div>
@@ -154,7 +159,7 @@
 <header class="hero">
   <div class="wrap">
     <div>
-      <h1>Organicen la vida en pareja con <span class="marca">Junt<b>OS</b></span></h1>
+      <h1>Organicen la vida en pareja con <span class="logo enh1" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></h1>
       <p class="lead">La casa, los ahorros, los viajes, el auto y los gastos de los dos, en una sola app. Lo que carga uno, lo ve el otro al instante.</p>
       <div class="ctas">
         <a class="btn pri jx-empezar" href="entrar.html">Probar gratis 30 días</a>
@@ -270,7 +275,7 @@
 
 <footer>
   <div class="wrap">
-    <span class="marca">Junt<b>OS</b></span>
+    <span class="marca"><span class="logo" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></span>
     <span>Hecha por una pareja, para parejas · <a href="entrar.html" class="jx-entrar">Ingresar</a></span>
   </div>
 </footer>
