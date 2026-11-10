@@ -67,4 +67,13 @@ jobs:
           cp actual "respaldo-$(date +%Y%m%d%H%M%S)"
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o htaccess-respaldo-raiz; put nuevo -o public_html/.htaccess; bye"
           echo "public_html/.htaccess actualizado (copia del anterior: htaccess-respaldo-raiz, fuera de public_html)"
+          # Si el servidor no acepta alguna regla (error 500), vuelvo al .htaccess anterior
+          sleep 3
+          for u in https://barbamanager.website/ https://barbamanager.website/app/ https://juntosapp.com.ar/entrar.html; do
+            c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$u"); echo "$c $u"
+            if [ "$c" = "500" ]; then
+              lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o public_html/.htaccess; bye"
+              echo "::error::Error 500 con el .htaccess nuevo: restauré el anterior"; exit 1
+            fi
+          done
 

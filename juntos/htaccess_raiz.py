@@ -5,13 +5,22 @@ import re, sys
 BLOQUE = """# BEGIN JuntOS
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# Estas reglas corren también en subcarpetas con su propio .htaccess (ej. app/ de BARBA), antes que las de ellas
+RewriteOptions InheritDownBefore
+# http -> https (solo juntosapp)
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:CDN-LOOP} !cloudflare
+RewriteCond %{REQUEST_URI} !^/.well-known/acme-challenge/
+RewriteCond %{HTTP_HOST} ^(www\\.)?juntosapp\\.com\\.ar$ [NC]
+RewriteRule ^ https://juntosapp.com.ar%{REQUEST_URI} [R=301,L]
 # www -> sin www
 RewriteCond %{HTTP_HOST} ^www\\.juntosapp\\.com\\.ar$ [NC]
-RewriteRule ^(.*)$ https://juntosapp.com.ar/$1 [R=301,L]
+RewriteRule ^ https://juntosapp.com.ar%{REQUEST_URI} [R=301,L]
 # juntosapp.com.ar muestra la carpeta juntos/ como si fuera la raíz
 RewriteCond %{HTTP_HOST} ^juntosapp\\.com\\.ar$ [NC]
 RewriteCond %{REQUEST_URI} !^/juntos/
-RewriteRule ^(.*)$ juntos/$1 [L]
+RewriteCond %{REQUEST_URI} !^/.well-known/
+RewriteRule ^ /juntos%{REQUEST_URI} [L]
 </IfModule>
 # END JuntOS
 """
