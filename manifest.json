@@ -3,10 +3,20 @@
   "short_name": "JuntOS",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#C0392B",
+  "background_color": "#DB2777",
   "theme_color": "#1D9E75",
   "icons": [
-    { "src": "img/icono.png?v=9", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "img/icono-512.png?v=9", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "img/icono-grande.png?v=10",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "img/icono-512.png?v=10",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }
