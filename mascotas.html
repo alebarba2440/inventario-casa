@@ -195,7 +195,7 @@ const pesos=n=>'$ '+Math.round(n).toLocaleString('es-AR');
 const fFecha=s=>s2f(s).toLocaleDateString('es-AR',{day:'numeric',month:'short',year:s.slice(0,4)===String(new Date().getFullYear())?undefined:'numeric'});
 const yo=()=>{const J=window.JUNTOS;return (J&&J.miSlot)||null};
 
-const AVS=Array.from({length:24},(_,i)=>'mascota'+String(i+1).padStart(2,'0'));
+const AVS=Array.from({length:23},(_,i)=>'mascota'+String(i+1).padStart(2,'0'));
 const avURL=a=>'img/avatares/'+a+'.webp';
 const avHTML=p=>p.avatar?`<img src="${avURL(p.avatar)}" alt="">`:esc(p.emoji||'🐾');
 // tipo: [emoji, nombre, grupo, próxima vez sugerida]
