@@ -39,6 +39,14 @@
   .btn.pri{background:var(--rosa);color:#fff;box-shadow:0 8px 20px rgba(219,39,119,.28)}
   .btn.pri:hover{box-shadow:0 10px 26px rgba(219,39,119,.38)}
   .btn.sec{background:#fff;color:var(--tinta);border:1.5px solid var(--borde)}
+  /* reflejo que cruza el botón cada 3 segundos: blanco en "Probar gratis", rosado en "Ingresar" */
+  .btn.pri.jx-empezar,nav .jx-entrar{position:relative;overflow:hidden;isolation:isolate}
+  .btn.pri.jx-empezar::after,nav .jx-entrar::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;pointer-events:none;
+    transform:translateX(-160%) skewX(-20deg);animation:reflejo 3s ease-in-out infinite}
+  .btn.pri.jx-empezar::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent)}
+  nav .jx-entrar::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--rosa) 38%,transparent),transparent);z-index:-1}
+  @keyframes reflejo{0%{transform:translateX(-160%) skewX(-20deg)}30%,100%{transform:translateX(330%) skewX(-20deg)}}
+  @media (prefers-reduced-motion:reduce){.btn.pri.jx-empezar::after,nav .jx-entrar::after{animation:none;display:none}}
   .btn.chico{padding:9px 16px;font-size:.92rem;border-radius:4px 16px 4px 16px}
 
   /* portada */
@@ -302,7 +310,7 @@ document.querySelectorAll('.rev').forEach((el, i) => { el.style.transitionDelay 
 fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.json()).then(e => {
   if (!e || !e.usuario) return;
   const destino = e.pareja ? 'app/' : 'entrar.html';
-  document.querySelectorAll('.jx-entrar').forEach(a => { a.href = destino; a.textContent = 'Abrir mi JuntOS'; });
+  document.querySelectorAll('.jx-entrar').forEach(a => { a.href = destino; a.textContent = 'Abrir JuntOS'; });
   document.querySelectorAll('.jx-empezar').forEach(a => { a.href = destino; });
 }).catch(() => {});
 </script>
