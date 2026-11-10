@@ -20,17 +20,6 @@ PAGINAS = ['index.html', 'inventario.html', 'ahorros.html', 'vacaciones.html', '
 ARCHIVOS = ['tema.js', 'sonidos.js', 'personajes.js', 'comun.css', 'fondo.css', 'manifest.json',
             'logo.png', 'logo2.png', 'logo3.png']
 
-CUENTA = '''
-    <div class="block acc">
-      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-user-circle"></i> Mi cuenta<i class="ti ti-chevron-down chev"></i></button>
-      <div class="acc-b">
-        <p id="jxCuenta" style="margin:0 0 10px;color:var(--text2)"></p>
-        <a class="btn pri" href="../entrar.html?cuenta=1" style="text-decoration:none;justify-content:center">Ver cuenta, pareja y suscripción</a>
-      </div>
-    </div>
-    <script>document.addEventListener('DOMContentLoaded',function(){var J=window.JUNTOS||{},u=J.usuario,p=J.pareja,e=document.getElementById('jxCuenta');
-      if(e&&u)e.textContent=(u.nombre||u.email)+(p?' · '+p.nombre:'');});</script>
-'''
 
 
 def main():
@@ -61,10 +50,6 @@ def main():
             html, n = re.subn(r'(<head[^>]*>)', r'\1\n' + tag, html, count=1, flags=re.I)
         assert n, f'{f}: no encontré <head>'
         assert 'src="firebase-config.js"' not in html, f'{f}: quedó firebase-config.js'
-        if f == 'index.html':
-            marca = '    <div class="block" style="display:none"><!-- oculto: estado de Firebase'
-            assert marca in html, 'index.html: no encontré dónde poner "Mi cuenta"'
-            html = html.replace(marca, CUENTA + marca, 1)
         (app / Path(f).name).write_text(html, encoding='utf-8')
     print(f'Listo: {SALIDA} ({len(PAGINAS) + len(extras)} páginas, adaptador v{v})')
 

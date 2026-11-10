@@ -45,6 +45,23 @@
   @keyframes perilla3{0%,100%{transform:translateX(0)}50%{transform:translateX(-9px)}}
   @media (prefers-reduced-motion:reduce){.gear circle{animation:none !important}}
   .gear:active{transform:scale(.88)}
+  .botones{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .cuenta-btn{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--accent);padding:0;background:var(--accent-light);color:var(--accent);
+    font:800 1rem 'Nunito',system-ui,sans-serif;display:grid;place-items:center;overflow:hidden;cursor:pointer;flex-shrink:0;transition:transform .15s}
+  .cuenta-btn:active{transform:scale(.88)}
+  .cuenta-btn[hidden]{display:none}
+  .cuenta-btn img{width:100%;height:100%;object-fit:cover}
+  .cta-yo{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .cta-av{width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--accent-light);color:var(--accent);font-weight:800;font-size:1.3rem;display:grid;place-items:center}
+  .cta-yo b{display:block;font-size:1.05rem}.cta-yo small{color:var(--text2);word-break:break-all}
+  .cta-par{display:flex;gap:18px;justify-content:center;margin:4px 0 2px}
+  .cta-par>div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.88rem;font-weight:700;width:84px;text-align:center}
+  .cta-par .cta-av{width:46px;height:46px;font-size:1.1rem}
+  .cta-falta .cta-av{background:none;border:2px dashed var(--border2);color:var(--text2)}
+  .cta-cod{font-size:1.7rem;font-weight:900;letter-spacing:.3em;text-align:center;background:var(--accent-light);color:var(--accent);border-radius:12px;padding:10px;margin:8px 0}
+  .cta-plan{border-radius:12px;padding:12px;text-align:center;background:var(--surface2);line-height:1.4}
+  .cta-b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-weight:800;padding:13px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;margin-top:8px;text-decoration:none}
+  .cta-b.salir{color:#c0392b;border-color:rgba(192,57,43,.35)}
   .gear .dot{display:none !important;position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#aaa;border:2px solid var(--surface)}
   .gear .dot.on{background:var(--ok)} .gear .dot.err{background:var(--err)}
 
@@ -241,11 +258,14 @@
       <h1 id="marcaT"><span class="logo" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></h1>
       <p class="sub" id="marcaS">El arte de construir</p>
     </div>
+    <div class="botones">
     <button class="gear" onclick="openCfg()" aria-label="Ajustes"><svg class="perillas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
       <path d="M3 5h18M3 12h18M3 19h18" opacity=".45"/>
       <circle class="k1" cx="14" cy="5" r="2" fill="currentColor"/>
       <circle class="k2" cx="8" cy="12" r="2" fill="currentColor"/>
       <circle class="k3" cx="17" cy="19" r="2" fill="currentColor"/></svg><span class="dot" id="gearDot"></span></button>
+    <button class="cuenta-btn" id="cuentaBtn" onclick="openCuenta()" aria-label="Mi cuenta" hidden></button>
+    </div>
   </header>
   <script>
   /* "JuntOS" del mismo largo que "El arte de construir": ajusta el tamaño de letra del título */
@@ -287,6 +307,18 @@
     </a>
   </nav>
   <p class="sin-acc" id="sinAcc" hidden>No hay accesos directos activados. Activalos en Ajustes › Accesos directos.</p>
+</div>
+
+<div class="overlay" id="cuentaOverlay" onclick="if(event.target===this)closeCuenta()">
+  <div class="sheet" role="dialog" aria-label="Mi cuenta">
+    <div class="handle"></div>
+    <h2>Mi cuenta</h2>
+    <div class="cta-yo" id="ctaYo"></div>
+    <div class="block"><h3><i class="ti ti-heart"></i> <span id="ctaParNom">Pareja</span></h3><div id="ctaPar"></div></div>
+    <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div></div>
+    <a class="cta-b" id="ctaAdmin" href="../admin/" hidden><i class="ti ti-chart-bar"></i> Panel de administración</a>
+    <button class="cta-b salir" onclick="salirCuenta()"><i class="ti ti-logout"></i> Cerrar sesión</button>
+  </div>
 </div>
 
 <div class="overlay" id="cfgOverlay" onclick="if(event.target===this)closeCfg()">
@@ -440,8 +472,38 @@ function openCfg(){
   if(!fromFile&&cfg.fbCfg)document.getElementById('fbCfg').value=cfg.fbCfg;
   document.getElementById('cfgOverlay').classList.add('open');
 }
+/* ---------- Mi cuenta (solo en la versión con cuentas) ---------- */
+function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function avCuenta(u,cls){const n=String((u&&(u.nombre||u.email))||'?').trim(),ini=esc(n.charAt(0).toUpperCase());
+  return u&&u.foto?`<img class="${cls}" src="${esc(u.foto)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=${cls}>${ini}</div>'">`:`<div class="${cls}">${ini}</div>`;}
+function pintarCuentaBtn(){const J=window.JUNTOS,b=document.getElementById('cuentaBtn');if(!b)return;
+  if(!J||!J.usuario){b.hidden=true;return}
+  b.hidden=false;const u=J.usuario;b.innerHTML=u.foto?`<img src="${esc(u.foto)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:'';
+  if(!u.foto)b.textContent=String(u.nombre||u.email||'?').trim().charAt(0).toUpperCase();}
+function openCuenta(){const J=window.JUNTOS||{},u=J.usuario||{},p=J.pareja;
+  document.getElementById('ctaYo').innerHTML=avCuenta(u,'cta-av')+`<div><b>${esc(u.nombre||'')}</b><small>${esc(u.email||'')}</small></div>`;
+  document.getElementById('ctaAdmin').hidden=!u.admin;
+  if(p){document.getElementById('ctaParNom').textContent=p.nombre;
+    const ms=(p.miembros||[]).map(m=>`<div>${avCuenta(m,'cta-av')}${esc(String(m.nombre||m.email).split(' ')[0])}</div>`);
+    if(ms.length<2)ms.push('<div class="cta-falta"><div class="cta-av">?</div>Esperando…</div>');
+    let h=`<div class="cta-par">${ms.join('')}</div>`;
+    if((p.miembros||[]).length<2)h+=`<p class="acc-hint" style="text-align:center">Pasale este código a tu pareja para que se una:</p><div class="cta-cod">${esc(p.codigo)}</div><button class="cta-b" onclick="compartirCodigo()"><i class="ti ti-share"></i> Compartir invitación</button>`;
+    document.getElementById('ctaPar').innerHTML=h;
+    const f=new Date(p.activo_hasta).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    document.getElementById('ctaPlan').innerHTML=p.solo_lectura?'⏸️ Tu período terminó.<br>Podés ver todo, pero no cargar cosas nuevas.'
+      :p.plan==='pago'?`✅ Suscripción activa<br>hasta el <b>${f}</b>`
+      :`🎁 Prueba gratis: te quedan <b>${p.dias_restantes} ${p.dias_restantes===1?'día':'días'}</b><br>(hasta el ${f})`;}
+  document.getElementById('cuentaOverlay').classList.add('open');}
+function closeCuenta(){document.getElementById('cuentaOverlay').classList.remove('open');}
+async function compartirCodigo(){const p=(window.JUNTOS||{}).pareja;if(!p)return;
+  const t=`Sumate a nuestro espacio en Juntos 💞\nEntrá a ${location.origin}${location.pathname.replace(/app\/.*$/,'')}entrar.html y usá el código: ${p.codigo}`;
+  if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else{try{await navigator.clipboard.writeText(t);alert('Invitación copiada')}catch(e){}}}
+async function salirCuenta(){if(!confirm('¿Cerrar sesión en este celu?'))return;
+  try{await fetch('../api/?a=salir',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Juntos':'1'},body:'{}'})}catch(e){}
+  location.href='../entrar.html';}
+window.addEventListener('juntos',pintarCuentaBtn);document.addEventListener('DOMContentLoaded',pintarCuentaBtn);
 function closeCfg(){document.getElementById('cfgOverlay').classList.remove('open');if(location.hash==='#ajustes')history.replaceState(null,'',location.pathname);}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfg()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfg();closeCuenta()}});
 
 testFb();
 if(location.hash==='#ajustes')openCfg();

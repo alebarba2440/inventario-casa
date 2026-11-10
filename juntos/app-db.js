@@ -34,6 +34,7 @@
       fotos: ms.length ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
       soloLectura: !!(y && y.pareja && y.pareja.solo_lectura)
     };
+    try { window.dispatchEvent(new Event('juntos')); } catch (e) {}
   }
   publicarYo(YO);
 
