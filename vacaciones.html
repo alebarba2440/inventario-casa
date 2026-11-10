@@ -371,7 +371,7 @@ function leerAhorros(st){
   const tieneMov=m=>m.mov&&((m.mov.j||[]).length||(m.mov.a||[]).length);
   // los mismos meses que suma el total de Ahorros: los de "Ahorrado" (no ocultos, agregados a mano o con movimientos)
   const ms=st.months.filter(m=>esMes(m)&&!m.oculto&&(m.enAho||tieneMov(m)));
-  const n=st.names||{};
+  const A=(window.JUNTOS&&JUNTOS.apodos)||{},n0=st.names||{},n={j:A.j||n0.j,a:A.a||n0.a};   // el apodo elegido en JuntOS manda
   AHO={j:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.j),0),a:ms.reduce((t,m)=>t+suma(m.mov&&m.mov.a),0),nj:n.j||((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'}).j,na:n.a||((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'}).a};
 }
 leerAhorros(rd('ahorros_v1',null));

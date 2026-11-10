@@ -200,7 +200,7 @@ const hoyISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMont
 const fFecha=f=>{const [y,m,d]=f.split('-');return `${+d}/${+m}`;};
 
 /* nombres: los mismos que en Ahorros */
-const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};const d=((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'});return {j:n.j||d.j,a:n.a||d.a};})();
+const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};const d=((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'});const A=(window.JUNTOS&&JUNTOS.apodos)||{};return {j:A.j||n.j||d.j,a:A.a||n.a||d.a};})();
 
 /* cada gasto se guarda por separado ({id: gasto}) para que si los dos cargan a la vez no se pise nada.
    Gastos fijos: S = {serie: {id, desde:'AAAA-MM', hasta:null|'AAAA-MM', saltar:{'AAAA-MM':true}}}.

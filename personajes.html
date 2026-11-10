@@ -10,7 +10,7 @@
 <title>Mi avatar</title>
 <script src="tema.js"></script>
 <script src="sonidos.js"></script>
-<script src="personajes.js?v=3"></script>
+<script src="personajes.js?v=4"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -46,6 +46,7 @@
   .def.on{border-color:var(--accent);background:var(--accent-light)}
   .def .ok{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:20px;height:20px;font-size:.75rem;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
   .def.on .ok{display:grid}
+  .perfil-b{display:block;margin:14px auto 0;border:none;background:none;color:var(--accent);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;text-decoration:underline}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1a1a;color:#fff;font-weight:800;padding:11px 18px;border-radius:999px;transition:all .25s;pointer-events:none;z-index:60;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -62,11 +63,13 @@
   <h2>Mujeres</h2><div class="grid" id="gF"></div>
   <h2>Hombres</h2><div class="grid" id="gM"></div>
   <button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Default</b></button>
+  <button class="perfil-b" id="bPerfil" onclick="abrirPerfil()" hidden>✏️ Cambiar mi nombre o apodo / ella-él</button>
 </main>
 <div class="toast" id="toast"></div>
 <script>
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function pintar(){
+  document.getElementById('bPerfil').hidden=!window.guardarPerfilYo;
   const yo=miPersonaje();
   document.getElementById('yoFig').innerHTML=yo?`<img src="${yo.img}" alt="">`:'';
   document.getElementById('yoNom').textContent=esDefault()?'Default':yo?yo.nombre:'Elegí tu personaje';

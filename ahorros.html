@@ -245,7 +245,7 @@ function colHTML(m,p){
   const t=cellTot(m,p),n=m.mov[p].length;
   const pc=p==='j'?'pj':'pa';
   return `<div class="col ${pc}">
-    <div class="who ${pc}" onclick="renameP('${p}')">${esc(state.names[p])}</div>
+    <div class="who ${pc}" onclick="renameP('${p}')">${esc(NM(p))}</div>
     <div class="amt ${pc} ${t<0?'neg':''}" onclick="openSheet('${m.id}','${p}')">${fmt(t)}<small>${n?n+' mov.':'sin movimientos'}</small></div>
     <div class="inrow"><input type="text" inputmode="numeric" placeholder="$" oninput="miles(this)" id="in_${m.id}_${p}" onkeydown="if(event.key==='Enter')quick('${m.id}','${p}',1)">
       <button class="pm p" onclick="quick('${m.id}','${p}',1)" aria-label="Puse">+</button><button class="pm m" onclick="quick('${m.id}','${p}',-1)" aria-label="Saqué">−</button></div>
@@ -300,8 +300,8 @@ function render(){
   const sel=document.getElementById('yearSel');
   sel.innerHTML=`<option value="all"${selYear==='all'?' selected':''}>Todos</option>`+ys.map(y=>`<option value="${y}"${y===selYear?' selected':''}>${y}</option>`).join('');
   const yl=selYear==='all'?'':' '+selYear;
-  document.getElementById('totJN').textContent='Total '+state.names.j+yl;
-  document.getElementById('totAN').textContent='Total '+state.names.a+yl;
+  document.getElementById('totJN').textContent='Total '+NM('j')+yl;
+  document.getElementById('totAN').textContent='Total '+NM('a')+yl;
   const ms=monthsOfYear();
   let irA=null;
   if(openMes===undefined){ // al entrar o al cambiar de año: abierto el mes actual (o el primero del año)
@@ -322,7 +322,7 @@ function render(){
       </div>
     </div>`};
   // con nombres (año) o solo los montos con su color (mes)
-  const resumen=(j,a,sinNombres)=>`<span class="rs"><span class="pj">${sinNombres?'':esc(state.names.j)+':'}<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${sinNombres?'':esc(state.names.a)+':'}<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>`;
+  const resumen=(j,a,sinNombres)=>`<span class="rs"><span class="pj">${sinNombres?'':esc(NM('j'))+':'}<b class="${j<0?'neg':''}">${fmtS(j)}</b></span><span class="pa">${sinNombres?'':esc(NM('a'))+':'}<b class="${a<0?'neg':''}">${fmtS(a)}</b></span></span>`;
   let html;
   if(selYear==='all'){ // un acordeón por año, con sus meses adentro
     const grupos=[];ms.forEach(m=>{const x=String(m.label).match(/(\d{4})/),g=x?x[1]:'Otros';let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
@@ -338,8 +338,8 @@ function render(){
       <div class="er1"><b>${esc(m.label.replace(/ \d{4}$/,''))}</b><span class="et" id="et_${m.id}"></span>
         <button class="xe" onclick="quitarEst('${m.id}')" aria-label="Quitar mes"><i class="ti ti-trash"></i></button></div>
       <div class="er2">
-        <label class="pj"><span>${esc(state.names.j)}</span><input type="text" inputmode="numeric" value="${m.est.j?fmtN(m.est.j):''}" placeholder="0" oninput="setEst('${m.id}','j',this)"></label>
-        <label class="pa"><span>${esc(state.names.a)}</span><input type="text" inputmode="numeric" value="${m.est.a?fmtN(m.est.a):''}" placeholder="0" oninput="setEst('${m.id}','a',this)"></label>
+        <label class="pj"><span>${esc(NM('j'))}</span><input type="text" inputmode="numeric" value="${m.est.j?fmtN(m.est.j):''}" placeholder="0" oninput="setEst('${m.id}','j',this)"></label>
+        <label class="pa"><span>${esc(NM('a'))}</span><input type="text" inputmode="numeric" value="${m.est.a?fmtN(m.est.a):''}" placeholder="0" oninput="setEst('${m.id}','a',this)"></label>
       </div></div>`).join('');
   const ems=estMonths(),grupos=[];
   ems.forEach(m=>{const g=String(Math.floor(monthKey(m,0)/12));let G=grupos.find(z=>z.g===g);if(!G){G={g,ms:[]};grupos.push(G);}G.ms.push(m);});
@@ -374,7 +374,7 @@ function recalc(){
   ems.forEach(m=>{const t=(+m.est.j||0)+(+m.est.a||0);est+=t;const e=document.getElementById('et_'+m.id);if(e)e.textContent=fmt(t)});
   document.querySelectorAll('[id^="eyr_"]').forEach(e=>{const g=e.id.slice(4),gm=ems.filter(m=>String(m.label).includes(g));
     const j=sum(gm.map(m=>+m.est.j||0)),a=sum(gm.map(m=>+m.est.a||0));
-    e.innerHTML=`<span class="pj">${esc(state.names.j)}:<b>${fmtS(j)}</b></span><span class="pa">${esc(state.names.a)}:<b>${fmtS(a)}</b></span>`;});
+    e.innerHTML=`<span class="pj">${esc(NM('j'))}:<b>${fmtS(j)}</b></span><span class="pa">${esc(NM('a'))}:<b>${fmtS(a)}</b></span>`;});
   document.getElementById('estTot').textContent=fmt(est);
   document.getElementById('sumEst').textContent=fmt(est);
   set('dif',tj+ta-est);
@@ -440,7 +440,12 @@ function borrarMes(id){
   const r=realM(id);r.mov={j:[],a:[]};delete r.enAho;delete r.oculto;if(!enEst(r))state.months=state.months.filter(x=>x!==r);openMes=null;save();render();
 });
 }
-function renameP(p){const n=prompt('Nombre de la columna',state.names[p]);if(n&&n.trim()){state.names[p]=n.trim();save();render();}}
+/* nombre que se muestra: el apodo elegido en JuntOS manda; si no, el de la columna */
+function NM(p){const A=(window.JUNTOS&&JUNTOS.apodos)||{};return A[p]||(state.names&&state.names[p])||(p==='j'?'Juli':'Ale');}
+function renameP(p){const n=prompt('Nombre',NM(p));if(!(n&&n.trim()))return;
+  if(window.ponerApodo&&window.ponerApodo(p,n.trim())){render();return;}
+  state.names[p]=n.trim();save();render();}
+window.addEventListener('juntos',()=>{try{render()}catch(e){}});
 
 /* ---------- movimientos ---------- */
 let cur=null;
@@ -448,7 +453,7 @@ function openSheet(id,p){cur={id,p};document.getElementById('shAmt').value='';do
 function closeSheet(){document.getElementById('bg').classList.remove('show');cur=null;}
 function drawSheet(){
   const m=getM(cur.id),t=cellTot(m,cur.p);
-  {const h=document.getElementById('shT');h.textContent=m.label+' · '+state.names[cur.p];h.className=cur.p==='j'?'pj':'pa';}
+  {const h=document.getElementById('shT');h.textContent=m.label+' · '+NM(cur.p);h.className=cur.p==='j'?'pj':'pa';}
   const e=document.getElementById('shTot');e.textContent='Total: '+fmt(t);e.className=cls(t);
   document.getElementById('shList').innerHTML=m.mov[cur.p].slice().reverse().map(x=>`<div class="mov">
     <b class="${x.amt>=0?'pos':'neg'}">${x.amt>=0?'+':'−'} ${fmt(Math.abs(x.amt)).replace('-','')}</b>

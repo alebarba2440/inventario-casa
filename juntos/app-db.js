@@ -54,13 +54,37 @@
     el.style.setProperty('--ale', ca); el.style.setProperty('--ale-l', mezcla(ca, .16));
     window.JUNTOS && (window.JUNTOS.colores = { j: cj, a: ca });
   }
+  var servidorOk = false;
+  // Mi nombre/apodo y si soy "él" o "ella" (se guardan en el perfil compartido de la pareja, por mail)
+  function guardarPerfilYo(o) {
+    var mail = YO && YO.usuario && YO.usuario.email; if (!mail) return;
+    var c = {};
+    if (o.apodo !== undefined) { c.apodos = {}; c.apodos[mail] = String(o.apodo || '').trim().slice(0, 30) || { __op: 'delete' }; }
+    if (o.genero === 'f' || o.genero === 'm') { c.generos = {}; c.generos[mail] = o.genero; }
+    if (Object.keys(c).length) db.collection('juntos').doc('pareja').set(c, { merge: true });
+    publicarYo(YO);
+  }
+  window.guardarPerfilYo = guardarPerfilYo;
+  // Cambiar el nombre que se muestra de uno de los dos (j / a), por ejemplo desde Ahorros
+  window.ponerApodo = function (slot, nombre) {
+    var e = window.JUNTOS && window.JUNTOS.emails && window.JUNTOS.emails[slot]; if (!e) return false;
+    var c = { apodos: {} }; c.apodos[e] = String(nombre || '').trim().slice(0, 30) || { __op: 'delete' };
+    db.collection('juntos').doc('pareja').set(c, { merge: true }); publicarYo(YO); return true;
+  };
   function publicarYo(y) {
     var ms = miembrosOrdenados(y);
     var pn = function (m) { return m ? String(m.nombre || m.email || '').split(' ')[0] : ''; };
     var mail = y && y.usuario && y.usuario.email;
+    var pf = perfil(), ap = pf.apodos || {}, gn = pf.generos || {};
+    var apodo = function (m) { var x = m && ap[m.email]; return x ? String(x).slice(0, 30) : null; };
+    var apodos = { j: apodo(ms[0]), a: apodo(ms[1]) };
     window.JUNTOS = {
       usuario: y && y.usuario, pareja: y && y.pareja,
-      nombres: (ms[0] || ms[1]) ? { j: pn(ms[0]) || 'Yo', a: pn(ms[1]) || 'Pareja' } : null,
+      nombres: (ms[0] || ms[1]) ? { j: apodos.j || pn(ms[0]) || 'Yo', a: apodos.a || pn(ms[1]) || 'Pareja' } : null,
+      apodos: apodos,   // nombre o apodo elegido en la app (manda sobre cualquier otro nombre)
+      generos: { j: (ms[0] && gn[ms[0].email]) || null, a: (ms[1] && gn[ms[1].email]) || null },
+      miGenero: (mail && gn[mail]) || null,
+      perfilListo: !!servidorOk,   // ya llegó lo del servidor (para no preguntar de más con datos viejos)
       fotos: (ms[0] || ms[1]) ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
       miSlot: mail ? (ms[0] && ms[0].email === mail ? 'j' : ms[1] && ms[1].email === mail ? 'a' : null) : null,
       emails: { j: (ms[0] && ms[0].email) || '', a: (ms[1] && ms[1].email) || '' },
@@ -194,7 +218,7 @@
         pend = []; cache = { pareja: b.pareja_id, ver: 0, srv: {} };
       }
       YO = yo; wr(K_YO, yo);
-      aplicarDocs(b);
+      aplicarDocs(b); servidorOk = true;
       publicarYo(yo); bandaSoloLectura();
       var recargar = personalDesdeServidor(b.personal || {}) || otraCuenta;
       if (recargar && puedeRecargar()) { location.reload(); return; }
