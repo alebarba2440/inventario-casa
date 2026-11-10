@@ -598,22 +598,36 @@ ordenarTarjetas();aplicarAccesos();dibujarAccesos();
   const quieto=()=>{clearTimeout(timer);timer=null;};
   function natural(a){const t=a.style.transform;a.style.transform='none';const r=a.getBoundingClientRect();a.style.transform=t;return r;}
   function seguir(x,y){const r=natural(drag.a);drag.a.style.transform=`translate(${x-drag.dx-r.left}px,${y-drag.dy-r.top}px) scale(1.07) rotate(0deg)`;}
+  // Destino: la tarjeta cuyo centro (sin contar los bordes) tiene el dedo encima, medida en su lugar real
+  // (sin la animación), y con una pausa después de cada cambio: así no rebota de un lado a otro.
+  function destino(x,y){
+    for(const a of cards()){if(a===drag.a||a.classList.contains('oculta'))continue;
+      const r=natural(a),mx=r.width*.22,my=r.height*.22;
+      if(x>r.left+mx&&x<r.right-mx&&y>r.top+my&&y<r.bottom-my)return a;}
+    return null;}
   function mover(x,y){
-    drag.a.style.pointerEvents='none';const el=document.elementFromPoint(x,y);drag.a.style.pointerEvents='';
-    const t=el&&el.closest('#grid a.card');
-    if(t&&t!==drag.a&&!t.classList.contains('oculta')){
+    drag.x=x;drag.y=y;
+    const t=Date.now()>drag.pausa?destino(x,y):null;
+    if(t){
       const otros=cards().filter(a=>a!==drag.a),antes=new Map(otros.map(a=>[a,natural(a)]));
       const cs=cards(),i=cs.indexOf(drag.a),j=cs.indexOf(t);
-      g.insertBefore(drag.a,i<j?t.nextSibling:t);aplicarAccesos();
+      g.insertBefore(drag.a,i<j?t.nextSibling:t);aplicarAccesos();drag.pausa=Date.now()+320;
       otros.forEach(a=>{const r0=antes.get(a),r1=natural(a),dx=r0.left-r1.left,dy=r0.top-r1.top;if(!dx&&!dy)return;   // animación suave de las demás
         a.style.transition='none';a.style.transform=`translate(${dx}px,${dy}px) rotate(var(--rot,0deg))`;
-        requestAnimationFrame(()=>{a.style.transition='transform .22s ease';a.style.transform='';});});
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{a.style.transition='transform .28s cubic-bezier(.2,.8,.2,1)';a.style.transform='';}));});
       try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
     }
     seguir(x,y);
   }
+  // Si llevo la tarjeta cerca del borde de arriba o de abajo, la pantalla se desplaza sola
+  function autoScroll(){
+    if(!drag)return;const m=80,h=innerHeight;let v=0;
+    if(drag.y>h-m)v=Math.min(14,(drag.y-(h-m))/4);else if(drag.y<m)v=-Math.min(14,(m-drag.y)/4);
+    if(v){scrollBy(0,v);mover(drag.x,drag.y);}
+    requestAnimationFrame(autoScroll);
+  }
   function empezar(a,x,y){
-    const r=a.getBoundingClientRect();drag={a,dx:x-r.left,dy:y-r.top};
+    const r=a.getBoundingClientRect();drag={a,dx:x-r.left,dy:y-r.top,x,y,pausa:0};requestAnimationFrame(autoScroll);
     a.classList.add('arrastrando');a.style.transition='box-shadow .2s';seguir(x,y);
     try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}try{window.sonido&&sonido('aceptar')}catch(e){}
   }
