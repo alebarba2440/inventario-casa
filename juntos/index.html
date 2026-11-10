@@ -39,6 +39,9 @@
   nav .links{display:flex;gap:22px;margin-left:auto;font-weight:700;font-size:.95rem}
   nav .links a{text-decoration:none;color:var(--gris)}
   nav .links a:hover{color:var(--tinta)}
+  nav .menu-btn{display:none;place-items:center;width:42px;height:42px;flex-shrink:0;border:1.5px solid var(--borde);background:#fff;border-radius:4px 14px 4px 14px;cursor:pointer;padding:0;color:var(--tinta)}
+  nav .menu-btn svg{width:22px;height:22px}
+  nav .menu-btn .x{display:none}nav.abierto .menu-btn .x{display:block}nav.abierto .menu-btn .h{display:none}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:800;font-size:1rem;padding:13px 22px;border-radius:6px 24px 6px 24px;border:0;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s}
   .btn:active{transform:scale(.97)}
   .btn.pri{background:var(--rosa);color:#fff;box-shadow:0 8px 20px rgba(219,39,119,.28)}
@@ -149,8 +152,15 @@
   @media (prefers-reduced-motion:reduce){.rev{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
 
   @media (max-width:860px){
-    nav .links{display:none}
     nav .wrap>.btn{margin-left:auto}
+    /* celu: los links van en un menú desplegable (botón ☰ a la derecha) */
+    nav .menu-btn{display:grid}
+    nav .links{position:absolute;top:64px;left:0;right:0;flex-direction:column;gap:0;margin:0;padding:6px 16px 14px;
+      background:rgba(255,253,248,.98);border-bottom:1px solid var(--borde);box-shadow:0 14px 30px rgba(0,0,0,.08);
+      opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .2s,transform .2s}
+    nav.abierto .links{opacity:1;transform:none;pointer-events:auto}
+    nav .links a{padding:13px 6px;font-size:1.05rem;border-bottom:1px solid var(--borde);color:var(--tinta)}
+    nav .links a:last-child{border-bottom:0}
     .hero .wrap{grid-template-columns:1fr;text-align:center;padding-top:34px;padding-bottom:40px}
     .hero p.lead{margin-left:auto;margin-right:auto}
     .hero .ctas{justify-content:center}
@@ -177,8 +187,9 @@
 <nav id="nav">
   <div class="wrap">
     <a class="marca" href="#" style="color:var(--tinta)"><span class="logo" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></a>
-    <div class="links"><a href="#que">Qué hace</a><a href="#como">Cómo funciona</a><a href="#precio">Precio</a><a href="#preguntas">Preguntas</a></div>
+    <div class="links" id="menuLinks"><a href="#que">Qué hace</a><a href="#como">Cómo funciona</a><a href="#precio">Precio</a><a href="#preguntas">Preguntas</a></div>
     <a class="btn sec chico jx-entrar" href="entrar.html">Ingresar</a>
+    <button type="button" class="menu-btn" id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="menuLinks"><svg class="h" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg><svg class="x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
 </nav>
 
@@ -317,6 +328,14 @@
 // Barra con línea al bajar
 const nav = document.getElementById('nav');
 addEventListener('scroll', () => nav.classList.toggle('sombra', scrollY > 8), {passive: true});
+
+// Menú del celu (☰): abre/cierra; se cierra al elegir una opción, tocar afuera o con Escape
+const menuBtn = document.getElementById('menuBtn');
+const menu = abrir => { nav.classList.toggle('abierto', abrir); menuBtn.setAttribute('aria-expanded', abrir); menuBtn.setAttribute('aria-label', abrir ? 'Cerrar menú' : 'Abrir menú'); };
+menuBtn.addEventListener('click', e => { e.stopPropagation(); menu(!nav.classList.contains('abierto')); });
+document.querySelectorAll('#menuLinks a').forEach(a => a.addEventListener('click', () => menu(false)));
+document.addEventListener('click', e => { if (!nav.contains(e.target)) menu(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') menu(false); });
 
 // Aparición suave de los bloques
 const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => {
