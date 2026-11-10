@@ -48,7 +48,7 @@
   .per small{display:block;font-size:.75rem;font-weight:800}
   .per.j small{color:var(--juli)} .per.a small{color:var(--ale)}
   .per b{font-size:1.15rem;font-weight:900}
-  .per i{display:block;font-style:normal;font-size:.75rem;color:var(--text2);font-weight:700;margin-top:2px}
+  .per i{display:block;font-style:normal;font-size:.75rem;white-space:nowrap;letter-spacing:-.01em;color:var(--text2);font-weight:700;margin-top:2px}
   .barra{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface2);margin:12px 0 10px}
   .barra .j{background:var(--juli)} .barra .a{background:var(--ale)}
   .saldo{text-align:center;font-weight:900;font-size:1.02rem;padding:10px;border-radius:12px;background:var(--surface2)}
@@ -132,6 +132,25 @@
   .sheet p{text-align:center;color:var(--text2);font-weight:600}
   .sheet .two{display:flex;gap:8px}.sheet .two .btn{flex:1}
   .sheet .col{display:flex;flex-direction:column;gap:8px}
+  /* botón de configuración a la derecha del título */
+  .top .cfg{margin-left:auto;width:40px;height:40px;border:none;border-radius:12px;background:var(--accent-light);color:var(--accent);font-size:1.35rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .top .cfg:active{transform:scale(.94)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .top .cfg{background:rgba(255,255,255,.08)}}
+  :root[data-theme="dark"] .top .cfg{background:rgba(255,255,255,.08)}
+  /* reparto: una sola barra que se mueve de 5 en 5 */
+  .rep{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .rep div{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:84px}
+  .rep img{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2.5px solid transparent}
+  .rep .j img{border-color:var(--juli)} .rep .a img{border-color:var(--ale)}
+  .rep small{font-size:.8rem;font-weight:800;color:var(--text2)}
+  .rep b{font-size:1.6rem;font-weight:900;color:var(--accent)}
+  .rango{-webkit-appearance:none;appearance:none;width:100%;height:12px;border-radius:999px;outline:none;margin:6px 0 2px;cursor:pointer;
+    background:linear-gradient(to right,var(--accent) 0 var(--v,50%),color-mix(in srgb,var(--accent) 22%,var(--surface2)) var(--v,50%) 100%)}
+  .rango::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:4px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .rango::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:4px solid var(--accent);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+  .rango::-moz-range-track{height:12px;border-radius:999px;background:transparent}
+  .marcas{display:flex;justify-content:space-between;font-size:.7rem;font-weight:800;color:var(--text2);padding:0 4px}
+  .sheet .lnk{background:none;border:none;color:var(--accent);font-weight:800;font-size:.9rem;cursor:pointer;padding:4px;align-self:center}
 </style>
 <link rel="stylesheet" href="fondo.css">
 <link rel="stylesheet" href="comun.css">
@@ -140,6 +159,7 @@
 <div class="top">
   <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
   <h1>GASTOS COMPARTIDOS</h1>
+  <button class="cfg" onclick="abrirReparto()" aria-label="Cómo dividen los gastos"><i class="ti ti-adjustments-horizontal"></i></button>
 </div>
 
 <main>
@@ -185,8 +205,24 @@
   </div>
 </div>
 
+<div class="bgm" id="dlgRep" onclick="if(event.target===this)cerrarReparto()">
+  <div class="sheet">
+    <h3>¿Cómo dividen los gastos?</h3>
+    <p style="font-size:.88rem">Lo que le toca pagar a cada uno del total del mes.</p>
+    <div class="rep">
+      <div class="j"><img id="rFJ" alt=""><small id="rNJ"></small><b class="num" id="rPJ">50%</b></div>
+      <div class="a"><img id="rFA" alt=""><small id="rNA"></small><b class="num" id="rPA">50%</b></div>
+    </div>
+    <input type="range" class="rango" id="rRango" min="0" max="100" step="5" value="50" aria-label="Porcentaje que paga cada uno" oninput="moverReparto(+this.value)">
+    <div class="marcas"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+    <button class="lnk" onclick="moverReparto(50)">Volver a mitad y mitad</button>
+    <div class="two"><button class="btn ghost" onclick="cerrarReparto()">Cancelar</button><button class="btn" onclick="guardarReparto()"><i class="ti ti-check"></i> Guardar</button></div>
+  </div>
+</div>
+
 <script>
-/* ===== Gastos compartidos: cada uno carga lo que pagó y la app calcula cuánto tiene que poner cada uno (mitad y mitad) ===== */
+/* ===== Gastos compartidos: cada uno carga lo que pagó y la app calcula cuánto tiene que poner cada uno
+   (mitad y mitad, o el porcentaje que elijan con el botón de configuración) ===== */
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const LS='compartidos_v1';
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
@@ -207,6 +243,9 @@ const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};const d=((window.JUN
    Cada mes hasta el que viene (por ejemplo, en enero se ve febrero pero no marzo) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
    y sin quién lo pagó; así si los dos celus lo crean a la vez, es el mismo y no se duplica. */
 let G=rd(LS,{})||{},S=rd(LS+'_s',{})||{};
+/* reparto: porcentaje que le toca a la primera persona (j); la otra paga el resto. Se guarda en la nube para los dos. */
+let REP=rd(LS+'_r',{pj:50})||{pj:50};
+const pctJ=()=>{const v=+REP.pj;return isFinite(v)?Math.min(100,Math.max(0,Math.round(v/5)*5)):50;};
 const inicial=(n,c)=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="${c}"/><text x="20" y="27" font-family="system-ui,sans-serif" font-size="19" font-weight="800" fill="#fff" text-anchor="middle">${String(n||'?').trim().charAt(0).toUpperCase().replace(/[<&>]/g,'')}</text></svg>`);
 const FOTO=window.JUNTOS?{j:(JUNTOS.fotos&&JUNTOS.fotos.j)||inicial(NOM.j,'#DB2777'),a:(JUNTOS.fotos&&JUNTOS.fotos.a)||inicial(NOM.a,'#0284C7')}:{j:'img/avatar-juli.webp?v=6',a:'img/avatar-ale.webp?v=6'};
 const mesDe=f=>f.slice(0,7);
@@ -243,11 +282,14 @@ function render(){
   const l=Object.values(G).filter(g=>g&&g.fecha&&g.fecha.startsWith(p)).sort((x,z)=>(!!x.saldado-!!z.saldado)||(!!x.quien-!!z.quien)||z.fecha.localeCompare(x.fecha)||(z.creado||0)-(x.creado||0));
   // los gastos ya divididos (saldados) no cuentan en el resumen
   const cuenta=l.filter(g=>!g.saldado),sald=l.filter(g=>g.saldado&&g.quien),tSald=sald.reduce((x,g)=>x+(+g.monto||0),0);
-  const pj=cuenta.filter(g=>g.quien==='j').reduce((s,g)=>s+(+g.monto||0),0),pa=cuenta.filter(g=>g.quien==='a').reduce((s,g)=>s+(+g.monto||0),0),tot=pj+pa,mitad=tot/2;
+  const pj=cuenta.filter(g=>g.quien==='j').reduce((s,g)=>s+(+g.monto||0),0),pa=cuenta.filter(g=>g.quien==='a').reduce((s,g)=>s+(+g.monto||0),0),tot=pj+pa;
+  const xj=pctJ(),tocaJ=tot*xj/100,tocaA=tot-tocaJ,mitad=tocaJ;   // "mitad": lo que le toca a j (con 50/50 es la mitad)
   document.getElementById('total').textContent=fmt(tot);
   document.getElementById('nJ').textContent=NOM.j.toUpperCase()+' PAGÓ';document.getElementById('nA').textContent=NOM.a.toUpperCase()+' PAGÓ';
   document.getElementById('pJ').textContent=fmt(pj);document.getElementById('pA').textContent=fmt(pa);
-  document.getElementById('cJ').textContent=tot?`Le toca ${fmt(mitad)}`:'';document.getElementById('cA').textContent=tot?`Le toca ${fmt(mitad)}`:'';
+  const conPct=xj!==50;
+  document.getElementById('cJ').textContent=tot?`Le toca ${fmt(tocaJ)}${conPct?` · ${xj}%`:''}`:(conPct?`Paga el ${xj}%`:'');
+  document.getElementById('cA').textContent=tot?`Le toca ${fmt(tocaA)}${conPct?` · ${100-xj}%`:''}`:(conPct?`Paga el ${100-xj}%`:'');
   document.getElementById('bJ').style.width=(tot?pj/tot*100:50)+'%';document.getElementById('bA').style.width=(tot?pa/tot*100:50)+'%';
   const s=document.getElementById('saldo'),dif=Math.round(pj-mitad);
   if(!tot){s.className=sald.length?'saldo ok':'saldo';s.textContent=sald.length?'¡Están a mano!':'Sin gastos este mes';}
@@ -265,7 +307,7 @@ function render(){
       <div class="tx" onclick="editar('${g.id}')"><b>${esc(g.desc)||'Sin descripción'}${g.serie?'<span class="fijo-tag"><i class="ti ti-repeat"></i> fijo</span>':''}</b>
         <small>${fFecha(g.fecha)} · ${g.quien?'pagó '+esc(NOM[g.quien]):'sin pagar'}${g.saldado?' · <span style="color:var(--pos)">ya dividido</span>':''}</small></div>
       <span class="m num">${fmt(+g.monto||0)}</span>
-      ${g.quien?`<button class="chk${g.saldado?' on':''}" onclick="toggleSaldado('${g.id}')" aria-pressed="${!!g.saldado}" aria-label="${g.saldado?'Marcar como no dividido':'Marcar como ya dividido mitad y mitad'}"><i class="ti ti-check"></i></button>`:'<span class="chk-esp"></span>'}
+      ${g.quien?`<button class="chk${g.saldado?' on':''}" onclick="toggleSaldado('${g.id}')" aria-pressed="${!!g.saldado}" aria-label="${g.saldado?'Marcar como no dividido':'Marcar como ya dividido'}"><i class="ti ti-check"></i></button>`:'<span class="chk-esp"></span>'}
       <button class="del" onclick="borrar('${g.id}')" aria-label="Eliminar ${esc(g.desc)}"><i class="ti ti-trash"></i></button>
     </div>`).join('')+(lejos?'<p class="vacio" style="font-size:.82rem">Los gastos fijos aparecen acá cuando falte un mes.</p>':''):(lejos?'<p class="vacio">Los gastos fijos aparecen acá cuando falte un mes.</p>':'<p class="vacio">Todavía no hay gastos en este mes</p>');
 }
@@ -277,7 +319,7 @@ function toggleFijo(v){fijo=v===undefined?!fijo:v;const b=document.getElementByI
   // en un gasto fijo se puede dejar "Nadie aún" y asignarlo después
   document.getElementById('qN').hidden=!fijo;document.getElementById('quienBox').classList.toggle('tres',fijo);
   if(!fijo&&quien===null)setQuien(rd('compartidos_quien','j'));}
-/* check: ese gasto ya lo dividieron mitad y mitad, deja de contar en el resumen */
+/* check: ese gasto ya lo dividieron, deja de contar en el resumen */
 function toggleSaldado(id){const g=G[id];if(!g)return;g.saldado=!g.saldado;subir(g);render();}
 function asignar(id,q){const g=G[id];if(!g)return;g.quien=q;subir(g);render();}
 function abrirForm(g){
@@ -331,6 +373,17 @@ function borrar(id){const g=G[id];if(!g)return;
   document.getElementById('dlg').classList.add('show');}
 function cerrarDlg(){document.getElementById('dlg').classList.remove('show');}
 
+/* configuración del reparto */
+let repTmp=50;
+function moverReparto(v){repTmp=v;const r=document.getElementById('rRango');r.value=v;r.style.setProperty('--v',v+'%');
+  document.getElementById('rPJ').textContent=v+'%';document.getElementById('rPA').textContent=(100-v)+'%';}
+function abrirReparto(){
+  document.getElementById('rFJ').src=FOTO.j;document.getElementById('rFA').src=FOTO.a;
+  document.getElementById('rNJ').textContent=NOM.j;document.getElementById('rNA').textContent=NOM.a;
+  moverReparto(pctJ());document.getElementById('dlgRep').classList.add('show');}
+function cerrarReparto(){document.getElementById('dlgRep').classList.remove('show');}
+function guardarReparto(){REP={pj:repTmp};PEND.r={pj:repTmp};guardarLocal();programar();cerrarReparto();render();}
+
 /* ===== nube (Firebase): colección "ahorros", documento "compartidos", campo g.{id} ===== */
 let db=null;
 const ref=()=>db.collection('ahorros').doc('compartidos');
@@ -339,23 +392,25 @@ function aviso(t){const d=document.createElement('div');d.textContent=t;d.style.
    Cuando llegan datos de la nube, se les aplican encima los pendientes: así un gasto recién cargado o borrado
    no desaparece ni vuelve a aparecer mientras viaja. */
 let PEND=rd(LS+'_p',{g:{},s:{}})||{g:{},s:{}},listo=false,tEnv=null,enviando=false;
-const guardarLocal=()=>{wr(LS,G);wr(LS+'_s',S);wr(LS+'_p',PEND);};
+const guardarLocal=()=>{wr(LS,G);wr(LS+'_s',S);wr(LS+'_r',REP);wr(LS+'_p',PEND);};
 function subir(g){PEND.g[g.id]=JSON.parse(JSON.stringify(g));guardarLocal();programar();}
 function subirS(sr){PEND.s[sr.id]=JSON.parse(JSON.stringify(sr));guardarLocal();programar();}
 function bajar(id){PEND.g[id]=null;guardarLocal();programar();}
 function programar(){clearTimeout(tEnv);tEnv=setTimeout(enviar,250);}
 function enviar(){
   if(!db||enviando)return;const FV=firebase.firestore.FieldValue;
-  const gk=Object.keys(PEND.g),sk=Object.keys(PEND.s);if(!gk.length&&!sk.length)return;
+  const gk=Object.keys(PEND.g),sk=Object.keys(PEND.s),rk=PEND.r?{...PEND.r}:null;if(!gk.length&&!sk.length&&!rk)return;
   const foto=JSON.stringify(PEND),obj={ts:FV.serverTimestamp()};
   if(gk.length){obj.g={};gk.forEach(k=>obj.g[k]=PEND.g[k]===null?FV.delete():PEND.g[k]);}
   if(sk.length){obj.s={};sk.forEach(k=>obj.s[k]=PEND.s[k]);}
+  if(rk)obj.r=rk;
   enviando=true;
   ref().set(obj,{merge:true}).then(()=>{
     const env=JSON.parse(foto);   // saca de pendientes lo que se mandó, salvo que haya cambiado mientras tanto
     gk.forEach(k=>{if(JSON.stringify(PEND.g[k])===JSON.stringify(env.g[k]))delete PEND.g[k];});
     sk.forEach(k=>{if(JSON.stringify(PEND.s[k])===JSON.stringify(env.s[k]))delete PEND.s[k];});
-    wr(LS+'_p',PEND);enviando=false;if(Object.keys(PEND.g).length||Object.keys(PEND.s).length)programar();
+    if(rk&&PEND.r&&PEND.r.pj===rk.pj)delete PEND.r;
+    wr(LS+'_p',PEND);enviando=false;if(Object.keys(PEND.g).length||Object.keys(PEND.s).length||PEND.r)programar();
   }).catch(e=>{enviando=false;console.warn(e);aviso('No se pudo guardar en la nube. Revisá la conexión.');setTimeout(programar,5000);});
 }
 function aplicar(doc){
@@ -364,7 +419,7 @@ function aplicar(doc){
   Object.entries(PEND.g).forEach(([k,v])=>{if(v===null)delete g[k];else g[k]=v;});
   Object.entries(PEND.s).forEach(([k,v])=>{sr[k]=v;});
   if(!doc.exists&&!listo){Object.values(G).forEach(subir);Object.values(S).forEach(subirS);}   // primera vez: sube lo que haya en este celu
-  else{G=g;S=sr;}
+  else{G=g;S=sr;REP=PEND.r?{...PEND.r}:(d.r&&isFinite(+d.r.pj)?{pj:+d.r.pj}:{pj:50});}
   listo=true;guardarLocal();
   const a=document.activeElement;if(!(a&&a.tagName==='INPUT'))render();
 }
