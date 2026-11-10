@@ -187,11 +187,11 @@
   .col.n2{grid-template-columns:1fr 1fr;align-content:center}
   .col.n3,.col.n4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
   .col.n3 span:first-child{grid-column:1/-1}
-  .col span{position:relative;background:#fff;border-radius:4px 12px 4px 12px;overflow:hidden;min-height:0}
+  .col span{position:relative;overflow:hidden;min-height:0}
   .col.n1 span{background:none}
   .col.n2 span{aspect-ratio:1}
   .col img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;max-height:none !important;padding:0 !important}
-  .col b{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);color:#fff;font:900 1.3rem 'Nunito',sans-serif}
+  .col b{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);border-radius:4px 12px 4px 12px;color:#fff;font:900 1.3rem 'Nunito',sans-serif}
   .pic::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
     background:linear-gradient(135deg,rgba(255,255,255,.38) 0%,rgba(255,255,255,.08) 38%,transparent 55%)}
   .pic::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:55%;pointer-events:none;z-index:2;
@@ -540,7 +540,7 @@ aplicarPersonaje();window.addEventListener('juntos',aplicarPersonaje);
 /* tarjetas de Mascotas e Hijos: el avatar elegido de cada uno (si no eligió, uno al azar) */
 (function(){
   const T={masc:{pic:'picMasc',ls:'mascotas_v1',col:'mascotas',n:23,pre:'mascota'},hijos:{pic:'picHijos',ls:'hijos_v1',col:'hijos',n:28,pre:'bebe'}};
-  const p2=n=>String(n).padStart(2,'0'),url=a=>'img/avatares/'+a+'.webp';
+  const p2=n=>String(n).padStart(2,'0'),url=a=>'img/avatares/'+a+'.webp?v=3';
   const azar=(t,semilla)=>{let h=0;String(semilla).split('').forEach(c=>h=(h*31+c.charCodeAt(0))>>>0);return t.pre+p2(h%t.n+1);};
   let al;try{al=sessionStorage.getItem('av_azar')}catch(e){}if(!al){al=String(Math.random());try{sessionStorage.setItem('av_azar',al)}catch(e){}}
   function pintar(k,datos){const t=T[k],el=document.getElementById(t.pic);if(!el)return;

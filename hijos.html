@@ -229,7 +229,7 @@ const SECS=[
   ['docs','📁','Documentos','Fotos, certificados y archivos'],
   ['fechas','📅','Fechas importantes','Cumpleaños, controles, turnos y colegio']];
 const BEBES=Array.from({length:28},(_,i)=>'bebe'+String(i+1).padStart(2,'0'));
-const avURL=a=>'img/avatares/'+a+'.webp';
+const avURL=a=>'img/avatares/'+a+'.webp?v=3';
 function avatar(c){return c.avatar?`<img src="${avURL(c.avatar)}" alt="">`:c.foto?`<img src="${URLA(c.foto)}" alt="">`:esc(c.emoji||'🧒');}
 function render(){
   const hs=Object.values(D.hijos).sort((a,b)=>(a.creado||0)-(b.creado||0));
