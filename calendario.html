@@ -201,7 +201,16 @@ function cae(e,s){
   if(e.rep==='anio')return a.getDate()===b.getDate()&&a.getMonth()===b.getMonth();
   return false;
 }
-function delDia(s){return Object.values(EV).filter(e=>cae(e,s)).sort((x,y)=>(x.hora||'').localeCompare(y.hora||'')||(x.creado||0)-(y.creado||0))}
+/* lo que les toca a las mascotas (próxima vacuna, desparasitación…) se ve en el calendario; se edita en Mascotas */
+let MP=rd('mascotas_v1',{}),MR=rd('mascota_reg_v1',{}),VM=[];
+const MT={vacuna:['💉','Vacuna'],despar:['🪱','Desparasitación'],pelu:['✂️','Peluquería'],bano:['🛁','Baño'],vete:['🩺','Veterinario'],enfer:['🩺','Control'],lesion:['🩺','Control'],raro:['🩺','Control'],comida:['🍖','Comida'],juguete:['🧸','Compras'],otro:['🐾','Recordatorio']};
+function calcMascotas(){const ult={};
+  Object.values(MR).forEach(r=>{if(!r||!r.mascota||!r.tipo||!r.fecha||!MP[r.mascota])return;const k=r.mascota+'|'+r.tipo,u=ult[k];
+    if(!u||r.fecha>u.fecha||(r.fecha===u.fecha&&(r.creado||0)>(u.creado||0)))ult[k]=r;});
+  VM=Object.values(ult).filter(r=>r.prox).map(r=>{const p=MP[r.mascota],t=MT[r.tipo]||MT.otro;
+    return {id:'m_'+r.id,titulo:t[0]+' '+t[1]+' de '+(p.nombre||'tu mascota'),fecha:r.prox,hora:'',quien:'ambos',virtual:true,mascota:r.mascota,emoji:p.emoji||'🐾'};});}
+calcMascotas();
+function delDia(s){return Object.values(EV).concat(VM).filter(e=>cae(e,s)).sort((x,y)=>(x.hora||'').localeCompare(y.hora||'')||(x.creado||0)-(y.creado||0))}
 
 function render(){
   // mes
@@ -232,6 +241,8 @@ function render(){
 function item(e){
   const q=e.quien||'ambos',col=q==='j'?'var(--juli)':q==='a'?'var(--ale)':'var(--dos)';
   const me=yo(),nuevo=me&&e.autor&&e.autor!==me&&(e.creado||0)>visto;
+  if(e.virtual)return `<div class="ev" onclick="location.href='mascotas.html#m=${encodeURIComponent(e.mascota)}'"><span class="bar" style="background:var(--dos)"></span>
+    <span class="hora"><span style="font-size:.7rem">Todo el día</span></span><div class="tx"><b>${esc(e.titulo)}</b><span class="chip gris">${esc(e.emoji)} Mascotas</span></div></div>`;
   return `<div class="ev" onclick="abrirForm('${esc(e.id)}')"><span class="bar" style="background:${col}"></span>
     <span class="hora">${e.hora?esc(e.hora):'<span style="font-size:.7rem">Todo el día</span>'}</span>
     <div class="tx"><b>${TIPO[e.tipo]||'📅'} ${esc(e.titulo)}</b>${e.notas?`<small>${esc(e.notas)}</small>`:''}
@@ -350,6 +361,9 @@ async function initFb(){
       primera=false;EV=r;wr(LS,EV);
       if(!document.getElementById('fm').classList.contains('show'))render();
     },()=>{});
+    [['mascotas','mascotas_v1',v=>MP=v],['mascota_reg','mascota_reg_v1',v=>MR=v]].forEach(([col,ls,set])=>db.collection(col).onSnapshot(snap=>{
+      const r={};snap.docs.forEach(d=>{const x=d.data();if(x)r[d.id]=Object.assign({},x,{id:d.id})});set(r);wr(ls,r);calcMascotas();
+      if(!document.getElementById('fm').classList.contains('show'))render();},()=>{}));
   }catch(e){}
 }
 document.getElementById('grilla').addEventListener('touchstart',e=>{window._tx=e.touches[0].clientX},{passive:true});

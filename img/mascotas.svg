@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- huella con corazón (provisoria hasta tener la ilustración de Mascotas) -->
+  <g fill="#7A4E2D" stroke="#3B2414" stroke-width="7" stroke-linejoin="round">
+    <ellipse cx="112" cy="168" rx="38" ry="50" transform="rotate(-24 112 168)"/>
+    <ellipse cx="170" cy="104" rx="38" ry="52" transform="rotate(-8 170 104)"/>
+    <ellipse cx="240" cy="104" rx="38" ry="52" transform="rotate(8 240 104)"/>
+    <ellipse cx="298" cy="168" rx="38" ry="50" transform="rotate(24 298 168)"/>
+    <path d="M205 196c-52 0-112 62-112 112 0 40 34 56 66 50 22-4 32-14 46-14s24 10 46 14c32 6 66-10 66-50 0-50-60-112-112-112z"/>
+  </g>
+  <path d="M205 322c-6-6-46-30-46-58 0-16 12-28 26-28 9 0 16 5 20 12 4-7 11-12 20-12 14 0 26 12 26 28 0 28-40 52-46 58z" fill="#E8435A"/>
+  <g fill="#fff" opacity=".35"><ellipse cx="160" cy="88" rx="10" ry="16" transform="rotate(-8 160 88)"/><ellipse cx="230" cy="88" rx="10" ry="16" transform="rotate(8 230 88)"/></g>
+</svg>

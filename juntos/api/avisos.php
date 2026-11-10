@@ -90,6 +90,46 @@ try {
       }
     }
   }
+  // ---------- Mascotas: lo que "le toca" (próxima vacuna, desparasitación, control…) ----------
+  // Por cada mascota y tipo vale el último registro; si tiene "próxima vez", se avisa el día anterior a las 20 y ese día a las 9.
+  $TIP = ['vacuna' => ['💉', 'Vacuna'], 'despar' => ['🪱', 'Desparasitación'], 'pelu' => ['✂️', 'Peluquería'], 'bano' => ['🛁', 'Baño'],
+    'vete' => ['🩺', 'Veterinario'], 'enfer' => ['🤒', 'Control'], 'lesion' => ['🦴', 'Control'], 'raro' => ['⚠️', 'Control'],
+    'comida' => ['🍖', 'Comida'], 'juguete' => ['🧸', 'Compras'], 'otro' => ['🐾', 'Recordatorio']];
+  foreach ($parejas as $pid) {
+    $pid = (int)$pid;
+    $q = $db->prepare("SELECT id, data FROM docs WHERE pareja_id = ? AND col = 'mascotas' AND data IS NOT NULL"); $q->execute([$pid]);
+    $pets = []; foreach ($q as $r) { $x = json_decode($r['data'], true); if (is_array($x)) $pets[$r['id']] = $x; }
+    if (!$pets) continue;
+    $q = $db->prepare("SELECT id, data FROM docs WHERE pareja_id = ? AND col = 'mascota_reg' AND data IS NOT NULL"); $q->execute([$pid]);
+    $ult = [];
+    foreach ($q as $r) {
+      $x = json_decode($r['data'], true);
+      if (!is_array($x) || empty($x['mascota']) || empty($x['tipo']) || empty($x['fecha']) || !isset($pets[$x['mascota']])) continue;
+      $k = $x['mascota'] . '|' . $x['tipo']; $x['id'] = $r['id'];
+      if (!isset($ult[$k]) || [$x['fecha'], $x['creado'] ?? 0] > [$ult[$k]['fecha'], $ult[$k]['creado'] ?? 0]) $ult[$k] = $x;
+    }
+    $m = $db->prepare('SELECT id FROM usuarios WHERE pareja_id = ?'); $m->execute([$pid]);
+    $todos = array_map('intval', $m->fetchAll(PDO::FETCH_COLUMN));
+    foreach ($ult as $x) {
+      $prox = (string)($x['prox'] ?? '');
+      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $prox) || ($prox !== $hoy && $prox !== $manana)) continue;
+      $t = $TIP[$x['tipo']] ?? $TIP['otro']; $pet = $pets[$x['mascota']];
+      $pasos = [['vispera', (new DateTime($prox . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 'Mañana le toca a ' . ($pet['nombre'] ?? 'tu mascota')],
+                ['dia', new DateTime($prox . ' ' . HORA_DIA, $tz), 'Hoy le toca a ' . ($pet['nombre'] ?? 'tu mascota')]];
+      foreach ($pasos as [$tipo, $tt, $texto]) {
+        $dif = ($ahora->getTimestamp() - $tt->getTimestamp()) / 60;
+        if ($dif < 0 || $dif > TOLERANCIA) continue;
+        $msg = ['title' => ($pet['emoji'] ?? '🐾') . ' ' . $t[0] . ' ' . $t[1] . ' de ' . ($pet['nombre'] ?? 'tu mascota'), 'body' => $texto,
+          'url' => 'mascotas.html#m=' . $x['mascota'], 'tag' => 'masc-' . $x['id']];
+        foreach ($todos as $uid) {
+          $marca->execute([hash('sha256', "$pid|m|{$x['id']}|$prox|$tipo|$uid")]);
+          if ($marca->rowCount() === 0) continue;
+          $enviados += pushUsuario($uid, $msg);
+        }
+      }
+    }
+  }
+
   echo json_encode(['ok' => true, 'enviados' => $enviados, 'hora' => $ahora->format('Y-m-d H:i')]);
 } catch (Throwable $e) {
   error_log('JuntOS avisos: ' . $e->getMessage());
