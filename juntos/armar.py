@@ -16,7 +16,7 @@ JUNTOS = RAIZ / 'juntos'
 SALIDA = Path(sys.argv[1]).resolve()
 
 PAGINAS = ['index.html', 'inventario.html', 'ahorros.html', 'vacaciones.html', 'copito.html',
-           'gastos.html', 'compartidos.html', 'personajes.html', 'sonidos.html']
+           'gastos.html', 'compartidos.html', 'calendario.html', 'personajes.html', 'sonidos.html']
 ARCHIVOS = ['tema.js', 'sonidos.js', 'personajes.js', 'comun.css', 'fondo.css', 'manifest.json',
             'logo.png', 'logo2.png', 'logo3.png']
 
