@@ -47,7 +47,7 @@
   /* un desplegable por hijo */
   .acc{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--accent);border-radius:18px;overflow:hidden}
   .acc-h{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
-  .av{width:62px;height:62px;border-radius:8px 22px 8px 22px;background:var(--accent-light);display:grid;place-items:center;font-size:2rem;flex-shrink:0;overflow:hidden}
+  .av{width:62px;height:62px;border-radius:8px 22px 8px 22px;background:#fff;border:1px solid var(--border);display:grid;place-items:center;font-size:2rem;flex-shrink:0;overflow:hidden}
   .av img{width:100%;height:100%;object-fit:cover}
   .acc-h .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .acc-h .tx b{font-size:1.15rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -109,6 +109,10 @@
   .foto-in{display:flex;align-items:center;gap:10px}
   .foto-in .av{width:56px;height:56px}
   .foto-in .tx{flex:1;font-size:.8rem;color:var(--text2);font-weight:700}
+  .avs{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:232px;overflow-y:auto;padding:2px}
+  .avs button{aspect-ratio:1;border:2.5px solid var(--border2) !important;background:#fff;cursor:pointer;padding:0;overflow:hidden}
+  .avs button img{width:100%;height:100%;object-fit:cover;display:block}
+  .avs button.on{border-color:var(--accent) !important;box-shadow:0 0 0 2px var(--accent-light)}
   .visor{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;gap:12px}
   .visor.show{display:flex}
   .visor img{max-width:100%;max-height:78dvh;object-fit:contain;border-radius:6px}
@@ -224,7 +228,9 @@ const SECS=[
   ['crec','📈','Crecimiento','Altura, peso e historial'],
   ['docs','📁','Documentos','Fotos, certificados y archivos'],
   ['fechas','📅','Fechas importantes','Cumpleaños, controles, turnos y colegio']];
-function avatar(c){return c.foto?`<img src="${URLA(c.foto)}" alt="" onerror="this.replaceWith('${esc(c.emoji||'🧒')}')">`:esc(c.emoji||'🧒');}
+const BEBES=Array.from({length:28},(_,i)=>'bebe'+String(i+1).padStart(2,'0'));
+const avURL=a=>'img/avatares/'+a+'.webp';
+function avatar(c){return c.avatar?`<img src="${avURL(c.avatar)}" alt="">`:c.foto?`<img src="${URLA(c.foto)}" alt="">`:esc(c.emoji||'🧒');}
 function render(){
   const hs=Object.values(D.hijos).sort((a,b)=>(a.creado||0)-(b.creado||0));
   if(!hs.length){$('main').innerHTML=`<section class="card nada"><div class="big">🧒</div><b>Todavía no hay hijos cargados</b>
@@ -310,6 +316,7 @@ function abrirForm(o){FORM=Object.assign({archivos:{}},o);
   const pri=$('fmF').querySelector('input:not([type=hidden]),textarea');if(pri&&!o.valores)setTimeout(()=>pri.focus(),60);
 }
 function campo([k,l,t,x],v){const val=v[k]??'',id='f_'+k;
+  if(t==='avatares'){FORM.archivos[k]=val||BEBES[0];return `<div class="lbl">${l}<div class="avs" id="${id}">${BEBES.map(a=>`<button type="button" class="${a===FORM.archivos[k]?'on':''}" onclick="FORM.archivos['${k}']='${a}';[...this.parentNode.children].forEach(b=>b.classList.toggle('on',b===this))" aria-label="Avatar"><img src="${avURL(a)}" alt="" loading="lazy"></button>`).join('')}</div></div>`;}
   if(t==='area')return `<label class="lbl">${l}<textarea class="in" id="${id}" maxlength="800">${esc(val)}</textarea></label>`;
   if(t==='sel')return `<label class="lbl">${l}<select class="in" id="${id}">${x.map(o=>{const[a,b]=Array.isArray(o)?o:[o,o];return `<option value="${esc(a)}"${a===val?' selected':''}>${esc(b)}</option>`}).join('')}</select></label>`;
   if(t==='foto'||t==='archivo'){FORM.archivos[k]=val||'';const esPdf=v[k+'Mime']==='application/pdf';
@@ -319,7 +326,7 @@ function campo([k,l,t,x],v){const val=v[k]??'',id='f_'+k;
   const tp={date:'date',time:'time',tel:'tel',num:'text'}[t]||'text',im=t==='num'?' inputmode="decimal"':t==='tel'?' inputmode="tel"':'';
   return `<label class="lbl">${l}<input class="in" id="${id}" type="${tp}"${im} value="${esc(val)}" maxlength="120" autocomplete="off"${x&&x.ph?` placeholder="${esc(x.ph)}"`:''}></label>`;}
 function leerForm(){const o={};FORM.campos.forEach(c=>{const L=c[2]==='dos'?c[3]:[c];L.forEach(([k,l,t])=>{
-  if(t==='foto'||t==='archivo'){o[k]=FORM.archivos[k]||'';if(FORM.archivos[k+'Mime'])o[k+'Mime']=FORM.archivos[k+'Mime'];return;}
+  if(t==='foto'||t==='archivo'||t==='avatares'){o[k]=FORM.archivos[k]||'';if(FORM.archivos[k+'Mime'])o[k+'Mime']=FORM.archivos[k+'Mime'];return;}
   const el=$('f_'+k);if(el)o[k]=t==='num'?num(el.value):el.value.trim();});});return o;}
 async function guardarForm(){const o=leerForm();if(FORM.requerido&&!o[FORM.requerido]){$('f_'+FORM.requerido).focus();return}
   if(FORM.subiendo){toast('Esperá que termine de subir el archivo');return}
@@ -358,7 +365,7 @@ const SANGRE=['','O+','O-','A+','A-','B+','B-','AB+','AB-'];
 function formPersonal(id){const c=id?D.hijos[id]:null;
   abrirForm({titulo:c?'Información personal':'Nuevo hijo/a',valores:c,requerido:'nombre',
     campos:[['x','','dos',[['nombre','NOMBRE','text'],['apellido','APELLIDO','text']]],
-      ['emoji','AVATAR','sel',['🧒','👶','👦','👧','🧑']],
+      ['avatar','ELEGÍ SU AVATAR','avatares'],
       ['x','','dos',[['nac','FECHA DE NACIMIENTO','date'],['dni','DNI','text',{ph:'Ej: 55.123.456'}]]],
       ['x','','dos',[['sexo','SEXO (OPCIONAL)','sel',['','Femenino','Masculino','Otro']],['sangre','GRUPO SANGUÍNEO','sel',SANGRE.map(s=>[s,s||'—'])]]],
       ['x','','dos',[['lugar','LUGAR DE NACIMIENTO','text'],['nac2','NACIONALIDAD','text',{ph:'Ej: Argentina'}]]]],

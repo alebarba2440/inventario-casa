@@ -47,7 +47,8 @@
   /* lista de mascotas */
   .pet{display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .12s}
   .pet:active{transform:scale(.98)}
-  .emo{width:58px;height:58px;border-radius:50%;background:var(--accent-light);display:grid;place-items:center;font-size:2rem;flex-shrink:0}
+  .emo{width:58px;height:58px;border-radius:8px 22px 8px 22px;background:#fff;display:grid;place-items:center;font-size:2rem;flex-shrink:0;overflow:hidden;border:1px solid var(--border)}
+  .emo img{width:100%;height:100%;object-fit:cover}
   .pet .tx{flex:1;min-width:0}
   .pet .tx b{display:block;font-size:1.1rem;font-weight:900}
   .pet .tx small{display:block;color:var(--text2);font-weight:700;font-size:.82rem}
@@ -95,7 +96,7 @@
   /* acordeón de mascotas (como los autos de Copito) */
   .acc{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--accent);border-radius:18px;overflow:hidden}
   .acc-h{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
-  .acc-h .emo{width:52px;height:52px;font-size:1.8rem}
+  .acc-h .emo{width:60px;height:60px;font-size:1.8rem}
   .acc-h .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
   .acc-h .tx b{font-size:1.1rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .acc-h .tx small{font-size:.8rem;color:var(--text2);font-weight:700}
@@ -123,9 +124,10 @@
   .tipos button i{font-style:normal;font-size:1.35rem}
   .tipos button span{font-size:.68rem;font-weight:800;line-height:1.1;text-align:center}
   .tipos button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
-  .emos{display:flex;flex-wrap:wrap;gap:6px}
-  .emos button{width:44px;height:44px;border-radius:12px;border:2px solid var(--border2);background:var(--surface);font-size:1.5rem;cursor:pointer}
-  .emos button.on{border-color:var(--accent);background:var(--accent-light)}
+  .emos{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:232px;overflow-y:auto;padding:2px}
+  .emos button{aspect-ratio:1;border:2.5px solid var(--border2) !important;background:#fff;cursor:pointer;padding:0;overflow:hidden}
+  .emos button img{width:100%;height:100%;object-fit:cover;display:block}
+  .emos button.on{border-color:var(--accent) !important;box-shadow:0 0 0 2px var(--accent-light)}
   .ops{display:flex;flex-wrap:wrap;gap:6px}
   .ops button{border:2px solid var(--border2);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:800;font-size:.85rem;cursor:pointer}
   .ops button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
@@ -148,7 +150,7 @@
   <form class="sheet" onsubmit="event.preventDefault();guardarPet()">
     <h3 id="pT">Nueva mascota</h3>
     <label class="lbl">NOMBRE<input class="in" id="pNom" maxlength="40" placeholder="Ej: Toby" autocomplete="off"></label>
-    <div class="lbl">¿QUÉ ES?<div class="emos" id="pEmo"></div></div>
+    <div class="lbl">ELEGÍ SU AVATAR<div class="emos" id="pEmo"></div></div>
     <div class="dos">
       <label class="lbl">NACIMIENTO (OPCIONAL)<input class="in" type="date" id="pNac"></label>
       <label class="lbl">RAZA (OPCIONAL)<input class="in" id="pRaza" maxlength="40" placeholder="Ej: Caniche" autocomplete="off"></label>
@@ -193,7 +195,9 @@ const pesos=n=>'$ '+Math.round(n).toLocaleString('es-AR');
 const fFecha=s=>s2f(s).toLocaleDateString('es-AR',{day:'numeric',month:'short',year:s.slice(0,4)===String(new Date().getFullYear())?undefined:'numeric'});
 const yo=()=>{const J=window.JUNTOS;return (J&&J.miSlot)||null};
 
-const EMOS=['🐶','🐱','🐰','🐹','🐦','🐢','🐠','🐴','🦜','🐍','🐾'];
+const AVS=Array.from({length:24},(_,i)=>'mascota'+String(i+1).padStart(2,'0'));
+const avURL=a=>'img/avatares/'+a+'.webp';
+const avHTML=p=>p.avatar?`<img src="${avURL(p.avatar)}" alt="">`:esc(p.emoji||'🐾');
 // tipo: [emoji, nombre, grupo, próxima vez sugerida]
 const TIPOS={
   vacuna:['💉','Vacuna','cuidado','1a'],despar:['🪱','Desparasitación','cuidado','3m'],pelu:['✂️','Peluquería','cuidado',''],bano:['🛁','Baño','cuidado',''],
@@ -236,7 +240,7 @@ function render(){
     const sub=[edad(p.nac),p.raza,up?String(up.peso).replace('.',',')+' kg':''].filter(Boolean).join(' · ');
     const nx=pe?(()=>{const[c,t]=etiqueta(pe.prox);return `<small>${TIPOS[pe.tipo][0]} ${esc(TIPOS[pe.tipo][1])}: <span class="tag ${c}">${t}</span></small>`})():'';
     return `<section class="acc${op?' open':''}" id="acc_${p.id}">
-      <button class="acc-h" onclick="togglePet('${p.id}')" aria-expanded="${op}"><span class="emo">${esc(p.emoji||'🐾')}</span>
+      <button class="acc-h" onclick="togglePet('${p.id}')" aria-expanded="${op}"><span class="emo">${avHTML(p)}</span>
         <span class="tx"><b>${esc(p.nombre)}</b>${sub?`<small>${esc(sub)}</small>`:''}${nx}</span><i class="ti ti-chevron-down chev"></i></button>
       <div class="acc-b">${op?cuerpo(p):''}</div></section>`;}).join('')
     +`<button class="agregar" onclick="abrirPet()"><i class="ti ti-plus"></i> Agregar mascota</button>`;
@@ -293,14 +297,14 @@ function abrirPet(id){
   editP=id||null;const p=id?PETS[id]:null;
   $('pT').textContent=p?'Editar mascota':'Nueva mascota';
   $('pNom').value=p?p.nombre:'';$('pNac').value=p?(p.nac||''):'';$('pRaza').value=p?(p.raza||''):'';
-  F.emo=p?p.emoji||'🐾':'🐶';
-  $('pEmo').innerHTML=EMOS.map(e=>`<button type="button" class="${e===F.emo?'on':''}" onclick="F.emo='${e}';[...this.parentNode.children].forEach(b=>b.classList.toggle('on',b===this))">${e}</button>`).join('');
+  F.av=p?p.avatar||'':'mascota01';
+  $('pEmo').innerHTML=AVS.map(a=>`<button type="button" class="${a===F.av?'on':''}" onclick="F.av='${a}';[...this.parentNode.children].forEach(b=>b.classList.toggle('on',b===this))" aria-label="Avatar"><img src="${avURL(a)}" alt="" loading="lazy"></button>`).join('');
   $('pDel').hidden=!p;$('fmP').classList.add('show');if(!p)setTimeout(()=>$('pNom').focus(),60);
 }
 function guardarPet(){
   const nom=$('pNom').value.trim();if(!nom){$('pNom').focus();return}
   const prev=editP?PETS[editP]:null,id=editP||nid('p');
-  const p={id,nombre:nom,emoji:F.emo||'🐾',nac:$('pNac').value||'',raza:$('pRaza').value.trim(),creado:prev?prev.creado:Date.now()};
+  const p={id,nombre:nom,avatar:F.av||'',emoji:prev&&prev.emoji||'🐾',nac:$('pNac').value||'',raza:$('pRaza').value.trim(),creado:prev?prev.creado:Date.now()};
   PETS[id]=p;wr(LSP,PETS);if(db)db.collection(COLP).doc(id).set(p).catch(()=>{});
   cerrar('fmP');snd(prev?'aceptar':'agregar');
   if(!prev){abierta=id;wr('masc_abierta',id);toast('¡Listo! Ahora cargá su primer registro');}render();
