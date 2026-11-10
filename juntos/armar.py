@@ -26,7 +26,6 @@ CUENTA = '''
       <div class="acc-b">
         <p id="jxCuenta" style="margin:0 0 10px;color:var(--text2)"></p>
         <a class="btn pri" href="../?cuenta=1" style="text-decoration:none;justify-content:center">Ver cuenta, pareja y suscripción</a>
-        <a class="btn" href="importar.html" style="text-decoration:none;justify-content:center;margin-top:8px">Traer datos de la app anterior</a>
       </div>
     </div>
     <script>document.addEventListener('DOMContentLoaded',function(){var J=window.JUNTOS||{},u=J.usuario,p=J.pareja,e=document.getElementById('jxCuenta');
