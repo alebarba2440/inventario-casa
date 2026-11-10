@@ -35,6 +35,8 @@ def main():
     (app / 'app-db.js').write_bytes(adaptador)
     shutil.copy2(JUNTOS / 'sw.js', app / 'sw.js')   # notificaciones (alcance: app/)
     v = hashlib.md5(adaptador).hexdigest()[:8]
+    shutil.copy2(JUNTOS / 'instalar.js', app / 'instalar.js')
+    vi = hashlib.md5((JUNTOS / 'instalar.js').read_bytes()).hexdigest()[:8]
     for f in ARCHIVOS:
         if (RAIZ / f).exists():
             shutil.copy2(RAIZ / f, app / f)
@@ -55,6 +57,11 @@ def main():
         # Versión según el contenido en los .css/.js comunes: así los celus no se quedan con uno viejo guardado
         for res, h in versiones.items():
             html = re.sub(r'((?:src|href)=")' + re.escape(res) + r'(?:\?v=[^"]*)?"', lambda m: f'{m.group(1)}{res}?v={h}"', html)
+        # Un solo manifest para toda la app (el de la raíz): así instalar desde la landing o desde adentro es la misma app
+        html = re.sub(r'<link rel="manifest" href="[^"]*">', '', html)
+        html = re.sub(r'(</head>)', '<link rel="manifest" href="../manifest.webmanifest">\n\\1', html, count=1, flags=re.I)
+        if Path(f).name == 'index.html':   # en el inicio: aviso para instalarla (se puede cerrar)
+            html = re.sub(r'(</body>)', f'<script>window.JX_INSTALAR_AVISO=true</script><script src="instalar.js?v={vi}"></script>\n\\1', html, count=1, flags=re.I)
         (app / Path(f).name).write_text(html, encoding='utf-8')
     print(f'Listo: {SALIDA} ({len(PAGINAS) + len(extras)} páginas, adaptador v{v})')
 

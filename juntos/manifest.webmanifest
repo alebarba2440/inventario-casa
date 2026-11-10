@@ -1,0 +1,19 @@
+{
+  "id": "/app/",
+  "name": "JuntOS",
+  "short_name": "JuntOS",
+  "description": "El lado organizado del amor: gastos, ahorros, viajes, calendario, mascotas e hijos de los dos, en una sola app.",
+  "lang": "es-AR",
+  "start_url": "app/index.html?origen=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFDF8",
+  "theme_color": "#DB2777",
+  "categories": ["lifestyle", "finance", "productivity"],
+  "icons": [
+    { "src": "app/img/icono-grande.png?v=10", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "app/img/icono-512.png?v=10", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "app/img/icono.png?v=10", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+  ]
+}

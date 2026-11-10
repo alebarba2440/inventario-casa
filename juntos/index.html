@@ -11,6 +11,11 @@
 <meta property="og:image" content="https://juntosapp.com.ar/app/img/pareja-hero.webp">
 <link rel="icon" href="app/img/icono.png?v=10">
 <link rel="apple-touch-icon" href="app/img/apple-touch.png?v=10">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="JuntOS">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Jost:wght@400&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -47,6 +52,10 @@
   nav .jx-entrar::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--rosa) 38%,transparent),transparent);z-index:-1}
   @keyframes reflejo{0%{transform:translateX(-160%) skewX(-20deg)}30%,100%{transform:translateX(330%) skewX(-20deg)}}
   @media (prefers-reduced-motion:reduce){.btn.pri.jx-empezar::after,nav .jx-entrar::after{animation:none;display:none}}
+  .inst-link{display:inline-flex;align-items:center;gap:6px;margin-top:12px;border:0;background:none;color:var(--rosa);font:800 .95rem 'Nunito',sans-serif;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:3px}
+  [hidden]{display:none !important}
+  .instalar .inst-ya{display:inline-block;margin-top:4px;font-weight:800;color:#15803d}
+  .instalar .btn{margin-top:2px}
   .btn.chico{padding:9px 16px;font-size:.92rem;border-radius:4px 16px 4px 16px}
 
   /* portada */
@@ -175,6 +184,7 @@
         <a class="btn sec" href="#que">Ver qué hace</a>
       </div>
       <p class="nota">Sin tarjeta · Entrás con tu cuenta de Google · Android y iPhone</p>
+      <button type="button" class="inst-link" data-instalar hidden>📲 Instalar la app en este dispositivo</button>
     </div>
     <div class="ilus"><img src="app/img/pareja-hero.webp?v=1" alt="Ilustración de una pareja abrazada" width="528" height="699" fetchpriority="high"></div>
   </div>
@@ -223,9 +233,9 @@
       <div class="paso rev"><h3>Úsenla los dos</h3><p>Tu pareja entra con su Google, pone el código y listo: lo que carga uno lo ve el otro.</p></div>
     </div>
     <div class="instalar rev">
-      <h3>📲 Tenela como una app en el celu</h3>
-      <div class="so"><b>Android (Chrome)</b><span>Abrí JuntOS, tocá los tres puntitos ⋮ y elegí <b style="display:inline">"Instalar app"</b> o "Agregar a pantalla principal".</span></div>
-      <div class="so"><b>iPhone (Safari)</b><span>Abrí JuntOS, tocá el botón Compartir ⬆️ y elegí <b style="display:inline">"Agregar a inicio"</b>.</span></div>
+      <h3>📲 Tenela como una app</h3>
+      <div class="so"><b>En un toque</b><span>Se instala en el celu o en la compu con su ícono, sin pasar por ninguna tienda. En iPhone te mostramos los dos pasos.</span></div>
+      <div class="so"><b>Android, iPhone y PC</b><span><button type="button" class="btn pri" data-instalar hidden>Instalar JuntOS</button><span class="inst-ya" data-instalar-ya hidden>✓ Ya la tenés instalada</span><span data-instalar-nada>Abrí juntosapp.com.ar desde Chrome, Edge o Safari para instalarla.</span></span></div>
     </div>
   </div>
 </section>
@@ -306,13 +316,23 @@ const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.
 }), {rootMargin: '0px 0px -8% 0px'}) : null;
 document.querySelectorAll('.rev').forEach((el, i) => { el.style.transitionDelay = (i % 3) * 70 + 'ms'; io ? io.observe(el) : el.classList.add('vis'); });
 
+// Abierta desde el ícono instalado: directo a la app (o al login)
+const desdeIcono = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+
 // Si ya tiene la sesión abierta, los botones llevan directo a su JuntOS
 fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.json()).then(e => {
   if (!e || !e.usuario) return;
   const destino = e.pareja ? 'app/' : 'entrar.html';
+  if (desdeIcono) { location.replace(destino); return; }
   document.querySelectorAll('.jx-entrar').forEach(a => { a.href = destino; a.textContent = 'Abrir JuntOS'; });
   document.querySelectorAll('.jx-empezar').forEach(a => { a.href = destino; });
 }).catch(() => {});
+if (desdeIcono) fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.json()).then(e => { if (!e || !e.usuario) location.replace('entrar.html'); }).catch(() => {});
+</script>
+<script src="instalar.js?v=1"></script>
+<script>
+// texto de respaldo: solo si no hay botón ni está instalada
+setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]'), y = document.querySelector('.instalar [data-instalar-ya]'), n = document.querySelector('[data-instalar-nada]'); if (n) n.hidden = !(b.hidden && y.hidden); }, 2700);
 </script>
 </body>
 </html>
