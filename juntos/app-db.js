@@ -58,6 +58,8 @@
       invertido: !!perfil().invertido,
       soloLectura: !!(y && y.pareja && y.pareja.solo_lectura)
     };
+    var pp = perfil().personajes || {};
+    window.JUNTOS.personajes = { j: (ms[0] && pp[ms[0].email]) || null, a: (ms[1] && pp[ms[1].email]) || null };
     aplicarColores(ms);
     try { window.dispatchEvent(new Event('juntos')); } catch (e) {}
   }
@@ -198,12 +200,15 @@
       if (ks.indexOf(PERFIL_K) >= 0) { var antes = window.JUNTOS && window.JUNTOS.invertido; publicarYo(YO); if (antes !== window.JUNTOS.invertido && puedeRecargar()) location.reload(); }
     }).catch(function () {});
   }
-  // Publica el color que elegí en mi app, para que mi pareja vea lo mío de ese color.
+  // Publica mi color y mi personaje (avatar), para que mi pareja vea lo mío así.
+  // Cada uno solo publica lo suyo: nadie puede elegir por el otro.
   function miColor() {
     try {
-      var c = hex((JSON.parse(lget('cfg_v2') || '{}') || {}).accent) || '#1D9E75', mail = YO && YO.usuario && YO.usuario.email;
-      if (!mail) return;
-      if ((perfil().colores || {})[mail] !== c) { var o = {}; o[mail] = c; db.collection('juntos').doc('pareja').set({ colores: o }, { merge: true }); }
+      var mail = YO && YO.usuario && YO.usuario.email; if (!mail) return;
+      var c = hex((JSON.parse(lget('cfg_v2') || '{}') || {}).accent) || '#1D9E75', pj = lget('personaje') || null, pf = perfil(), cambios = {};
+      if ((pf.colores || {})[mail] !== c) { cambios.colores = {}; cambios.colores[mail] = c; }
+      if (pj && (pf.personajes || {})[mail] !== pj) { cambios.personajes = {}; cambios.personajes[mail] = pj; }
+      if (Object.keys(cambios).length) db.collection('juntos').doc('pareja').set(cambios, { merge: true });
       publicarYo(YO);
     } catch (e) {}
   }
@@ -295,7 +300,7 @@
     if (this !== LS) return setItemOrig.call(this, k, v);
     lset(k, v);
     if (!silencio && esPersonal(k)) { ppend[k] = String(v); wr(K_PPEND, ppend); subirPersonal(); }
-    if (!silencio && k === 'cfg_v2' && sincronizado) setTimeout(miColor, 0);
+    if (!silencio && (k === 'cfg_v2' || k === 'personaje') && sincronizado) setTimeout(miColor, 0);
   };
   Storage.prototype.removeItem = function (k) {
     if (this !== LS) return removeItemOrig.call(this, k);
