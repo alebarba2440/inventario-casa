@@ -7,13 +7,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          for u in https://juntosapp.com.ar/ https://juntosapp.com.ar/app/img/logo-texto.png https://juntosapp.com.ar/entrar.html https://juntosapp.com.ar/api/?a=yo https://barbamanager.website/juntos/app/img/logo-texto.png https://barbamanager.website/juntos/entrar.html; do
-            echo "=== $u"; curl -s -I -m 20 "$u" | grep -iE "^(HTTP|server|content-type|location|x-)" ; done
-          echo "=== body /"; curl -s -m 20 https://juntosapp.com.ar/ | head -c 400; echo
-      - env:
-          S: ${{ secrets.FTP_SERVER }}
-          U: ${{ secrets.FTP_USERNAME }}
-          P: ${{ secrets.FTP_PASSWORD }}
-        run: |
-          sudo apt-get install -y -qq lftp >/dev/null
-          lftp -u "$U","$P" "$S" -e "set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set ftp:passive-mode true; cls -1a public_html/; echo ---; cls -1a public_html/juntos/; echo ---; cls -1a public_html/juntos/app/img/ ; echo --- HTACCESS; cat public_html/.htaccess; echo --- JUNTOS_HT; cat public_html/juntos/.htaccess; bye" 2>&1 | sed -E 's/(pass|password|user)[^ ]*/[x]/Ig'
+          for u in https://juntosapp.com.ar/juntos/app/img/logo-texto.png https://juntosapp.com.ar/icon.png https://juntosapp.com.ar/app/comun.css https://juntosapp.com.ar/app/inventario.html https://juntosapp.com.ar/juntos/entrar.html; do
+            echo "=== $u"; curl -s -I -m 20 "$u" | grep -iE "^(HTTP|server|content-type|location)" ; done
