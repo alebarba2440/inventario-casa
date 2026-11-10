@@ -60,3 +60,9 @@ input[type="date"]::-webkit-date-and-time-value,input[type="time"]::-webkit-date
    Quedan afuera solo los que son redondos o no se ven como botón: interruptores, botones circulares,
    los días del calendario, los encabezados de los desplegables y las opciones de los selectores deslizantes. */
 button:not(.sw):not(.sw2):not(.gear):not(.cuenta-btn):not(.camera-fab):not(.home-link):not(.home-btn):not(.chk):not(.icon-btn):not(.dia):not(.acc-h):not(.anio-h):not(.mes-h):not(.dia-h):not(.car-h):not(.reg-h):not(.grp-h):not(.oacc-h):not(.lap):not(.pj):not(.nav-btn):not(.d):not(.cc-dot):not(.rn):not(.desliz>button):not(#intro button),a.btn,.btn,a.add,a.cta-b{border-radius:6px 20px 6px 20px !important}
+
+/* Interruptores (sí/no) y selectores deslizantes con la misma forma de esquinas cruzadas */
+.sw,.sw2,.toggle-track{border-radius:7px 15px 7px 15px !important}
+.sw::after,.sw2::after,.toggle-thumb{border-radius:5px 11px 5px 11px !important}
+.desliz{border-radius:6px 20px 6px 20px !important}
+.desliz>.sw-knob{border-radius:4px 16px 4px 16px !important}
