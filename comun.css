@@ -54,3 +54,11 @@ input[type="date"],input[type="time"],input[type="month"],input[type="datetime-l
   -webkit-appearance:none;appearance:none;min-width:0;max-width:100%;width:100%;box-sizing:border-box;display:block;min-height:2.6em}
 input[type="date"]::-webkit-date-and-time-value,input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
 *:has(> input[type="date"]),*:has(> input[type="time"]){min-width:0}
+
+/* Botones con esquinas cruzadas (igual que la página de presentación):
+   poca curva arriba-izquierda y abajo-derecha, mucha arriba-derecha y abajo-izquierda.
+   Solo botones con texto: no toca los redondos, interruptores, pestañas ni encabezados de desplegables. */
+.btn,.cta-b,.add,.agregar,.pdf-btn,
+.close-btn,.submit-btn,.confirm-cancel,.confirm-ok,
+.def{border-radius:6px 22px 6px 22px !important}
+.mini,.hoy-b,.aviso-b,.small-btn,.addest,.wipe{border-radius:4px 14px 4px 14px !important}
