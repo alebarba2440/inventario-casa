@@ -288,6 +288,52 @@ try {
       db()->prepare('UPDATE parejas SET pago_hasta = ? WHERE id = ?')->execute([$nuevo, $pid]);
       responder(['ok' => true]);
 
+    case 'GET admin_backup':
+      // Copia completa de la base: parejas, usuarios, datos compartidos y personales (sin sesiones).
+      requerirAdmin();
+      $out = ['formato' => 'juntos-backup-1', 'fecha' => gmdate('c'), 'esquema' => VERSION_ESQUEMA];
+      $out['parejas'] = db()->query('SELECT * FROM parejas ORDER BY id')->fetchAll();
+      $out['usuarios'] = db()->query('SELECT * FROM usuarios ORDER BY id')->fetchAll();
+      $out['docs'] = db()->query('SELECT pareja_id, col, id, data FROM docs WHERE data IS NOT NULL ORDER BY pareja_id, col, id')->fetchAll();
+      $out['personal'] = db()->query('SELECT usuario_id, data FROM personal ORDER BY usuario_id')->fetchAll();
+      header('Content-Disposition: attachment; filename="juntos-backup-' . gmdate('Y-m-d') . '.json"');
+      responder($out);
+
+    case 'POST admin_restaurar':
+      // Vuelve la base al estado del backup. Lo que no está en el backup se borra.
+      requerirAdmin();
+      $b = json_decode(file_get_contents('php://input') ?: '', true);
+      if (!is_array($b) || ($b['formato'] ?? '') !== 'juntos-backup-1') error_('No es un backup de Juntos');
+      foreach (['parejas', 'usuarios', 'docs', 'personal'] as $k) if (!isset($b[$k]) || !is_array($b[$k])) error_("Backup incompleto ($k)");
+      $db = db(); $db->beginTransaction();
+      try {
+        $pids = array_map(fn($p) => (int)$p['id'], $b['parejas']);
+        $uids = array_map(fn($u) => (int)$u['id'], $b['usuarios']);
+        // 1) borrar usuarios y parejas que no están en el backup (sus sesiones y datos se van con ellos)
+        $db->exec('DELETE FROM usuarios' . ($uids ? ' WHERE id NOT IN (' . implode(',', $uids) . ')' : ''));
+        $db->exec('UPDATE usuarios SET pareja_id = NULL');
+        $db->exec('DELETE FROM parejas' . ($pids ? ' WHERE id NOT IN (' . implode(',', $pids) . ')' : ''));
+        // 2) parejas y usuarios del backup (se actualizan sin borrar, para no perder datos en cascada)
+        $qp = $db->prepare('INSERT INTO parejas (id, nombre, codigo, creado, prueba_hasta, pago_hasta) VALUES (?,?,?,?,?,?)
+          ON DUPLICATE KEY UPDATE nombre=VALUES(nombre), codigo=VALUES(codigo), creado=VALUES(creado), prueba_hasta=VALUES(prueba_hasta), pago_hasta=VALUES(pago_hasta)');
+        foreach ($b['parejas'] as $p) $qp->execute([(int)$p['id'], $p['nombre'], $p['codigo'], $p['creado'], $p['prueba_hasta'], $p['pago_hasta'] ?: null]);
+        $qu = $db->prepare('INSERT INTO usuarios (id, google_sub, email, nombre, foto, pareja_id, creado, ultimo_ingreso) VALUES (?,?,?,?,?,?,?,?)
+          ON DUPLICATE KEY UPDATE google_sub=VALUES(google_sub), email=VALUES(email), nombre=VALUES(nombre), foto=VALUES(foto), pareja_id=VALUES(pareja_id), creado=VALUES(creado), ultimo_ingreso=VALUES(ultimo_ingreso)');
+        foreach ($b['usuarios'] as $u) $qu->execute([(int)$u['id'], $u['google_sub'], $u['email'], $u['nombre'] ?? '', $u['foto'] ?? '', $u['pareja_id'] ? (int)$u['pareja_id'] : null, $u['creado'], $u['ultimo_ingreso']]);
+        // 3) datos compartidos: lo actual se marca como borrado y se carga lo del backup, todo con una versión nueva
+        //    (así los celus que están abiertos se enteran solos de los cambios)
+        $v = nuevaVersion();
+        $db->prepare('UPDATE docs SET data = NULL, ver = ?')->execute([$v]);
+        $qd = $db->prepare('INSERT INTO docs (pareja_id, col, id, data, ver) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE data = VALUES(data), ver = VALUES(ver)');
+        foreach ($b['docs'] as $d) $qd->execute([(int)$d['pareja_id'], (string)$d['col'], (string)$d['id'], (string)$d['data'], $v]);
+        // 4) datos personales
+        $db->exec('DELETE FROM personal');
+        $qx = $db->prepare('INSERT INTO personal (usuario_id, data) VALUES (?,?)');
+        foreach ($b['personal'] as $x) $qx->execute([(int)$x['usuario_id'], (string)$x['data']]);
+        $db->commit();
+      } catch (Throwable $e) { $db->rollBack(); error_log('JuntOS restaurar: ' . $e->getMessage()); error_('No se pudo restaurar: el backup no coincide con la base', 400); }
+      responder(['ok' => true, 'parejas' => count($b['parejas']), 'usuarios' => count($b['usuarios']), 'docs' => count($b['docs'])]);
+
     default:
       error_('Acción desconocida', 404);
   }

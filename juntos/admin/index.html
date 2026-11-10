@@ -86,6 +86,14 @@
     <div id="lista" style="display:flex;flex-direction:column;gap:10px"></div>
     <h2 id="tSueltos"></h2>
     <div class="card" id="sueltos"></div>
+    <h2>Copias de seguridad</h2>
+    <div class="card" style="display:flex;flex-direction:column;gap:10px">
+      <p style="margin:0;color:#55554f;font-size:.92rem">Descargá una copia de <b>toda la base</b>: parejas, usuarios y todos sus datos. Guardala en tu compu o en Drive.</p>
+      <button class="btn" style="background:#0284C7" onclick="descargarBackup()">⬇️ Descargar backup</button>
+      <input type="file" id="fBak" accept=".json,application/json" hidden onchange="elegirBackup(this.files[0]);this.value=''">
+      <button class="btn sec" style="color:#b91c1c;flex:1" onclick="fBak.click()">⬆️ Restaurar desde un backup</button>
+      <p style="margin:0;color:#9a9a92;font-size:.8rem">Restaurar deja la base <b>exactamente como estaba</b> en ese backup: lo que se cargó después se pierde. Antes de restaurar se descarga sola una copia de cómo está ahora, por las dudas.</p>
+    </div>
     <button class="link" onclick="salir()">Cerrar sesión</button>
   </div>
 
@@ -177,6 +185,41 @@ function pago(id, op){
   $('dOk').className = 'btn' + (op === 'anular' ? ' rosa' : '');
   $('dOk').onclick = async () => { dlg.close(); try { await api('admin_pago', {pareja_id: id, op}); await cargar(); } catch(e){ $('err').textContent = e.message; } };
   dlg.showModal();
+}
+
+/* ---------- Copias de seguridad ---------- */
+async function bajarBackup(sufijo){
+  const r = await fetch('../api/?a=admin_backup', {credentials:'same-origin', cache:'no-store'});
+  if (!r.ok) throw new Error('No se pudo descargar el backup');
+  const blob = await r.blob(), n = new Date(), d2 = x => String(x).padStart(2,'0'), f = `${n.getFullYear()}-${d2(n.getMonth()+1)}-${d2(n.getDate())}_${d2(n.getHours())}-${d2(n.getMinutes())}`;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `juntos-backup-${f}${sufijo||''}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+async function descargarBackup(){ try { await bajarBackup(); } catch(e){ $('err').textContent = e.message; } }
+function elegirBackup(file){
+  if (!file) return;
+  const lr = new FileReader();
+  lr.onload = () => {
+    let b; try { b = JSON.parse(lr.result); if (b.formato !== 'juntos-backup-1') throw 0; } catch(e){ $('err').textContent = 'Ese archivo no es un backup de Juntos'; return; }
+    $('dTxt').innerHTML = `<b>¿Restaurar el backup del ${esc(fecha(b.fecha, true))}?</b><br><small>${b.parejas.length} parejas · ${b.usuarios.length} usuarios · ${b.docs.length} registros.<br>
+      La base vuelve a ese momento y <b>se pierde lo cargado después</b>. Antes se descarga una copia de cómo está ahora.</small>
+      <input id="dConf" placeholder="Escribí RESTAURAR" autocomplete="off" style="margin-top:12px;width:100%;font:inherit;padding:10px;border:1.5px solid #e5e5df;border-radius:10px;text-align:center;letter-spacing:.1em">`;
+    $('dOk').className = 'btn rosa';
+    $('dOk').onclick = async () => {
+      if (($('dConf').value || '').trim().toUpperCase() !== 'RESTAURAR') { $('dConf').focus(); return; }
+      dlg.close();
+      try {
+        await bajarBackup('-antes-de-restaurar');
+        const r = await fetch('../api/?a=admin_restaurar', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Juntos':'1'}, body: lr.result});
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j.error || 'No se pudo restaurar');
+        alert(`✅ Listo: se restauraron ${j.parejas} parejas, ${j.usuarios} usuarios y ${j.docs} registros.`);
+        inicio();
+      } catch(e){ $('err').textContent = e.message; }
+    };
+    dlg.showModal();
+  };
+  lr.readAsText(file);
 }
 
 let gIniciado = false;
