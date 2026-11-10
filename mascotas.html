@@ -91,9 +91,22 @@
   .reg .der{text-align:right;flex-shrink:0;font-weight:900;font-size:.88rem}
   .reg .der small{display:block;color:var(--text2);font-weight:700;font-size:.72rem}
   .mes-t{font-size:.72rem;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-top:10px}
-  .fab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:30;border:none;background:var(--accent);color:#fff;border-radius:999px;padding:14px 20px;font-weight:900;font-size:1rem;box-shadow:0 8px 22px rgba(0,0,0,.22);cursor:pointer;display:flex;align-items:center;gap:6px}
-  .fab:active{transform:scale(.95)}
 
+  /* acordeón de mascotas (como los autos de Copito) */
+  .acc{background:var(--surface);border:.5px solid var(--border);border-left:5px solid var(--accent);border-radius:18px;overflow:hidden}
+  .acc-h{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;background:none;border:none;font-family:inherit;color:var(--text);cursor:pointer;text-align:left}
+  .acc-h .emo{width:52px;height:52px;font-size:1.8rem}
+  .acc-h .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .acc-h .tx b{font-size:1.1rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .acc-h .tx small{font-size:.8rem;color:var(--text2);font-weight:700}
+  .acc-h .chev{color:var(--text2);transition:transform .2s;font-size:1.2rem}
+  .acc.open>.acc-h .chev{transform:rotate(180deg)}
+  .acc-b{display:none;flex-direction:column;gap:10px;padding:0 10px 12px}
+  .acc.open>.acc-b{display:flex}
+  .acc-b>.card{background:var(--surface2);border:none}
+  .acc-b .resumen div{background:var(--surface)}
+  .acc-b .acciones{display:flex;gap:8px}
+  .acc-b .acciones .btn{flex:1;padding:11px;font-size:.95rem}
   /* formularios */
   .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
   .bgm.show{display:flex}
@@ -129,7 +142,6 @@
   <h1>MASCOTAS</h1>
 </div>
 <main id="main"></main>
-<button class="fab" id="fab" onclick="abrirReg()" hidden><i class="ti ti-plus"></i> Registro</button>
 
 <!-- mascota -->
 <div class="bgm" id="fmP" onclick="if(event.target===this)cerrar('fmP')">
@@ -211,31 +223,31 @@ function ultimoPeso(id){const p=regsDe(id).filter(r=>r.tipo==='peso'&&r.peso>0);
 function sumarProx(fecha,c){if(!c||c==='f')return '';const d=s2f(fecha),n=parseInt(c),u=c.slice(-1);
   if(u==='m')d.setMonth(d.getMonth()+n);else d.setFullYear(d.getFullYear()+n);return f2s(d);}
 
-/* ---------- pantallas ---------- */
+/* ---------- pantalla: una sección desplegable por mascota (abrir una cierra las demás) ---------- */
+let abierta=rd('masc_abierta',null);
 function render(){
-  const m=/#m=([\w-]+)/.exec(location.hash);actual=m&&PETS[m[1]]?m[1]:null;
-  $('fab').hidden=!actual;
-  if(actual)return renderFicha(PETS[actual]);
   const ps=Object.values(PETS).sort((a,b)=>(a.creado||0)-(b.creado||0));
   if(!ps.length){$('main').innerHTML=`<section class="card nada"><div class="big">🐾</div><b>Todavía no hay mascotas</b>
     <p>Agregá a tu mascota para anotar vacunas, visitas al veterinario, peso y gastos. Te avisamos cuando le toque algo.</p>
     <button class="btn" onclick="abrirPet()"><i class="ti ti-plus"></i> Agregar mascota</button></section>`;return;}
-  $('main').innerHTML=ps.map(p=>{const pe=pendientes(p.id)[0],up=ultimoPeso(p.id),ed=edad(p.nac);
-    const sub=[ed,p.raza,up?String(up.peso).replace('.',',')+' kg':''].filter(Boolean).join(' · ');
+  if(abierta&&!PETS[abierta])abierta=null;
+  if(!abierta&&ps.length===1)abierta=ps[0].id;
+  $('main').innerHTML=ps.map(p=>{const op=p.id===abierta,pe=pendientes(p.id)[0],up=ultimoPeso(p.id);
+    const sub=[edad(p.nac),p.raza,up?String(up.peso).replace('.',',')+' kg':''].filter(Boolean).join(' · ');
     const nx=pe?(()=>{const[c,t]=etiqueta(pe.prox);return `<small>${TIPOS[pe.tipo][0]} ${esc(TIPOS[pe.tipo][1])}: <span class="tag ${c}">${t}</span></small>`})():'';
-    return `<section class="card pet" onclick="ver('${p.id}')"><div class="emo">${esc(p.emoji||'🐾')}</div>
-      <div class="tx"><b>${esc(p.nombre)}</b>${sub?`<small>${esc(sub)}</small>`:''}${nx}</div><i class="ti ti-chevron-right chev"></i></section>`;}).join('')
+    return `<section class="acc${op?' open':''}" id="acc_${p.id}">
+      <button class="acc-h" onclick="togglePet('${p.id}')" aria-expanded="${op}"><span class="emo">${esc(p.emoji||'🐾')}</span>
+        <span class="tx"><b>${esc(p.nombre)}</b>${sub?`<small>${esc(sub)}</small>`:''}${nx}</span><i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">${op?cuerpo(p):''}</div></section>`;}).join('')
     +`<button class="agregar" onclick="abrirPet()"><i class="ti ti-plus"></i> Agregar mascota</button>`;
 }
-function renderFicha(p){
-  const rs=regsDe(p.id),pe=pendientes(p.id),ed=edad(p.nac);
+function cuerpo(p){
+  const rs=regsDe(p.id),pe=pendientes(p.id);
   const anio=String(new Date().getFullYear()),mes=hoyS().slice(0,7);
   const gMes=rs.filter(r=>r.fecha.startsWith(mes)).reduce((t,r)=>t+(r.costo||0),0),gAnio=rs.filter(r=>r.fecha.startsWith(anio)).reduce((t,r)=>t+(r.costo||0),0);
   const ps=rs.filter(r=>r.tipo==='peso'&&r.peso>0).slice().reverse();
-  let h=`<button class="volver" onclick="ver(null)"><i class="ti ti-chevron-left"></i> Mascotas</button>
-  <section class="card ficha"><div class="emo">${esc(p.emoji||'🐾')}</div><div class="tx"><b>${esc(p.nombre)}</b>
-    <small>${esc([ed,p.raza].filter(Boolean).join(' · ')||'Tocá el lápiz para completar sus datos')}</small></div>
-    <button class="lapiz" onclick="abrirPet('${p.id}')" aria-label="Editar"><i class="ti ti-pencil"></i></button></section>`;
+  let h=`<div class="acciones"><button class="btn" onclick="abrirReg(null,'${p.id}')"><i class="ti ti-plus"></i> Registro</button>
+    <button class="btn ghost" onclick="abrirPet('${p.id}')"><i class="ti ti-pencil"></i> Datos</button></div>`;
   h+=`<section class="card"><h2><i class="ti ti-bell"></i> Próximo</h2>${pe.length?pe.map(r=>{const[c,t]=etiqueta(r.prox);
     return `<div class="prox" onclick="abrirReg('${r.id}')"><span class="ic">${TIPOS[r.tipo][0]}</span><div class="tx">${esc(TIPOS[r.tipo][1])}<small>${fFecha(r.prox)}</small></div><span class="tag ${c}">${t}</span></div>`}).join('')
     :'<div class="vacio" style="padding:6px 0">Nada pendiente. Al cargar una vacuna o un control, poné "Próxima vez" y te avisamos.</div>'}</section>`;
@@ -253,8 +265,18 @@ function renderFicha(p){
         ${r.notas?`<small>${esc(r.notas)}</small>`:''}${r.prox?`<small>Próxima: ${fFecha(r.prox)}</small>`:''}</div>
         <div class="der">${r.costo?pesos(r.costo):''}<small>${s2f(r.fecha).getDate()}/${s2f(r.fecha).getMonth()+1}</small></div></div>`}).join('')
       :`<div class="vacio">${rs.length?'No hay registros de este tipo':'Todavía no hay registros. Tocá "+ Registro" para cargar el primero.'}</div>`}</section>`;
-  $('main').innerHTML=h;
+  return h;
 }
+function togglePet(id){abierta=abierta===id?null:id;wr('masc_abierta',abierta);filtro='todo';render();snd('tick');
+  if(abierta)irA(id);}
+function filtrar(k){filtro=k;render();snd('tick');}
+// desde el Calendario o una notificación: mascotas.html#m=ID abre esa mascota
+function desdeLink(){const m=/#m=([\w-]+)/.exec(location.hash);if(!m||!PETS[m[1]])return;abierta=m[1];wr('masc_abierta',abierta);history.replaceState(null,'',location.pathname);render();
+  setTimeout(()=>irA(abierta,true),60);}
+// que quede a la vista el encabezado de la mascota (debajo de la barra de arriba)
+function irA(id,suave){const el=$('acc_'+id);if(!el)return;const top=el.getBoundingClientRect().top+scrollY-document.querySelector('.top').offsetHeight-10;
+  if(suave||el.getBoundingClientRect().top<80)scrollTo({top,behavior:suave?'smooth':'auto'});}
+addEventListener('hashchange',desdeLink);
 function grafico(ps){
   const W=320,H=110,pad=14,xs=ps.map(r=>s2f(r.fecha).getTime()),ys=ps.map(r=>r.peso);
   const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys),dy=(y1-y0)||1;
@@ -264,10 +286,7 @@ function grafico(ps){
     <polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
     ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--surface)" stroke="var(--accent)" stroke-width="2.5" vector-effect="non-scaling-stroke"/>`).join('')}</svg>`;
 }
-let interna=false;   // entré a la ficha desde esta misma lista: "volver" es ir atrás
-function ver(id){if(id){interna=true;location.hash='m='+id;}else if(interna){interna=false;history.back();}else location.replace('#');snd('tick');}
-function filtrar(k){filtro=k;render();snd('tick');}
-addEventListener('hashchange',()=>{filtro='todo';render();scrollTo(0,0);});
+
 
 /* ---------- mascota ---------- */
 function abrirPet(id){
@@ -284,13 +303,13 @@ function guardarPet(){
   const p={id,nombre:nom,emoji:F.emo||'🐾',nac:$('pNac').value||'',raza:$('pRaza').value.trim(),creado:prev?prev.creado:Date.now()};
   PETS[id]=p;wr(LSP,PETS);if(db)db.collection(COLP).doc(id).set(p).catch(()=>{});
   cerrar('fmP');snd(prev?'aceptar':'agregar');
-  if(!prev){interna=true;location.hash='m='+id;toast('¡Listo! Ahora cargá su primer registro');}else render();
+  if(!prev){abierta=id;wr('masc_abierta',id);toast('¡Listo! Ahora cargá su primer registro');}render();
 }
 function borrarPet(){
   const p=PETS[editP];if(!p||!confirm('¿Eliminar a '+p.nombre+' y todos sus registros?'))return;
   regsDe(p.id).forEach(r=>{delete REGS[r.id];if(db)db.collection(COLR).doc(r.id).delete().catch(()=>{});});
   delete PETS[p.id];wr(LSP,PETS);wr(LSR,REGS);if(db)db.collection(COLP).doc(p.id).delete().catch(()=>{});
-  cerrar('fmP');snd('borrar');interna=false;location.replace('#');render();
+  cerrar('fmP');snd('borrar');render();
 }
 
 /* ---------- registro ---------- */
@@ -299,8 +318,8 @@ function setTipo(t,auto){F.tipo=t;
   const esPeso=t==='peso';$('rPesoL').hidden=!esPeso;$('rCostoL').hidden=esPeso;$('rProxL').hidden=esPeso;
   if(auto)setProx(TIPOS[t][3]||'');}
 function setProx(c){F.prox=c;[...$('rProx').children].forEach(b=>b.classList.toggle('on',b.dataset.c===c));$('rProxF').hidden=c!=='f';}
-function abrirReg(id){
-  if(!actual)return;editR=id||null;const r=id?REGS[id]:null;
+function abrirReg(id,pet){
+  editR=id||null;const r=id?REGS[id]:null;actual=r?r.mascota:(pet||abierta);if(!actual||!PETS[actual])return;
   $('rT').textContent=r?'Editar registro':'Nuevo registro · '+PETS[actual].nombre;
   $('rTipo').innerHTML=Object.entries(TIPOS).map(([k,v])=>`<button type="button" data-t="${k}" onclick="setTipo('${k}',true)"><i>${v[0]}</i><span>${v[1]}</span></button>`).join('');
   $('rProx').innerHTML=PROX.map(([c,t])=>`<button type="button" data-c="${c}" onclick="setProx('${c}')">${t}</button>`).join('');
@@ -353,7 +372,7 @@ async function initFb(){
       },()=>{});});
   }catch(e){}
 }
-render();initFb();
+render();desdeLink();initFb();
 </script>
 </body>
 </html>
