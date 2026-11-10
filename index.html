@@ -197,13 +197,13 @@
   #intro.fin{opacity:0;pointer-events:none}
   #intro .esc{position:relative;width:min(78vw,360px);aspect-ratio:1500/1918}
   #intro .esc>img{position:absolute;inset:0;width:100%;height:100%;z-index:2;animation:aparece .8s cubic-bezier(.3,1.5,.5,1) both;user-select:none;-webkit-user-drag:none}
-  #intro .cor{position:absolute;left:50%;top:45%;width:var(--s,26px);z-index:var(--z,1);opacity:0;animation:vuela 2.2s cubic-bezier(.2,.7,.3,1) var(--d,.8s) both}
-  /* "Junt♡s" (logo) que se escribe solo, de izquierda a derecha: primero se dibuja el trazo y después se rellena */
+  #intro .cor{position:absolute;left:50%;top:45%;width:var(--s,26px);z-index:var(--z,1);opacity:0;animation:vuela 2.2s cubic-bezier(.2,.7,.3,1) calc(var(--d,.8s) + .95s) both}
+  /* "Junt♡s" (logo) que se escribe solo, de izquierda a derecha; cuando llega al corazón salen volando los corazoncitos: primero se dibuja el trazo y después se rellena */
   #intro .tit{width:min(62vw,280px);height:auto;margin-top:6px;overflow:visible;
-    clip-path:inset(-15% 100% -15% -2%);animation:escribe 1.9s cubic-bezier(.45,.05,.45,1) 1.6s forwards}
+    clip-path:inset(-15% 100% -15% -2%);animation:escribe 2s linear .5s forwards}
   #intro .tit path{fill:#1a1a1a}
   #intro .tit path.os{fill:var(--accent)}
-  #intro .sub{font-style:italic;font-size:1.1rem;color:#666;font-weight:600;letter-spacing:.03em;opacity:0;animation:sube .6s ease-out 3.6s both}
+  #intro .sub{font-style:italic;font-size:1.1rem;color:#666;font-weight:600;letter-spacing:.03em;opacity:0;animation:sube .6s ease-out 3.1s both}
   #intro .saltar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);font-size:.8rem;color:#999;opacity:.7}
   @keyframes aparece{0%{opacity:0;transform:scale(.6) translateY(20px)}100%{opacity:1;transform:none}}
   @keyframes vuela{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}12%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1) rotate(var(--r,0deg))}}
@@ -231,7 +231,7 @@
   try{sessionStorage.setItem('intro_ok','1')}catch(e){}
   window.finIntro=function(){if(!el.isConnected)return;el.classList.add('fin');setTimeout(()=>el.remove(),500);if(window.repartirFotos)setTimeout(repartirFotos,250);};
   const anims=()=>el.getAnimations({subtree:true});anims().forEach(a=>a.pause());
-  const img=new Image();img.onload=img.onerror=()=>{anims().forEach(a=>a.play());setTimeout(finIntro,5400);};img.src='img/intro-juntos.webp?v=5';
+  const img=new Image();img.onload=img.onerror=()=>{anims().forEach(a=>a.play());setTimeout(finIntro,5600);};img.src='img/intro-juntos.webp?v=5';
   setTimeout(finIntro,8000);
 })();
 </script>
