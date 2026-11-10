@@ -114,9 +114,10 @@ function esquema(PDO $db): void {
 }
 
 // ---------- Archivos ----------
-const MAX_ARCHIVO = 10 * 1024 * 1024;        // 10 MB por archivo
-const CUOTA_PAREJA = 300 * 1024 * 1024;     // 300 MB por pareja
+const MAX_ARCHIVO = 3 * 1024 * 1024;         // 3 MB por archivo (las fotos llegan achicadas, ~100-200 KB)
+const CUOTA_PAREJA = 50 * 1024 * 1024;      // 50 MB por pareja (cientos de fotos de documentos)
 const TIPOS_ARCHIVO = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
+const TIPOS_SUBIDA = ['image/jpeg', 'image/webp'];   // solo fotos (achicadas en el celu); los PDF ya subidos se siguen viendo
 
 // Carpeta de archivos: fuera de public_html si se puede (junto a juntos-config.php); si no, una carpeta protegida.
 function carpetaArchivos(): string {

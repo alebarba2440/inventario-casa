@@ -269,11 +269,11 @@ try {
       if (soloLectura($p)) error_('Tu período terminó: podés ver todo, pero no guardar cambios', 402);
       $f = $_FILES['f'] ?? null;
       if (!$f || !is_array($f) || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) error_(($f['error'] ?? 0) === UPLOAD_ERR_INI_SIZE ? 'El archivo es muy grande' : 'No llegó el archivo');
-      if ($f['size'] > MAX_ARCHIVO) error_('El archivo es muy grande (máximo 10 MB)');
+      if ($f['size'] > MAX_ARCHIVO) error_('La foto es muy grande');
       $tipo = tipoReal($f['tmp_name']);
-      if (!$tipo) error_('Solo se pueden subir fotos (JPG, PNG, WEBP) o PDF');
+      if (!$tipo || !in_array($tipo, TIPOS_SUBIDA, true)) error_('Solo se pueden subir fotos');
       $q = db()->prepare('SELECT COALESCE(SUM(bytes),0) FROM archivos WHERE pareja_id = ?'); $q->execute([$p['id']]);
-      if ((int)$q->fetchColumn() + $f['size'] > CUOTA_PAREJA) error_('Se llenó el espacio para archivos (300 MB)');
+      if ((int)$q->fetchColumn() + $f['size'] > CUOTA_PAREJA) error_('Se llenó el espacio para fotos de documentos (50 MB)');
       $id = bin2hex(random_bytes(12));
       $ruta = rutaArchivo((int)$p['id'], $id, $tipo);
       if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
@@ -311,6 +311,8 @@ try {
       foreach ($us as $x) { if ($x['pareja_id']) $porPareja[$x['pareja_id']][] = $x; else $sueltos[] = $x; }
       $t = time(); $res = ['usuarios' => count($us), 'parejas' => count($ps), 'prueba' => 0, 'pago' => 0, 'vencidas' => 0,
         'altas_semana' => count(array_filter($us, fn($x) => strtotime($x['creado'] . ' UTC') > $t - 7 * 86400))];
+      $esp = db()->query('SELECT pareja_id, COUNT(*) n, SUM(bytes) b FROM archivos GROUP BY pareja_id')->fetchAll(PDO::FETCH_UNIQUE);
+      $res['fotos_mb'] = round(array_sum(array_column($esp, 'b')) / 1048576, 1);
       $lista = [];
       foreach ($ps as $p) {
         $pago = $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0;
@@ -322,6 +324,7 @@ try {
         $lista[] = ['id' => (int)$p['id'], 'nombre' => $p['nombre'], 'codigo' => $p['codigo'], 'creado' => iso($p['creado']),
           'estado' => $estado, 'activo_hasta' => gmdate('c', $hasta), 'dias' => (int)ceil(($hasta - $t) / 86400),
           'pago_hasta' => iso($p['pago_hasta']),
+          'fotos' => (int)($esp[$p['id']]['n'] ?? 0), 'fotos_mb' => round(($esp[$p['id']]['b'] ?? 0) / 1048576, 1),
           'ultimo_ingreso' => $ms ? iso(max(array_column($ms, 'ultimo_ingreso'))) : null,
           'miembros' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto']], $ms)];
       }

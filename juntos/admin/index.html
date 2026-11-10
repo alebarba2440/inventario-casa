@@ -143,7 +143,7 @@ function dibujar(){
   const r = D.resumen;
   $('kpis').innerHTML = [
     ['', r.parejas, 'Parejas'], ['', r.usuarios, 'Usuarios'], ['', r.altas_semana, 'Altas (7 días)'],
-    ['prueba', r.prueba, 'En prueba'], ['pago', r.pago, 'Pagas'], ['vencida', r.vencidas, 'Vencidas'],
+    ['prueba', r.prueba, 'En prueba'], ['pago', r.pago, 'Pagas'], ['vencida', r.vencidas, 'Vencidas'], ['', (r.fotos_mb||0) + ' MB', 'Fotos guardadas'],
   ].map(([c,n,t]) => `<div class="kpi ${c}"><b>${n}</b><span>${t}</span></div>`).join('');
   $('filtros').innerHTML = Object.keys(NOM).map(k => `<button class="chip ${k===FILTRO?'on':''}" onclick="FILTRO='${k}';dibujar()">${NOM[k]}</button>`).join('');
 
@@ -159,7 +159,7 @@ function dibujar(){
       <div class="ms">${ms.join('')}</div>
       <div class="det">
         <span>Alta: <b>${fecha(p.creado)}</b></span><span>Código: <b>${esc(p.codigo)}</b></span>
-        <span>Le quedan: <b>${quedan}</b></span><span>Último ingreso: <b>${hace(p.ultimo_ingreso)}</b></span>
+        <span>Le quedan: <b>${quedan}</b></span><span>Último ingreso: <b>${hace(p.ultimo_ingreso)}</b></span><span>Fotos: <b>${p.fotos||0} (${p.fotos_mb||0} MB de 50)</b></span>
       </div>
       <div class="acc">
         <button class="btn" onclick="pago(${p.id},'sumar_mes')">+1 mes pago</button>

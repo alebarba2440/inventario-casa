@@ -162,7 +162,7 @@
   <div class="bt"><button type="button" class="btn ghost" onclick="cerrarVisor()">Cerrar</button><a class="btn" id="visorAbrir" target="_blank" rel="noopener">Abrir</a></div>
   <div class="bt"><button type="button" class="btn ghost" onclick="editarVisor()"><i class="ti ti-pencil"></i> Editar</button><button type="button" class="btn danger" onclick="eliminarVisor()"><i class="ti ti-trash"></i> Eliminar</button></div>
 </div>
-<input type="file" id="fileIn" accept="image/*,application/pdf" hidden>
+<input type="file" id="fileIn" accept="image/*" hidden>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -314,7 +314,7 @@ function campo([k,l,t,x],v){const val=v[k]??'',id='f_'+k;
   if(t==='sel')return `<label class="lbl">${l}<select class="in" id="${id}">${x.map(o=>{const[a,b]=Array.isArray(o)?o:[o,o];return `<option value="${esc(a)}"${a===val?' selected':''}>${esc(b)}</option>`}).join('')}</select></label>`;
   if(t==='foto'||t==='archivo'){FORM.archivos[k]=val||'';const esPdf=v[k+'Mime']==='application/pdf';
     return `<div class="lbl">${l}<div class="foto-in"><span class="av" id="${id}_pv">${val?(esPdf?'📄':`<img src="${URLA(val)}" alt="">`):(t==='foto'?esc(v.emoji||'🧒'):'📎')}</span>
-      <span class="tx" id="${id}_tx">${val?'Archivo cargado':(t==='foto'?'Opcional: una foto de su cara':'Foto o PDF (opcional)')}</span>
+      <span class="tx" id="${id}_tx">${val?'Archivo cargado':'Sacale una foto o elegila de la galería'}</span>
       <button type="button" class="mini" onclick="elegirArchivo('${k}','${t}')">${val?'Cambiar':'Subir'}</button>${val?`<button type="button" class="mini gris" onclick="quitarArchivo('${k}','${t}')">Quitar</button>`:''}</div></div>`;}
   const tp={date:'date',time:'time',tel:'tel',num:'text'}[t]||'text',im=t==='num'?' inputmode="decimal"':t==='tel'?' inputmode="tel"':'';
   return `<label class="lbl">${l}<input class="in" id="${id}" type="${tp}"${im} value="${esc(val)}" maxlength="120" autocomplete="off"${x&&x.ph?` placeholder="${esc(x.ph)}"`:''}></label>`;}
@@ -330,25 +330,26 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cerrarForm();cerrar
 /* ---------- archivos: fotos (se achican antes de subir) y PDF ---------- */
 let elegido=null;
 function elegirArchivo(k,t){if(!enJuntos()){alert('Las fotos y documentos se guardan en tu cuenta de JuntOS. Abrí la app desde JuntOS para subirlos.');return}
-  elegido={k,t};const fi=$('fileIn');fi.accept=t==='foto'?'image/*':'image/*,application/pdf';fi.value='';fi.click();}
+  elegido={k,t};const fi=$('fileIn');fi.accept='image/*';fi.value='';fi.click();}
 $('fileIn').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f||!FORM||!elegido)return;const {k,t}=elegido;
   const tx=$('f_'+k+'_tx');tx.textContent='Subiendo…';FORM.subiendo=true;
-  try{const r=await subir(f,t==='foto'?900:1800);FORM.archivos[k]=r.id;FORM.archivos[k+'Mime']=r.tipo;
+  try{if(!/^image\//.test(f.type||'image/'))throw new Error('solo se pueden subir fotos');const r=await subir(f);FORM.archivos[k]=r.id;FORM.archivos[k+'Mime']=r.tipo;
     $('f_'+k+'_pv').innerHTML=r.tipo==='application/pdf'?'📄':`<img src="${URLA(r.id)}" alt="">`;tx.textContent='¡Listo! Archivo cargado';snd('agregar');}
   catch(err){tx.textContent='No se pudo subir: '+(err.message||err);}
   FORM&&(FORM.subiendo=false);});
 function quitarArchivo(k,t){if(!FORM)return;FORM.archivos[k]='';FORM.archivos[k+'Mime']='';$('f_'+k+'_pv').innerHTML=t==='foto'?'🧒':'📎';$('f_'+k+'_tx').textContent='Se borra al tocar Guardar';}
-async function subir(file,max){
-  let blob=file;
-  if(file.type!=='application/pdf'){blob=await achicar(file,max).catch(()=>file);}
-  if(blob.size>10*1024*1024)throw new Error('el archivo pesa más de 10 MB');
-  const fd=new FormData();fd.append('f',blob,(file.name||'archivo').replace(/\.\w+$/,'')+(blob.type==='image/jpeg'?'.jpg':blob.type==='application/pdf'?'.pdf':''));
+/* Fotos lo más livianas posible pero legibles: lado mayor 1280px, WebP (o JPEG si el celu no puede). Quedan en ~80-200 KB. */
+async function subir(file){
+  let blob=await achicar(file,1280);
+  if(blob.size>3*1024*1024)throw new Error('la foto es muy grande');
+  const fd=new FormData();fd.append('f',blob,'foto'+(blob.type==='image/webp'?'.webp':'.jpg'));
   const r=await fetch('../api/?a=archivo_subir',{method:'POST',credentials:'same-origin',headers:{'X-Juntos':'1'},body:fd});
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('error '+r.status));return j;}
 function achicar(file,max){return new Promise((ok,ko)=>{const u=URL.createObjectURL(file),im=new Image();
   im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
-    c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?ok(b):ko(),'image/jpeg',.84);};
-  im.onerror=()=>{URL.revokeObjectURL(u);ko();};im.src=u;});}
+    const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);
+    c.toBlob(b=>{if(b&&b.type==='image/webp')return ok(b);c.toBlob(j=>j?ok(j):ko(new Error('no se pudo leer la foto')),'image/jpeg',.68);},'image/webp',.62);};
+  im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error('no se pudo leer la foto'));};im.src=u;});}
 function borrarArchivo(id){if(id&&enJuntos())fetch('../api/?a=archivo_borrar',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Juntos':'1'},body:JSON.stringify({id})}).catch(()=>{});}
 function cambioArchivo(antes,despues){if(antes&&antes!==despues)borrarArchivo(antes);}
 
@@ -356,8 +357,8 @@ function cambioArchivo(antes,despues){if(antes&&antes!==despues)borrarArchivo(an
 const SANGRE=['','O+','O-','A+','A-','B+','B-','AB+','AB-'];
 function formPersonal(id){const c=id?D.hijos[id]:null;
   abrirForm({titulo:c?'Información personal':'Nuevo hijo/a',valores:c,requerido:'nombre',
-    campos:[['foto','FOTO O AVATAR','foto'],['x','','dos',[['nombre','NOMBRE','text'],['apellido','APELLIDO','text']]],
-      ['emoji','AVATAR (SI NO HAY FOTO)','sel',['🧒','👶','👦','👧','🧑']],
+    campos:[['x','','dos',[['nombre','NOMBRE','text'],['apellido','APELLIDO','text']]],
+      ['emoji','AVATAR','sel',['🧒','👶','👦','👧','🧑']],
       ['x','','dos',[['nac','FECHA DE NACIMIENTO','date'],['dni','DNI','text',{ph:'Ej: 55.123.456'}]]],
       ['x','','dos',[['sexo','SEXO (OPCIONAL)','sel',['','Femenino','Masculino','Otro']],['sangre','GRUPO SANGUÍNEO','sel',SANGRE.map(s=>[s,s||'—'])]]],
       ['x','','dos',[['lugar','LUGAR DE NACIMIENTO','text'],['nac2','NACIONALIDAD','text',{ph:'Ej: Argentina'}]]]],
@@ -375,11 +376,11 @@ function formSalud(id){const c=D.hijos[id];
 function formVac(hijo,id){const v=id?D.vac[id]:null;
   abrirForm({titulo:v?'Vacuna':'Nueva vacuna',valores:v||{fecha:hoyS()},requerido:'nombre',
     campos:[['nombre','NOMBRE DE LA VACUNA','text',{ph:'Ej: Triple viral'}],['x','','dos',[['fecha','FECHA DE APLICACIÓN','date'],['dosis','N° DE DOSIS','text',{ph:'Ej: 1ª dosis'}]]],
-      ['prox','PRÓXIMA DOSIS (TE AVISAMOS)','date'],['lugar','LUGAR DONDE SE APLICÓ','text'],['obs','OBSERVACIONES','area'],['cert','FOTO DEL CERTIFICADO','archivo']],
+      ['prox','PRÓXIMA DOSIS (TE AVISAMOS)','date'],['lugar','LUGAR DONDE SE APLICÓ','text'],['obs','OBSERVACIONES','area']],
     guardar:o=>{const n=Object.assign({},v||{id:nid('v'),hijo,creado:Date.now()},o);cambioArchivo(v&&v.cert,n.cert);guardar('vac',n);snd(v?'aceptar':'agregar');
       if(n.prox&&dias(n.prox)>=0)toast('Te avisamos el '+fCorta(n.prox));},
     borrar:v?()=>{if(!confirm('¿Eliminar esta vacuna?'))return;borrarArchivo(v.cert);borrar('vac',v.id);cerrarForm();render();snd('borrar');}:null});
-  if(!v)setTimeout(()=>{const t=$('fmF').querySelector('.foto-in .tx');if(t)t.textContent='Foto o PDF (opcional). Si todavía no se la aplicó, dejá la fecha vacía y poné la próxima.';},0);}
+}
 function formMed(hijo,id){const m=id?D.med[id]:null;
   abrirForm({titulo:m?'Medición':'Nueva medición',valores:m?Object.assign({},m,{peso:m.peso?coma(m.peso):'',altura:m.altura?coma(m.altura):''}):{fecha:hoyS()},
     campos:[['fecha','FECHA DE MEDICIÓN','date'],['x','','dos',[['peso','PESO (KG)','num',{ph:'Ej: 18,5'}],['altura','ALTURA (CM)','num',{ph:'Ej: 108'}]]],['obs','OBSERVACIONES','area']],
@@ -389,8 +390,8 @@ function formMed(hijo,id){const m=id?D.med[id]:null;
 const TD={dni_f:'DNI (frente)',dni_d:'DNI (dorso)',partida:'Partida de nacimiento',carnet:'Carnet de vacunas',cert_nac:'Certificado de nacimiento',obra:'Obra social',cert_med:'Certificado médico',otro:'Otro documento'};
 function formDoc(hijo,id){const d=id?D.doc[id]:null;
   abrirForm({titulo:d?'Documento':'Nuevo documento',valores:d?Object.assign({},d,{archivoMime:d.mime}):null,
-    campos:[['tipo','QUÉ ES','sel',Object.entries(TD)],['nombre','NOMBRE (OPCIONAL)','text',{ph:'Ej: Apto físico 2026'}],['archivo','FOTO O PDF','archivo']],
-    guardar:o=>{if(!o.archivo){toast('Subí la foto o el PDF');return false}
+    campos:[['tipo','QUÉ ES','sel',Object.entries(TD)],['nombre','NOMBRE (OPCIONAL)','text',{ph:'Ej: Apto físico 2026'}],['archivo','FOTO DEL DOCUMENTO','archivo']],
+    guardar:o=>{if(!o.archivo){toast('Sacale una foto al documento');return false}
       const n=Object.assign({},d||{id:nid('d'),hijo,creado:Date.now()},{tipo:o.tipo,nombre:o.nombre,archivo:o.archivo,mime:o.archivoMime||(d&&d.mime)||'image/jpeg'});
       cambioArchivo(d&&d.archivo,n.archivo);guardar('doc',n);snd(d?'aceptar':'agregar');},
     borrar:d?()=>{if(!confirm('¿Eliminar este documento?'))return;borrarArchivo(d.archivo);borrar('doc',d.id);cerrarForm();cerrarVisor();render();snd('borrar');}:null});}
