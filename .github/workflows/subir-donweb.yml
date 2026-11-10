@@ -1,5 +1,5 @@
 # Arma JuntOS (juntos/armar.py: login + las mismas secciones de siempre conectadas a la base de DonWeb)
-# y lo sube a public_html/juntos (= juntosapp.com.ar) en cada cambio.
+# y lo sube a public_html/juntos, que se ve en juntosapp.com.ar (la URL vieja barbamanager.website/juntos redirige ahí).
 # La configuración de la base se arma con los secretos DB_* y se guarda FUERA de public_html (no accesible desde la web).
 # Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
 name: Subir JuntOS a DonWeb
@@ -69,7 +69,7 @@ jobs:
           echo "public_html/.htaccess actualizado (copia del anterior: htaccess-respaldo-raiz, fuera de public_html)"
           # Si el servidor no acepta alguna regla (error 500), vuelvo al .htaccess anterior
           sleep 3
-          for u in https://barbamanager.website/ https://barbamanager.website/app/ https://juntosapp.com.ar/entrar.html; do
+          for u in https://barbamanager.website/ https://barbamanager.website/app/ https://juntosapp.com.ar/entrar.html https://juntosapp.com.ar/app/img/logo-texto.png https://barbamanager.website/juntos/entrar.html; do
             c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$u"); echo "$c $u"
             if [ "$c" = "500" ]; then
               lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o public_html/.htaccess; bye"

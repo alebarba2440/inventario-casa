@@ -16,6 +16,14 @@ RewriteRule ^ https://juntosapp.com.ar%{REQUEST_URI} [R=301,L]
 # www -> sin www
 RewriteCond %{HTTP_HOST} ^www\\.juntosapp\\.com\\.ar$ [NC]
 RewriteRule ^ https://juntosapp.com.ar%{REQUEST_URI} [R=301,L]
+# La URL vieja barbamanager.website/juntos/... -> juntosapp.com.ar/...
+RewriteCond %{HTTP_HOST} ^(www\\.)?barbamanager\\.website$ [NC]
+RewriteCond %{REQUEST_URI} ^/juntos(/.*)?$
+RewriteRule ^ https://juntosapp.com.ar%1 [R=301,L]
+# juntosapp.com.ar/juntos/... escrito a mano -> sin /juntos
+RewriteCond %{HTTP_HOST} ^juntosapp\\.com\\.ar$ [NC]
+RewriteCond %{THE_REQUEST} \\s/juntos(/[^\\s?]*)?
+RewriteRule ^ https://juntosapp.com.ar%1 [R=301,L]
 # juntosapp.com.ar muestra la carpeta juntos/ como si fuera la raíz
 RewriteCond %{HTTP_HOST} ^juntosapp\\.com\\.ar$ [NC]
 RewriteCond %{REQUEST_URI} !^/juntos/
