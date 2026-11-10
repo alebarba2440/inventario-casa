@@ -193,6 +193,10 @@
   .txt b{font-family:'Dancing Script',cursive;font-size:1.55rem;font-weight:700;color:#333;line-height:1.15}
   .go{display:none !important}
   a.card.oculta{display:none !important}
+  /* mover tarjetas (mantener apretado y arrastrar) */
+  #grid a.card{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  #grid a.card img{-webkit-user-drag:none;pointer-events:none}
+  #grid a.card.arrastrando{z-index:50;box-shadow:0 22px 40px rgba(0,0,0,.3) !important;transition:none !important;cursor:grabbing}
   /* la última (si quedan impares) va sola y centrada; con una sola tarjeta, ocupa el ancho */
   .grid a.card.sola{grid-column:1 / span 2;justify-self:center;width:calc(50% - 8px)}
   .grid.una a.card.sola{width:min(100%,320px)}
@@ -530,6 +534,9 @@ const ROT=['-3deg','2.5deg','2deg','-2.5deg','-1.5deg','3deg','-2deg'];
 function accCfg(){if(!cfg.accesos||typeof cfg.accesos!=='object')cfg.accesos={};return cfg.accesos;}
 const cards=()=>[...document.querySelectorAll('#grid a.card')];
 function defNombre(a){if(!a.dataset.def)a.dataset.def=a.querySelector('.txt b').textContent;return a.dataset.def;}
+function ordenarTarjetas(){const o=Array.isArray(cfg.ordenAccesos)?cfg.ordenAccesos:[];if(!o.length)return;
+  const g=document.getElementById('grid'),cs=cards(),pos=k=>{const i=o.indexOf(k);return i<0?1e3+cs.findIndex(a=>a.dataset.k===k):i;};
+  cs.slice().sort((x,y)=>pos(x.dataset.k)-pos(y.dataset.k)).forEach(a=>g.appendChild(a));}
 function aplicarAccesos(){
   const A=accCfg();let vis=[];
   cards().forEach(a=>{const c=A[a.dataset.k]||{},on=c.on!==false;defNombre(a);
@@ -583,7 +590,49 @@ function editarNombre(k){
 function toggleAccCfg(btn){const b=btn.closest('.acc'),abrir=!b.classList.contains('open');
   document.querySelectorAll('.sheet .acc').forEach(x=>{x.classList.remove('open');x.querySelector('.acc-h').setAttribute('aria-expanded','false');});
   if(abrir){b.classList.add('open');btn.setAttribute('aria-expanded','true');if(window.syncSwitches)syncSwitches();}}
-aplicarAccesos();dibujarAccesos();
+ordenarTarjetas();aplicarAccesos();dibujarAccesos();
+/* ===== Mover tarjetas: mantener apretada una tarjeta y arrastrarla a otro lugar (el orden se guarda) ===== */
+(function(){
+  const g=document.getElementById('grid');let drag=null,timer=null,ini=null,sinClick=false;
+  cards().forEach(a=>a.draggable=false);
+  const quieto=()=>{clearTimeout(timer);timer=null;};
+  function natural(a){const t=a.style.transform;a.style.transform='none';const r=a.getBoundingClientRect();a.style.transform=t;return r;}
+  function seguir(x,y){const r=natural(drag.a);drag.a.style.transform=`translate(${x-drag.dx-r.left}px,${y-drag.dy-r.top}px) scale(1.07) rotate(0deg)`;}
+  function mover(x,y){
+    drag.a.style.pointerEvents='none';const el=document.elementFromPoint(x,y);drag.a.style.pointerEvents='';
+    const t=el&&el.closest('#grid a.card');
+    if(t&&t!==drag.a&&!t.classList.contains('oculta')){
+      const otros=cards().filter(a=>a!==drag.a),antes=new Map(otros.map(a=>[a,natural(a)]));
+      const cs=cards(),i=cs.indexOf(drag.a),j=cs.indexOf(t);
+      g.insertBefore(drag.a,i<j?t.nextSibling:t);aplicarAccesos();
+      otros.forEach(a=>{const r0=antes.get(a),r1=natural(a),dx=r0.left-r1.left,dy=r0.top-r1.top;if(!dx&&!dy)return;   // animación suave de las demás
+        a.style.transition='none';a.style.transform=`translate(${dx}px,${dy}px) rotate(var(--rot,0deg))`;
+        requestAnimationFrame(()=>{a.style.transition='transform .22s ease';a.style.transform='';});});
+      try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+    }
+    seguir(x,y);
+  }
+  function empezar(a,x,y){
+    const r=a.getBoundingClientRect();drag={a,dx:x-r.left,dy:y-r.top};
+    a.classList.add('arrastrando');a.style.transition='box-shadow .2s';seguir(x,y);
+    try{navigator.vibrate&&navigator.vibrate(25)}catch(e){}try{window.sonido&&sonido('aceptar')}catch(e){}
+  }
+  function terminar(){
+    quieto();if(!drag)return;const a=drag.a;drag=null;sinClick=true;setTimeout(()=>sinClick=false,350);
+    a.classList.remove('arrastrando');a.style.transition='transform .2s ease';a.style.transform='';
+    setTimeout(()=>{a.style.transition='';},250);
+    cfg.ordenAccesos=cards().map(x=>x.dataset.k);saveCfg();dibujarAccesos();llenarPantalla();
+  }
+  g.addEventListener('pointerdown',e=>{const a=e.target.closest('a.card');if(!a||e.button>0)return;
+    ini={x:e.clientX,y:e.clientY};quieto();timer=setTimeout(()=>{timer=null;empezar(a,ini.x,ini.y);},420);});
+  addEventListener('pointermove',e=>{
+    if(timer&&ini&&Math.hypot(e.clientX-ini.x,e.clientY-ini.y)>10)quieto();   // se estaba desplazando la pantalla
+    if(drag){e.preventDefault();mover(e.clientX,e.clientY);}},{passive:false});
+  addEventListener('pointerup',terminar);addEventListener('pointercancel',terminar);
+  document.addEventListener('touchmove',e=>{if(drag)e.preventDefault();},{passive:false});   // que no se mueva la pantalla mientras arrastro
+  g.addEventListener('click',e=>{if(sinClick){e.preventDefault();e.stopPropagation();}},true);
+  g.addEventListener('contextmenu',e=>e.preventDefault());
+})();
 /* efecto "poner las fotos en la mesa": una por una, rápido. Si está la intro, arranca cuando termina */
 function repartirFotos(){const g=document.getElementById('grid');if(!g.classList.contains('antes'))return;
   g.classList.remove('antes');g.classList.add('repartir');
