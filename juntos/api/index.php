@@ -1,6 +1,7 @@
 <?php
 // API de JuntOS: login con Google, sesión, crear pareja y unirse con código.
 require __DIR__ . '/db.php';
+require __DIR__ . '/push.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -236,6 +237,30 @@ try {
       if (strlen($j) > 4000000) { $db->rollBack(); error_('Demasiados datos personales'); }
       $db->prepare('INSERT INTO personal (usuario_id, data) VALUES (?, ?) ON DUPLICATE KEY UPDATE data = VALUES(data)')->execute([$u['id'], $j]);
       $db->commit();
+      responder(['ok' => true]);
+
+    // ---------- Notificaciones ----------
+    case 'GET push_clave':
+      responder(['clave' => b64u(vapid()['pub'])]);
+
+    case 'POST push_alta':
+      // Guarda la suscripción de este celu y le manda un aviso de prueba.
+      $u = requerirUsuario();
+      $s = entrada();
+      $ep = (string)($s['endpoint'] ?? ''); $k = $s['keys'] ?? [];
+      if (!preg_match('#^https://[^\s]{10,1000}$#', $ep) || !is_array($k) || !preg_match('/^[A-Za-z0-9_\-=]{80,120}$/', (string)($k['p256dh'] ?? '')) || !preg_match('/^[A-Za-z0-9_\-=]{16,40}$/', (string)($k['auth'] ?? ''))) error_('Suscripción inválida');
+      db()->prepare('INSERT INTO push_subs (usuario_id, endpoint_hash, endpoint, p256dh, auth, creado) VALUES (?,?,?,?,?,?)
+        ON DUPLICATE KEY UPDATE usuario_id = VALUES(usuario_id), p256dh = VALUES(p256dh), auth = VALUES(auth)')
+        ->execute([$u['id'], hash('sha256', $ep), $ep, rtrim($k['p256dh'], '='), rtrim($k['auth'], '='), ahora()]);
+      $q = db()->prepare('SELECT * FROM push_subs WHERE endpoint_hash = ?'); $q->execute([hash('sha256', $ep)]);
+      $code = 0;
+      try { $code = enviarPush($q->fetch(), ['title' => '🔔 Avisos activados', 'body' => 'Te vamos a avisar de los eventos del calendario.', 'url' => 'calendario.html', 'tag' => 'prueba']); }
+      catch (Throwable $e) { error_log('JuntOS push_alta: ' . $e->getMessage()); }
+      responder(['ok' => true, 'prueba' => $code]);
+
+    case 'POST push_baja':
+      $u = requerirUsuario();
+      db()->prepare('DELETE FROM push_subs WHERE endpoint_hash = ? AND usuario_id = ?')->execute([hash('sha256', (string)(entrada()['endpoint'] ?? '')), $u['id']]);
       responder(['ok' => true]);
 
     case 'GET admin_datos':

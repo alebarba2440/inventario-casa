@@ -26,13 +26,14 @@ def main():
     if SALIDA.exists():
         shutil.rmtree(SALIDA)
     # 1) Lo propio de JuntOS
-    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'app-db.js', 'extra', '.*'))
+    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'app-db.js', 'sw.js', 'extra', '.*'))
 
     # 2) Las secciones
     app = SALIDA / 'app'
     app.mkdir()
     adaptador = (JUNTOS / 'app-db.js').read_bytes()
     (app / 'app-db.js').write_bytes(adaptador)
+    shutil.copy2(JUNTOS / 'sw.js', app / 'sw.js')   # notificaciones (alcance: /juntos/app/)
     v = hashlib.md5(adaptador).hexdigest()[:8]
     for f in ARCHIVOS:
         if (RAIZ / f).exists():

@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 2;
+const VERSION_ESQUEMA = 3;
 
 function config(): array {
   static $c = null;
@@ -76,6 +76,25 @@ function esquema(PDO $db): void {
       usuario_id INT PRIMARY KEY,
       data MEDIUMTEXT NOT NULL,
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 3) {
+    // Notificaciones: los celus suscriptos de cada persona y los avisos ya mandados (para no repetir).
+    $db->exec("CREATE TABLE IF NOT EXISTS push_subs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      usuario_id INT NOT NULL,
+      endpoint_hash CHAR(64) NOT NULL UNIQUE,
+      endpoint TEXT NOT NULL,
+      p256dh VARCHAR(120) NOT NULL,
+      auth VARCHAR(40) NOT NULL,
+      creado DATETIME NOT NULL,
+      INDEX (usuario_id),
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->exec("CREATE TABLE IF NOT EXISTS avisos (
+      clave CHAR(64) PRIMARY KEY,
+      enviado DATETIME NOT NULL,
+      INDEX (enviado)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
