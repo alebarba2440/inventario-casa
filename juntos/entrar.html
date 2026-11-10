@@ -181,5 +181,6 @@ async function salir(){
 
 api('yo').then(mostrar).catch(e => { ver('vIngresar'); botonGoogle(); err(e.message); });
 </script>
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('sw-raiz.js').catch(function(){});</script>
 </body>
 </html>

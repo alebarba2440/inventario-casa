@@ -10,10 +10,35 @@
   "orientation": "portrait",
   "background_color": "#FFFDF8",
   "theme_color": "#DB2777",
-  "categories": ["lifestyle", "finance", "productivity"],
+  "categories": [
+    "lifestyle",
+    "finance",
+    "productivity"
+  ],
   "icons": [
-    { "src": "app/img/icono-grande.png?v=10", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "app/img/icono-512.png?v=10", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "app/img/icono.png?v=10", "sizes": "192x192", "type": "image/png", "purpose": "any" }
+    {
+      "src": "app/img/icono-grande.png?v=10",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "app/img/icono-512.png?v=10",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "app/img/icono.png?v=10",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://juntosapp.com.ar/manifest.webmanifest"
+    }
   ]
 }

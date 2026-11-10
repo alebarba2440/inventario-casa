@@ -13,6 +13,8 @@
   var iosOtro = esIOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);                            // Chrome/Firefox/Edge en iPhone
   var safariMac = !esMovil && /Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome|Chromium|Edg|Firefox/.test(ua);
   var firefoxPC = !esMovil && /Firefox/.test(ua);
+  var chromePC = !esMovil && /Chrome\/|Edg\//.test(ua) && !/OPR|Firefox/.test(ua);
+  var yaInstalada = false;   // la detecta getInstalledRelatedApps (Chrome/Edge) aunque se abra en una pestaña
   var instalada = function () {
     return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: window-controls-overlay)').matches)) || navigator.standalone === true;
   };
@@ -22,12 +24,13 @@
 
   // Qué se puede ofrecer en este navegador
   function modo() {
-    if (instalada()) return null;
+    if (instalada() || yaInstalada) return null;
     if (evento) return 'nativo';
     if (enApp) return 'abrir';                       // Instagram / Facebook / etc: hay que abrirla en el navegador
     if (esIOS) return 'ios';
     if (safariMac) return 'mac';
     if (firefoxPC) return null;                      // Firefox en PC no instala webs
+    if (chromePC && listo) return 'barra';           // Chrome/Edge en PC todavía no avisó: se instala desde el ícono de la barra
     // Android con un navegador que no avisa (Firefox, Opera...): pasos con el menú ⋮.
     // En Chrome/Samsung/Edge no: si no avisó es porque ya está instalada.
     if (esAndroid && listo && (/Firefox|OPR|UCBrowser|MiuiBrowser|YaBrowser/.test(ua) || !/Chrome\//.test(ua))) return 'android';
@@ -62,6 +65,7 @@
   document.head.appendChild(css);
 
   var IC_COMPARTIR = '<svg class="jxi-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  var IC_INST = '<svg class="jxi-ic" style="color:#555" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M12 7v6M9 10l3 3 3-3"/></svg>';
   var IC_MAS = '<svg class="jxi-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
 
   function hoja(titulo, texto, pasos, flecha) {
@@ -93,6 +97,11 @@
       ].concat(iosOtro ? ['Si no te aparece la opción, abrí <b>juntosapp.com.ar</b> en <b>Safari</b> y repetí los pasos.'] : []), !ipad && !iosOtro);
     } else if (m === 'mac') {
       hoja('Instalá JuntOS en tu Mac', 'En Safari:', ['Andá al menú <b>Archivo</b> (o tocá Compartir ' + IC_COMPARTIR + ').', 'Elegí <b>"Agregar al Dock"</b>.'], false);
+    } else if (m === 'barra') {
+      hoja('Instalá JuntOS en tu compu', 'Desde ' + (/Edg\//.test(ua) ? 'Edge' : 'Chrome') + ', en dos clicks:', [
+        'Hacé click en el ícono de <b>instalar</b> ' + IC_INST + ' que aparece a la derecha de la <b>barra de direcciones</b>.',
+        'Confirmá con <b>Instalar</b>. Queda en el escritorio y en el menú inicio.'
+      ].concat(['Si no ves el ícono: menú <b>⋮</b> → <b>"Transmitir, guardar y compartir"</b> → <b>"Instalar JuntOS"</b>' + (/Edg\//.test(ua) ? ' (en Edge: menú ⋯ → Aplicaciones → Instalar este sitio como aplicación).' : '.')]), false);
     } else if (m === 'android') {
       hoja('Instalá JuntOS', 'Desde el menú del navegador:', ['Tocá los <b>tres puntitos ⋮</b> (arriba a la derecha).', 'Elegí <b>"Instalar app"</b> o <b>"Agregar a pantalla de inicio"</b>.'], false);
     } else if (m === 'abrir') {
@@ -136,9 +145,11 @@
   window.jxInstalar = instalar;
 
   function iniciar() {
+    if ('serviceWorker' in navigator && window.JX_SW) navigator.serviceWorker.register(window.JX_SW).catch(function () {});
+    if (navigator.getInstalledRelatedApps) navigator.getInstalledRelatedApps().then(function (l) { if (l && l.length) { yaInstalada = true; pintar(); } }).catch(function () {});
     pintar();
     // Si el navegador no avisa que se puede instalar (Firefox Android, Opera...), a los 2,5 s ofrecemos los pasos a mano
-    setTimeout(function () { listo = true; pintar(); }, 2500);
+    setTimeout(function () { listo = true; pintar(); }, 3500);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
 })();

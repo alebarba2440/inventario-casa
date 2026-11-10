@@ -61,7 +61,7 @@ def main():
         html = re.sub(r'<link rel="manifest" href="[^"]*">', '', html)
         html = re.sub(r'(</head>)', '<link rel="manifest" href="../manifest.webmanifest">\n\\1', html, count=1, flags=re.I)
         if Path(f).name == 'index.html':   # en el inicio: aviso para instalarla (se puede cerrar)
-            html = re.sub(r'(</body>)', f'<script>window.JX_INSTALAR_AVISO=true</script><script src="instalar.js?v={vi}"></script>\n\\1', html, count=1, flags=re.I)
+            html = re.sub(r'(</body>)', f'<script>window.JX_INSTALAR_AVISO=true;window.JX_SW=\'sw.js\'</script><script src="instalar.js?v={vi}"></script>\n\\1', html, count=1, flags=re.I)
         (app / Path(f).name).write_text(html, encoding='utf-8')
     print(f'Listo: {SALIDA} ({len(PAGINAS) + len(extras)} páginas, adaptador v{v})')
 

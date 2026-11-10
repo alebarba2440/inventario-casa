@@ -329,7 +329,7 @@ fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.json()).then(e => {
 }).catch(() => {});
 if (desdeIcono) fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.json()).then(e => { if (!e || !e.usuario) location.replace('entrar.html'); }).catch(() => {});
 </script>
-<script src="instalar.js?v=1"></script>
+<script>window.JX_SW='sw-raiz.js'</script><script src="instalar.js?v=2"></script>
 <script>
 // texto de respaldo: solo si no hay botón ni está instalada
 setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]'), y = document.querySelector('.instalar [data-instalar-ya]'), n = document.querySelector('[data-instalar-nada]'); if (n) n.hidden = !(b.hidden && y.hidden); }, 2700);
