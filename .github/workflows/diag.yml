@@ -1,0 +1,13 @@
+name: Diagnostico dominio
+on:
+  push:
+    branches: [diag-dominio2]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          for u in http://juntosapp.com.ar/ https://www.juntosapp.com.ar/ https://juntosapp.com.ar/app/img/logo-texto.png https://juntosapp.com.ar/app/inventario.html https://juntosapp.com.ar/app/index.html https://juntosapp.com.ar/entrar.html https://barbamanager.website/app/ https://barbamanager.website/juntos/app/img/logo-texto.png; do
+            echo "=== $u"; curl -s -I -m 20 "$u" | grep -iE "^(HTTP|content-type|location)" ; done
+          echo; curl -s -m 20 https://juntosapp.com.ar/app/index.html | grep -m1 -o "<title>[^<]*"
+          curl -s -m 20 https://barbamanager.website/app/ | grep -m1 -o "<title>[^<]*"
