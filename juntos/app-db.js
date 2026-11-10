@@ -25,18 +25,42 @@
 
   /* ---------- Quién soy (cacheado para que las páginas lo lean al instante) ---------- */
   var YO = rd(K_YO, null);
+  /* Cada integrante ocupa un lugar en los datos: "j" (el primero) y "a" (el segundo).
+     Por defecto, j = quien creó la pareja. Si quedó al revés (por ej. con datos importados), se intercambia desde el panel de administración
+     y queda guardado para los dos en el documento compartido juntos/pareja. */
+  var PERFIL_K = 'juntos\u0001pareja';
+  function perfil() { var v = window.__jxValor ? window.__jxValor(PERFIL_K) : null; return (v && typeof v === 'object') ? v : {}; }
+  function miembrosOrdenados(y) {
+    var ms = ((y && y.pareja && y.pareja.miembros) || []).slice();
+    if (perfil().invertido) { ms = [ms[1] || null, ms[0] || null]; }
+    return ms;
+  }
+  var DEF_COL = { j: '#DB2777', a: '#0284C7' };
+  function hex(c) { return /^#[0-9a-f]{6}$/i.test(c || '') ? c.toUpperCase() : null; }
+  function mezcla(c, a) { var n = parseInt(c.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
+  function aplicarColores(ms) {
+    var col = perfil().colores || {}, el = document.documentElement;
+    var cj = hex(ms[0] && col[ms[0].email]) || DEF_COL.j, ca = hex(ms[1] && col[ms[1].email]) || DEF_COL.a;
+    if (ca === cj) ca = (cj === DEF_COL.a) ? DEF_COL.j : DEF_COL.a;   // si eligieron el mismo color, el segundo usa otro que contraste
+    el.style.setProperty('--juli', cj); el.style.setProperty('--juli-l', mezcla(cj, .16));
+    el.style.setProperty('--ale', ca); el.style.setProperty('--ale-l', mezcla(ca, .16));
+    window.JUNTOS && (window.JUNTOS.colores = { j: cj, a: ca });
+  }
   function publicarYo(y) {
-    var ms = (y && y.pareja && y.pareja.miembros) || [];
+    var ms = miembrosOrdenados(y);
     var pn = function (m) { return m ? String(m.nombre || m.email || '').split(' ')[0] : ''; };
+    var mail = y && y.usuario && y.usuario.email;
     window.JUNTOS = {
       usuario: y && y.usuario, pareja: y && y.pareja,
-      nombres: ms.length ? { j: pn(ms[0]) || 'Yo', a: pn(ms[1]) || 'Pareja' } : null,
-      fotos: ms.length ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
+      nombres: (ms[0] || ms[1]) ? { j: pn(ms[0]) || 'Yo', a: pn(ms[1]) || 'Pareja' } : null,
+      fotos: (ms[0] || ms[1]) ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
+      miSlot: mail ? (ms[0] && ms[0].email === mail ? 'j' : ms[1] && ms[1].email === mail ? 'a' : null) : null,
+      invertido: !!perfil().invertido,
       soloLectura: !!(y && y.pareja && y.pareja.solo_lectura)
     };
+    aplicarColores(ms);
     try { window.dispatchEvent(new Event('juntos')); } catch (e) {}
   }
-  publicarYo(YO);
 
   /* ---------- Estado: lo que dijo el servidor + lo pendiente de subir ---------- */
   var cache = rd(K_DOCS, null);
@@ -78,6 +102,8 @@
     });
     return v;
   }
+  window.__jxValor = valor;
+  publicarYo(YO);
   function pendiente(k) { return pend.some(function (p) { return clave(p.c, p.i) === k; }); }
   function guardarEstado() { wr(K_DOCS, cache); wr(K_PEND, pend); }
 
@@ -156,17 +182,30 @@
         try { lclear(); } catch (e) {}
         pend = []; cache = { pareja: b.pareja_id, ver: 0, srv: {} };
       }
-      YO = yo; wr(K_YO, yo); publicarYo(yo); bandaSoloLectura();
+      YO = yo; wr(K_YO, yo);
       aplicarDocs(b);
+      publicarYo(yo); bandaSoloLectura();
       var recargar = personalDesdeServidor(b.personal || {}) || otraCuenta;
       if (recargar && puedeRecargar()) { location.reload(); return; }
-      marcarSincronizado(); enviar();
+      marcarSincronizado(); miColor(); enviar();
     }).catch(function () { marcarSincronizado(); });   // sin conexión: sigo con lo guardado
   }
 
   function cambios() {
     if (!sincronizado || document.visibilityState === 'hidden') return Promise.resolve();
-    return pedir('cambios&desde=' + cache.ver).then(function (r) { notificar(aplicarDocs(r)); }).catch(function () {});
+    return pedir('cambios&desde=' + cache.ver).then(function (r) {
+      var ks = aplicarDocs(r); notificar(ks);
+      if (ks.indexOf(PERFIL_K) >= 0) { var antes = window.JUNTOS && window.JUNTOS.invertido; publicarYo(YO); if (antes !== window.JUNTOS.invertido && puedeRecargar()) location.reload(); }
+    }).catch(function () {});
+  }
+  // Publica el color que elegí en mi app, para que mi pareja vea lo mío de ese color.
+  function miColor() {
+    try {
+      var c = hex((JSON.parse(lget('cfg_v2') || '{}') || {}).accent) || '#1D9E75', mail = YO && YO.usuario && YO.usuario.email;
+      if (!mail) return;
+      if ((perfil().colores || {})[mail] !== c) { var o = {}; o[mail] = c; db.collection('juntos').doc('pareja').set({ colores: o }, { merge: true }); }
+      publicarYo(YO);
+    } catch (e) {}
   }
 
   function enviar() {
@@ -256,6 +295,7 @@
     if (this !== LS) return setItemOrig.call(this, k, v);
     lset(k, v);
     if (!silencio && esPersonal(k)) { ppend[k] = String(v); wr(K_PPEND, ppend); subirPersonal(); }
+    if (!silencio && k === 'cfg_v2' && sincronizado) setTimeout(miColor, 0);
   };
   Storage.prototype.removeItem = function (k) {
     if (this !== LS) return removeItemOrig.call(this, k);

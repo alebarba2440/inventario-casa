@@ -157,6 +157,7 @@ function dibujar(){
         <button class="btn" onclick="pago(${p.id},'sumar_mes')">+1 mes pago</button>
         ${p.pago_hasta ? `<button class="btn sec" onclick="pago(${p.id},'anular')">Anular pago</button>` : ''}
       </div>
+      ${p.miembros.length === 2 ? `<button class="link" style="align-self:flex-start;font-size:.85rem" onclick="pago(${p.id},'intercambiar')">⇄ Intercambiar lugares (si nombres o colores salen cruzados)</button>` : ''}
     </div>`;
   }).join('') : '<div class="card vacio">No hay parejas para mostrar</div>';
 
@@ -168,7 +169,9 @@ function dibujar(){
 
 function pago(id, op){
   const p = D.parejas.find(x => x.id === id);
-  $('dTxt').innerHTML = op === 'sumar_mes'
+  $('dTxt').innerHTML = op === 'intercambiar'
+    ? `¿Intercambiar los lugares de <b>${esc(p.nombre)}</b>?<br><small>Usalo solo si a esta pareja le salen los nombres, fotos o colores cruzados. Se puede volver a tocar para deshacer.</small>`
+    : op === 'sumar_mes'
     ? `¿Registrar <b>1 mes pago</b> para <b>${esc(p.nombre)}</b>?<br><small>Se suma a partir de que termine lo que ya tienen.</small>`
     : `¿Anular los pagos registrados de <b>${esc(p.nombre)}</b>?<br><small>Vuelve a quedar solo con la prueba.</small>`;
   $('dOk').className = 'btn' + (op === 'anular' ? ' rosa' : '');

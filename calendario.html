@@ -174,7 +174,7 @@ const FOTO=window.JUNTOS?{j:(JUNTOS.fotos&&JUNTOS.fotos.j)||'',a:(JUNTOS.fotos&&
 const TIPO={evento:'📅',recordatorio:'⏰',cumple:'🎂'};
 const REP={semana:'Cada semana',mes:'Cada mes',anio:'Cada año'};
 /* quién soy en este celu (para marcar "nuevo" lo que cargó el otro) */
-function yo(){const J=window.JUNTOS;if(J&&J.usuario&&J.pareja&&J.pareja.miembros){const i=J.pareja.miembros.findIndex(m=>m.email===J.usuario.email);if(i===0)return 'j';if(i===1)return 'a';}return rd('cal_yo',null);}
+function yo(){const J=window.JUNTOS;if(J&&J.miSlot)return J.miSlot;return rd('cal_yo',null);}
 
 let EV=rd(LS,{});                 // id -> evento
 let db=null;

@@ -274,6 +274,16 @@ try {
         $nuevo = (new DateTime('@' . $base))->modify('+1 month')->format('Y-m-d H:i:s');
       } elseif ($op === 'anular') {
         $nuevo = null;
+      } elseif ($op === 'intercambiar') {
+        // Arreglo puntual: invierte qué integrante ocupa cada lugar (j/a) en los datos de la pareja.
+        $db = db(); $db->beginTransaction();
+        $q = $db->prepare("SELECT data FROM docs WHERE pareja_id = ? AND col = 'juntos' AND id = 'pareja' FOR UPDATE"); $q->execute([$pid]);
+        $d = json_decode($q->fetchColumn() ?: '{}'); if (!is_object($d)) $d = new stdClass;
+        $d->invertido = empty($d->invertido);
+        $db->prepare("INSERT INTO docs (pareja_id, col, id, data, ver) VALUES (?, 'juntos', 'pareja', ?, ?) ON DUPLICATE KEY UPDATE data = VALUES(data), ver = VALUES(ver)")
+          ->execute([$pid, json_encode($d, JSON_UNESCAPED_UNICODE), nuevaVersion()]);
+        $db->commit();
+        responder(['ok' => true, 'invertido' => $d->invertido]);
       } else error_('Operación inválida');
       db()->prepare('UPDATE parejas SET pago_hasta = ? WHERE id = ?')->execute([$nuevo, $pid]);
       responder(['ok' => true]);
