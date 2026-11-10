@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JuntOS</title>
+<meta name="theme-color" content="#FCE7F3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;min-height:100vh;font-family:'Nunito',system-ui,sans-serif;color:#1a1a1a;
+    background:linear-gradient(160deg,#FCE7F3 0%,#FFF7E6 50%,#E0F2FE 100%);display:flex;justify-content:center;padding:24px 18px calc(24px + env(safe-area-inset-bottom))}
+  main{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:18px}
+  h1.marca{font-family:'Dancing Script',cursive;font-size:3.4rem;margin:28px 0 0;line-height:1}
+  h1.marca b{color:#DB2777;font-weight:700}
+  .sub{margin:0;color:#6b6b63;text-align:center}
+  .card{width:100%;background:#fff;border-radius:22px;padding:22px;box-shadow:0 10px 30px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:14px}
+  .card h2{margin:0;font-size:1.25rem}
+  .card p{margin:0;color:#55554f;line-height:1.45}
+  input{width:100%;font:inherit;font-size:1.05rem;padding:13px 14px;border:1.5px solid #e5e5df;border-radius:14px;outline:none}
+  input:focus{border-color:#DB2777}
+  input.codigo{text-transform:uppercase;letter-spacing:.35em;text-align:center;font-weight:800;font-size:1.4rem}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-weight:800;font-size:1.05rem;padding:14px;border:0;border-radius:14px;cursor:pointer;background:#DB2777;color:#fff}
+  .btn.sec{background:#fff;color:#1a1a1a;border:1.5px solid #e5e5df}
+  .btn.azul{background:#0284C7}
+  .btn:disabled{opacity:.5}
+  .o{display:flex;align-items:center;gap:10px;color:#9a9a92;font-size:.9rem}
+  .o::before,.o::after{content:"";flex:1;height:1px;background:#e5e5df}
+  .yo{display:flex;align-items:center;gap:12px}
+  .yo img,.mi img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#eee}
+  .yo div{flex:1;min-width:0}
+  .yo small{color:#9a9a92;display:block;overflow:hidden;text-overflow:ellipsis}
+  .link{background:none;border:0;color:#9a9a92;font:inherit;text-decoration:underline;cursor:pointer}
+  .cod{font-size:2rem;font-weight:800;letter-spacing:.3em;text-align:center;background:#FCE7F3;color:#DB2777;border-radius:14px;padding:12px}
+  .mis{display:flex;gap:14px;justify-content:center}
+  .mi{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.9rem;width:90px;text-align:center}
+  .ini{width:44px;height:44px;border-radius:50%;background:#FCE7F3;color:#DB2777;font-weight:800;display:grid;place-items:center;flex-shrink:0}
+  .mi .vacio{width:44px;height:44px;border-radius:50%;border:2px dashed #c9c9c2;display:grid;place-items:center;color:#c9c9c2}
+  .plan{background:#FFF7E6;border-radius:14px;padding:12px 14px;text-align:center}
+  .plan.ro{background:#FFEDD5}
+  .err{color:#b91c1c;font-weight:600;text-align:center;min-height:1.2em;margin:0}
+  #gbtn{display:flex;justify-content:center;min-height:44px}
+</style>
+</head>
+<body>
+<main>
+  <a href="./" style="text-decoration:none;color:inherit"><h1 class="marca">Junt<b>OS</b></h1></a>
+  <p class="sub">Tu casa, tus planes y tus gastos, en pareja.</p>
+
+  <section class="card" id="vCargando"><p style="text-align:center">Cargando…</p></section>
+
+  <!-- Ingresar -->
+  <section class="card" id="vIngresar" hidden>
+    <h2>Ingresá con Google</h2>
+    <p>Usá tu cuenta de Google. Tenés <b>30 días de prueba gratis</b>, sin tarjeta.</p>
+    <div id="gbtn"></div>
+  </section>
+
+  <!-- Sin pareja: crear o unirse -->
+  <section class="card" id="vPareja" hidden>
+    <div class="yo"><span id="yoFoto"></span><div><b id="yoNombre"></b><small id="yoMail"></small></div></div>
+    <h2>Armá tu espacio</h2>
+    <p>Creá uno nuevo e invitá a tu pareja, o unite con el código que te pasó.</p>
+    <input id="nombrePareja" maxlength="80" placeholder="Nombre (ej: Juli y Ale)">
+    <button class="btn" onclick="crearPareja()">Crear nuestro espacio</button>
+    <div class="o">o</div>
+    <input id="codigo" class="codigo" maxlength="6" placeholder="CÓDIGO" autocomplete="off" autocapitalize="characters">
+    <button class="btn azul" onclick="unirse()">Unirme con código</button>
+  </section>
+
+  <!-- Con pareja -->
+  <section class="card" id="vListo" hidden>
+    <h2 id="pNombre" style="text-align:center"></h2>
+    <div class="mis" id="miembros"></div>
+    <div id="invitar">
+      <p style="text-align:center;margin-bottom:10px">Pasale este código a tu pareja para que se una:</p>
+      <div class="cod" id="pCodigo"></div>
+      <button class="btn sec" style="margin-top:10px" onclick="compartir()">Compartir invitación</button>
+    </div>
+    <div class="plan" id="plan"></div>
+    <a class="btn" href="app/" style="text-decoration:none">Abrir JuntOS →</a>
+  </section>
+
+  <p class="err" id="err"></p>
+  <a class="link" id="bPanel" href="admin/" hidden>Panel de administración</a>
+  <button class="link" id="bSalir" onclick="salir()" hidden>Cerrar sesión</button>
+</main>
+
+<script>
+const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
+const $ = id => document.getElementById(id);
+const VISTAS = ['vCargando','vIngresar','vPareja','vListo'];
+let EST = null;
+
+function ver(v){ VISTAS.forEach(x => $(x).hidden = x !== v); $('bSalir').hidden = !(v==='vPareja'||v==='vListo'); }
+function err(m){ $('err').textContent = m || ''; }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function avatar(u){
+  const ini = esc((u.nombre || u.email || '?').trim()[0].toUpperCase());
+  return u.foto ? `<img src="${esc(u.foto)}" alt="" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=ini>${ini}</div>'">` : `<div class="ini">${ini}</div>`;
+}
+async function api(accion, datos){
+  const op = datos === undefined ? {credentials:'same-origin'} :
+    {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Juntos':'1'}, body:JSON.stringify(datos)};
+  const r = await fetch('api/?a=' + accion, op);
+  let j = {}; try { j = await r.json(); } catch(e){}
+  if (!r.ok) throw new Error(j.error || 'No se pudo conectar');
+  return j;
+}
+
+function mostrar(e){
+  EST = e; err('');
+  $('bPanel').hidden = !e.usuario?.admin;
+  if (!e.usuario){ ver('vIngresar'); botonGoogle(); return; }
+  if (!e.pareja){
+    $('yoFoto').innerHTML = avatar(e.usuario); $('yoNombre').textContent = e.usuario.nombre; $('yoMail').textContent = e.usuario.email;
+    ver('vPareja'); return;
+  }
+  const p = e.pareja;
+  $('pNombre').textContent = p.nombre;
+  const ms = p.miembros.map(m => `<div class="mi">${avatar(m)}<span>${esc((m.nombre||m.email).split(' ')[0])}</span></div>`);
+  if (ms.length < 2) ms.push('<div class="mi"><div class="vacio">?</div><span>Esperando…</span></div>');
+  $('miembros').innerHTML = ms.join('');
+  $('pCodigo').textContent = p.codigo;
+  $('invitar').hidden = p.miembros.length >= 2;
+  const f = new Date(p.activo_hasta).toLocaleDateString('es-AR', {day:'numeric', month:'long'});
+  $('plan').className = 'plan' + (p.solo_lectura ? ' ro' : '');
+  $('plan').innerHTML = p.solo_lectura ? '⏸️ Tu período terminó. Podés ver todo, pero no cargar cosas nuevas.'
+    : p.plan === 'pago' ? `✅ Suscripción activa hasta el <b>${f}</b>`
+    : `🎁 Prueba gratis: te quedan <b>${p.dias_restantes} días</b> (hasta el ${f})`;
+  ver('vListo');
+  // Pareja completa: vamos directo a la app (salvo que vengan a ver la cuenta).
+  if (p.miembros.length >= 2 && !/[?&]cuenta=/.test(location.search) && !mostrar.yaFue) { mostrar.yaFue = true; location.replace('app/'); }
+}
+
+let gIniciado = false;
+function botonGoogle(){
+  if (!window.google?.accounts?.id){ setTimeout(botonGoogle, 200); return; }
+  if (!gIniciado){
+    google.accounts.id.initialize({client_id: CLIENT_ID, callback: alIngresar, ux_mode: 'popup'});
+    gIniciado = true;
+  }
+  google.accounts.id.renderButton($('gbtn'), {theme:'outline', size:'large', shape:'pill', text:'continue_with', locale:'es', width: Math.min(320, $('gbtn').clientWidth || 300)});
+}
+async function alIngresar(r){
+  try { mostrar(await api('login', {credencial: r.credential})); } catch(e){ err(e.message); }
+}
+async function crearPareja(){
+  const n = $('nombrePareja').value.trim();
+  if (!n) { err('Poné un nombre para su espacio'); return; }
+  try { mostrar(await api('crear_pareja', {nombre: n})); } catch(e){ err(e.message); }
+}
+async function unirse(){
+  const c = $('codigo').value.trim();
+  if (c.length !== 6) { err('El código tiene 6 letras y números'); return; }
+  try { mostrar(await api('unirse', {codigo: c})); } catch(e){ err(e.message); }
+}
+async function compartir(){
+  const t = `Sumate a nuestro espacio en JuntOS 💞\nEntrá a ${location.origin}/juntos/entrar.html y usá el código: ${EST.pareja.codigo}`;
+  if (navigator.share) { try { await navigator.share({text: t}); } catch(e){} }
+  else { await navigator.clipboard.writeText(t); err('✅ Invitación copiada, pegala en WhatsApp'); }
+}
+async function salir(){
+  try { await api('salir', {}); } catch(e){}
+  google?.accounts?.id?.disableAutoSelect?.();
+  mostrar({usuario: null});
+}
+
+api('yo').then(mostrar).catch(e => { ver('vIngresar'); botonGoogle(); err(e.message); });
+</script>
+</body>
+</html>

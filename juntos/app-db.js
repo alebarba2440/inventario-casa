@@ -125,7 +125,7 @@
       });
     });
   }
-  function irAIngresar() { if (!/\/juntos\/?$/.test(location.pathname)) location.href = '../'; }
+  function irAIngresar() { location.href = '../entrar.html'; }
   function aplicarDocs(r) {
     var cambiadas = [];
     (r.docs || []).forEach(function (d) {
@@ -147,7 +147,7 @@
   function boot() {
     pedir('boot&desde=' + (cache.pareja ? cache.ver : 0)).then(function (b) {
       if (!b.usuario) { ldel(K_YO); irAIngresar(); return; }
-      if (!b.pareja) { location.href = '../'; return; }
+      if (!b.pareja) { location.href = '../entrar.html'; return; }
       var yo = { usuario: b.usuario, pareja: b.pareja, pareja_id: b.pareja_id, usuario_id: b.usuario_id };
       var otraCuenta = !YO || YO.pareja_id !== b.pareja_id || YO.usuario_id !== b.usuario_id;
       if (otraCuenta) {
@@ -303,7 +303,7 @@
     var ya = document.getElementById('juntosRO');
     if (!(window.JUNTOS && window.JUNTOS.soloLectura)) { if (ya) ya.remove(); return; }
     if (ya || !document.body) return;
-    var a = document.createElement('a'); a.id = 'juntosRO'; a.href = '../';
+    var a = document.createElement('a'); a.id = 'juntosRO'; a.href = '../entrar.html?cuenta=1';
     a.textContent = '⏸️ Período terminado · solo lectura. Tocá para ver tu cuenta';
     a.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;background:#FFEDD5;color:#9a3412;font:700 13px system-ui;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;text-decoration:none';
     document.body.appendChild(a);
