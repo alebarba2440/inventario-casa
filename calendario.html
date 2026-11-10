@@ -89,6 +89,7 @@
   .in{font-size:1rem;font-weight:700;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px;outline:none;width:100%;min-width:0}
   .in:focus{border-color:var(--accent)}
   textarea.in{resize:vertical;min-height:64px;font-weight:600}
+  .hm{display:flex;align-items:center;gap:4px}.hm .in{padding:10px 4px;text-align:center}.hm b{font-weight:900}
   .dos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
   .ops{display:grid;gap:8px}
   .ops.t3{grid-template-columns:repeat(3,1fr)}
@@ -152,7 +153,7 @@
     <div class="lbl">¿DE QUIÉN?<div class="ops t3" id="fQuien"></div></div>
     <div class="dos">
       <label class="lbl">FECHA<input class="in" type="date" id="fFecha"></label>
-      <label class="lbl">HORA<input class="in" type="time" id="fHora"></label>
+      <div class="lbl">HORA<div class="hm"><select class="in" id="fHH" aria-label="Hora"></select><b>:</b><select class="in" id="fMM" aria-label="Minutos"></select></div></div>
     </div>
     <div class="fila" onclick="toggleTodo()"><b>Todo el día</b><button type="button" class="sw" id="fTodo" role="switch" aria-checked="false" onclick="event.stopPropagation();toggleTodo()" aria-label="Todo el día"></button></div>
     <label class="lbl">REPETIR<select class="in" id="fRep">
@@ -243,8 +244,18 @@ function irHoy(){elegir(hoyF())}
 /* ---------- formulario ---------- */
 let F={};
 function setOp(c,v){F[c]=v;const box=document.getElementById(c==='tipo'?'fTipo':'fQuien');box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-  if(c==='tipo'&&v==='cumple'&&!editando){document.getElementById('fRep').value='anio';if(!document.getElementById('fHora').value)setTodo(true);}}
-function setTodo(on){const b=document.getElementById('fTodo');b.setAttribute('aria-checked',on);document.getElementById('fHora').disabled=on;if(on)document.getElementById('fHora').value='';}
+  if(c==='tipo'&&v==='cumple'&&!editando){document.getElementById('fRep').value='anio';if(!getHora())setTodo(true);}}
+function setTodo(on){const b=document.getElementById('fTodo');b.setAttribute('aria-checked',on);['fHH','fMM'].forEach(i=>document.getElementById(i).disabled=on);if(on)setHora('');}
+/* Hora con minutos de a 5 (00, 05, 10 … 55) */
+(function(){const p=n=>String(n).padStart(2,'0');
+  document.getElementById('fHH').innerHTML='<option value="">--</option>'+Array.from({length:24},(_,i)=>`<option>${p(i)}</option>`).join('');
+  document.getElementById('fMM').innerHTML=Array.from({length:12},(_,i)=>`<option>${p(i*5)}</option>`).join('');
+  document.getElementById('fHH').addEventListener('change',e=>{if(!e.target.value)document.getElementById('fMM').value='00';});})();
+function getHora(){const h=document.getElementById('fHH').value;return h?h+':'+(document.getElementById('fMM').value||'00'):'';}
+function setHora(v){const m=/^(\d{2}):(\d{2})/.exec(v||''),mm=document.getElementById('fMM');
+  document.getElementById('fHH').value=m?m[1]:'';
+  if(m&&![...mm.options].some(o=>o.value===m[2])){const o=document.createElement('option');o.textContent=m[2];o.dataset.extra='1';mm.appendChild(o);}  // hora vieja que no era múltiplo de 5
+  mm.value=m?m[2]:'00';}
 function toggleTodo(){setTodo(document.getElementById('fTodo').getAttribute('aria-checked')!=='true')}
 let editando=null;
 function abrirForm(id){
@@ -253,7 +264,7 @@ function abrirForm(id){
   document.getElementById('fQuien').innerHTML=['j','a','ambos'].map(k=>`<button type="button" class="${k}" data-v="${k}" onclick="setOp('quien','${k}')">${k!=='ambos'&&FOTO[k]?`<img src="${esc(FOTO[k])}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">`:k==='ambos'?'💞':''}<span>${esc(NOM[k])}</span></button>`).join('');
   document.getElementById('fTit').value=e?e.titulo:'';
   document.getElementById('fFecha').value=e?e.fecha:sel;
-  document.getElementById('fHora').value=e?(e.hora||''):'';
+  setHora(e?(e.hora||''):'');
   document.getElementById('fRep').value=e?(e.rep||'no'):'no';
   document.getElementById('fNotas').value=e?(e.notas||''):'';
   F={};setOp('tipo',e?e.tipo||'evento':'evento');setOp('quien',e?e.quien||'ambos':(yo()||rd('cal_quien','ambos')));
@@ -269,7 +280,7 @@ function guardar(){
   if(!fecha){document.getElementById('fFecha').focus();return}
   const todo=document.getElementById('fTodo').getAttribute('aria-checked')==='true';
   const prev=editando?EV[editando]:null,id=editando||('e'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-  const e={id,titulo:tit,fecha,hora:todo?'':document.getElementById('fHora').value,tipo:F.tipo||'evento',quien:F.quien||'ambos',
+  const e={id,titulo:tit,fecha,hora:todo?'':getHora(),tipo:F.tipo||'evento',quien:F.quien||'ambos',
     rep:document.getElementById('fRep').value,notas:document.getElementById('fNotas').value.trim(),
     creado:prev?prev.creado:Date.now(),autor:prev?prev.autor||null:yo(),editado:Date.now()};
   EV[id]=e;wr(LS,EV);wr('cal_quien',e.quien);
