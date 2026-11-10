@@ -443,7 +443,7 @@ async function exportarPDF(){
     const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'mm',format:'a4'});
     const W=210,H=297,MX=16,fin=H-18,acc=colorRGB(getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()||'#1D9E75');
     const COL={venc:[226,75,74],cerca:[217,119,6],ok:[29,158,117]};
-    const img=await imagenPNG('img/copito.webp');
+    const img=await imagenPNG('img/copito.webp?v=2');
     const hoy=new Date().toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
     const gris=c=>doc.setTextColor(c,c,c);
     const header=()=>{
