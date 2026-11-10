@@ -28,11 +28,19 @@
   /* Cada integrante ocupa un lugar en los datos: "j" (el primero) y "a" (el segundo).
      Por defecto, j = quien creó la pareja. Si quedó al revés (por ej. con datos importados), se intercambia desde el panel de administración
      y queda guardado para los dos en el documento compartido juntos/pareja. */
+  var FIJO = { j: 'gionejulieta@gmail.com', a: 'alejandrobarba021@gmail.com' };
   var PERFIL_K = 'juntos\u0001pareja';
   function perfil() { var v = window.__jxValor ? window.__jxValor(PERFIL_K) : null; return (v && typeof v === 'object') ? v : {}; }
   function miembrosOrdenados(y) {
     var ms = ((y && y.pareja && y.pareja.miembros) || []).slice();
     if (perfil().invertido) { ms = [ms[1] || null, ms[0] || null]; }
+    // Pareja fija (Juli y Ale): Juli siempre es "j" y Ale siempre "a", en todas las secciones.
+    var em = function (m) { return m && String(m.email || '').toLowerCase(); };
+    var ju = ms.filter(function (m) { return em(m) === FIJO.j; })[0], al = ms.filter(function (m) { return em(m) === FIJO.a; })[0];
+    if (ju || al) {
+      var otro = ms.filter(function (m) { return m && m !== ju && m !== al; })[0] || null;
+      ms = [ju || otro, al || (ju ? otro : null)];
+    }
     return ms;
   }
   var DEF_COL = { j: '#DB2777', a: '#0284C7' };

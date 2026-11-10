@@ -21,12 +21,7 @@
   window.miPersonaje = function () {
     let id = null; try { id = localStorage.getItem('personaje'); } catch (e) {}
     if (id && id !== 'default' && window.personaje(id)) return window.personaje(id);
-    const J = window.JUNTOS, s = J && J.miSlot;
-    // Caso especial (Alejandro y Julieta): en Default, la foto se asigna por mail y no por el lugar en la pareja.
-    if (J && J.emails && s) {
-      const ale = 'alejandrobarba021@', es = x => String(x || '').toLowerCase().indexOf(ale) === 0;
-      if (es(J.emails.j) || es(J.emails.a)) return window.personaje(es(J.emails[s]) ? 'alejandro' : 'julieta');
-    }
+    const s = window.JUNTOS && window.JUNTOS.miSlot;
     return s === 'j' ? window.personaje('julieta') : s === 'a' ? window.personaje('alejandro') : null;
   };
   // Imagen para una sección (si el personaje tiene una propia para esa sección, se usa esa)

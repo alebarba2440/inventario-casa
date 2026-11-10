@@ -49,6 +49,14 @@ try {
     $q = $db->prepare("SELECT data FROM docs WHERE pareja_id = ? AND col = 'juntos' AND id = 'pareja'"); $q->execute([$pid]);
     $perfil = json_decode($q->fetchColumn() ?: '{}', true);
     if (!empty($perfil['invertido'])) $ms = [$ms[1] ?? null, $ms[0] ?? null];
+    // Pareja fija (Juli y Ale): Juli siempre es "j" y Ale "a" (igual que en app-db.js)
+    $fijo = $db->prepare("SELECT id, LOWER(email) e FROM usuarios WHERE pareja_id = ? AND LOWER(email) IN ('gionejulieta@gmail.com','alejandrobarba021@gmail.com')");
+    $fijo->execute([$pid]); $fj = array_column($fijo->fetchAll(), 'id', 'e');
+    if ($fj) {
+      $ju = isset($fj['gionejulieta@gmail.com']) ? (int)$fj['gionejulieta@gmail.com'] : null; $al = isset($fj['alejandrobarba021@gmail.com']) ? (int)$fj['alejandrobarba021@gmail.com'] : null;
+      $otro = array_values(array_diff(array_filter($ms), [$ju, $al]))[0] ?? null;
+      $ms = [$ju ?? $otro, $al ?? ($ju ? $otro : null)];
+    }
     $slot = ['j' => $ms[0] ?? null, 'a' => $ms[1] ?? null];
 
     $q = $db->prepare("SELECT id, data FROM docs WHERE pareja_id = ? AND col = 'calendario' AND data IS NOT NULL"); $q->execute([$pid]);
