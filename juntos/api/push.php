@@ -51,7 +51,7 @@ function firmaES256(string $datos, string $pem): string {
 function jwtVapid(string $endpoint): string {
   $u = parse_url($endpoint);
   $h = b64u(json_encode(['typ' => 'JWT', 'alg' => 'ES256']));
-  $c = b64u(json_encode(['aud' => $u['scheme'] . '://' . $u['host'], 'exp' => time() + 12 * 3600, 'sub' => 'https://barbamanager.website/juntos/'], JSON_UNESCAPED_SLASHES));
+  $c = b64u(json_encode(['aud' => $u['scheme'] . '://' . $u['host'], 'exp' => time() + 12 * 3600, 'sub' => 'https://juntosapp.com.ar/'], JSON_UNESCAPED_SLASHES));
   return "$h.$c." . b64u(firmaES256("$h.$c", vapid()['pem']));
 }
 

@@ -165,7 +165,7 @@ async function unirse(){
   try { mostrar(await api('unirse', {codigo: c})); } catch(e){ err(e.message); }
 }
 async function compartir(){
-  const t = `Sumate a nuestro espacio en JuntOS 💞\nEntrá a ${location.origin}/juntos/entrar.html y usá el código: ${EST.pareja.codigo}`;
+  const t = `Sumate a nuestro espacio en JuntOS 💞\nEntrá a ${new URL('entrar.html', location.href).href} y usá el código: ${EST.pareja.codigo}`;
   if (navigator.share) { try { await navigator.share({text: t}); } catch(e){} }
   else { await navigator.clipboard.writeText(t); err('✅ Invitación copiada, pegala en WhatsApp'); }
 }

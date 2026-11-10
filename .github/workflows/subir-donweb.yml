@@ -1,5 +1,5 @@
 # Arma JuntOS (juntos/armar.py: login + las mismas secciones de siempre conectadas a la base de DonWeb)
-# y lo sube a barbamanager.website/juntos en cada cambio.
+# y lo sube a public_html/juntos (= juntosapp.com.ar) en cada cambio.
 # La configuración de la base se arma con los secretos DB_* y se guarda FUERA de public_html (no accesible desde la web).
 # Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
 name: Subir JuntOS a DonWeb
@@ -48,3 +48,23 @@ jobs:
             rm -f public_html/juntos/api/prueba.php;
             rm -f public_html/juntos/app/importar.html;
             bye"
+      - name: Regla en public_html/.htaccess para que juntosapp.com.ar abra JuntOS en la raíz
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          L="set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set ftp:passive-mode true; set net:max-retries 2; set net:timeout 30;"
+          mkdir -p /tmp/ht && cd /tmp/ht
+          # Si ya hay un .htaccess lo bajo y lo conservo; si la descarga falla, no toco nada.
+          if lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L cls -1a public_html/; bye" | grep -qx '.htaccess'; then
+            lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L get public_html/.htaccess -o actual; bye" || { echo "::error::No pude bajar public_html/.htaccess"; exit 1; }
+          else
+            : > actual
+          fi
+          python3 "$GITHUB_WORKSPACE/juntos/htaccess_raiz.py" actual nuevo
+          if cmp -s actual nuevo; then echo "public_html/.htaccess sin cambios"; exit 0; fi
+          cp actual "respaldo-$(date +%Y%m%d%H%M%S)"
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o htaccess-respaldo-raiz; put nuevo -o public_html/.htaccess; bye"
+          echo "public_html/.htaccess actualizado (copia del anterior: htaccess-respaldo-raiz, fuera de public_html)"
+

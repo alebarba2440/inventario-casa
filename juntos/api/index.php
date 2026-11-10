@@ -30,12 +30,19 @@ function verificarGoogle(string $credencial): array {
   return $t;
 }
 
+// Carpeta base según la URL pedida: '/' en juntosapp.com.ar, '/juntos/' en barbamanager.website/juntos
+function rutaCookie(): string {
+  $p = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+  $i = strpos($p, '/api/');
+  return $i === false ? '/' : substr($p, 0, $i + 1);
+}
+
 function crearSesion(int $uid): void {
   $token = bin2hex(random_bytes(32));
   $exp = time() + DIAS_SESION * 86400;
   db()->prepare('INSERT INTO sesiones (token_hash, usuario_id, creado, expira) VALUES (?,?,?,?)')
     ->execute([hash('sha256', $token), $uid, ahora(), gmdate('Y-m-d H:i:s', $exp)]);
-  setcookie(COOKIE, $token, ['expires' => $exp, 'path' => '/juntos/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
+  setcookie(COOKIE, $token, ['expires' => $exp, 'path' => rutaCookie(), 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
 }
 
 function usuarioActual(): ?array {
@@ -150,7 +157,7 @@ try {
     case 'POST salir':
       $tok = $_COOKIE[COOKIE] ?? '';
       if ($tok) db()->prepare('DELETE FROM sesiones WHERE token_hash = ?')->execute([hash('sha256', $tok)]);
-      setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => '/juntos/', 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
+      setcookie(COOKIE, '', ['expires' => time() - 3600, 'path' => rutaCookie(), 'secure' => true, 'httponly' => true, 'samesite' => 'Lax']);
       responder(['ok' => true]);
 
     case 'POST crear_pareja':

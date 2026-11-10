@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Arma la carpeta que se sube a DonWeb (barbamanager.website/juntos/).
+"""Arma la carpeta que se sube a DonWeb (juntosapp.com.ar, carpeta public_html/juntos/).
 
 - Copia lo propio de JuntOS (login, api, admin).
 - En app/ copia las secciones de siempre (las mismas páginas de GitHub Pages) y les cambia Firebase
@@ -26,14 +26,14 @@ def main():
     if SALIDA.exists():
         shutil.rmtree(SALIDA)
     # 1) Lo propio de JuntOS
-    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'app-db.js', 'sw.js', 'extra', '.*'))
+    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'htaccess_raiz.py', 'app-db.js', 'sw.js', 'extra', '.*'))
 
     # 2) Las secciones
     app = SALIDA / 'app'
     app.mkdir()
     adaptador = (JUNTOS / 'app-db.js').read_bytes()
     (app / 'app-db.js').write_bytes(adaptador)
-    shutil.copy2(JUNTOS / 'sw.js', app / 'sw.js')   # notificaciones (alcance: /juntos/app/)
+    shutil.copy2(JUNTOS / 'sw.js', app / 'sw.js')   # notificaciones (alcance: app/)
     v = hashlib.md5(adaptador).hexdigest()[:8]
     for f in ARCHIVOS:
         if (RAIZ / f).exists():

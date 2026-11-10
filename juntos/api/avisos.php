@@ -1,6 +1,6 @@
 <?php
 // Avisos del calendario por notificación. Lo llama cron-job.org cada 5 minutos:
-//   https://barbamanager.website/juntos/api/avisos.php
+//   https://juntosapp.com.ar/api/avisos.php
 // Todos: el día anterior a las 20. Con hora: además 1 hora antes y a la hora justa. Sin hora: además ese día a las 9.
 // Cada aviso se manda una sola vez (tabla avisos), así que llamarlo de más no repite nada.
 require __DIR__ . '/db.php';
