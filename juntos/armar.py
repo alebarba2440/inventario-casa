@@ -26,6 +26,7 @@ CUENTA = '''
       <div class="acc-b">
         <p id="jxCuenta" style="margin:0 0 10px;color:var(--text2)"></p>
         <a class="btn pri" href="../?cuenta=1" style="text-decoration:none;justify-content:center">Ver cuenta, pareja y suscripción</a>
+        <a class="btn" href="importar.html" style="text-decoration:none;justify-content:center;margin-top:8px">Traer datos de la app anterior</a>
       </div>
     </div>
     <script>document.addEventListener('DOMContentLoaded',function(){var J=window.JUNTOS||{},u=J.usuario,p=J.pareja,e=document.getElementById('jxCuenta');
@@ -37,7 +38,7 @@ def main():
     if SALIDA.exists():
         shutil.rmtree(SALIDA)
     # 1) Lo propio de JuntOS
-    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'app-db.js', '.*'))
+    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'app-db.js', 'extra', '.*'))
 
     # 2) Las secciones
     app = SALIDA / 'app'
@@ -50,8 +51,9 @@ def main():
             shutil.copy2(RAIZ / f, app / f)
     shutil.copytree(RAIZ / 'img', app / 'img')
 
-    for f in PAGINAS:
-        html = (RAIZ / f).read_text(encoding='utf-8')
+    extras = sorted((JUNTOS / 'extra').glob('*.html'))
+    for f in PAGINAS + extras:
+        html = Path(f).read_text(encoding='utf-8') if isinstance(f, Path) else (RAIZ / f).read_text(encoding='utf-8')
         html = html.replace('<script src="firebase-config.js"></script>', '')
         # El adaptador va primero de todo (antes de tema.js, que ya lee los ajustes).
         tag = f'<script src="app-db.js?v={v}"></script>'
@@ -64,8 +66,8 @@ def main():
             marca = '    <div class="block" style="display:none"><!-- oculto: estado de Firebase'
             assert marca in html, 'index.html: no encontré dónde poner "Mi cuenta"'
             html = html.replace(marca, CUENTA + marca, 1)
-        (app / f).write_text(html, encoding='utf-8')
-    print(f'Listo: {SALIDA} ({len(PAGINAS)} páginas, adaptador v{v})')
+        (app / Path(f).name).write_text(html, encoding='utf-8')
+    print(f'Listo: {SALIDA} ({len(PAGINAS) + len(extras)} páginas, adaptador v{v})')
 
 
 main()

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Traer mis datos · JuntOS</title>
+<style>
+  body{margin:0;font-family:system-ui,sans-serif;background:#FCE7F3;color:#1a1a1a;padding:24px 18px;display:flex;justify-content:center}
+  main{max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px}
+  h1{margin:0;font-size:1.4rem}
+  .card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
+  .btn{display:block;width:100%;font:inherit;font-weight:800;font-size:1.05rem;padding:14px;border:0;border-radius:14px;background:#DB2777;color:#fff;cursor:pointer;text-align:center;text-decoration:none;box-sizing:border-box}
+  .btn.sec{background:#fff;color:#1a1a1a;border:1.5px solid #e5e5df}
+  .btn:disabled{opacity:.5}
+  label.op{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid #eee}
+  label.op input{width:22px;height:22px;margin-top:2px;accent-color:#DB2777}
+  small{color:#6b6b63}
+  .ok{color:#15803d;font-weight:700}.err{color:#b91c1c;font-weight:700}
+  ul{margin:6px 0 0;padding-left:20px;line-height:1.6}
+</style>
+</head>
+<body>
+<main>
+  <h1>📥 Traer mis datos</h1>
+  <div class="card">
+    <p style="margin-top:0">Elegí el archivo que descargaste en la app anterior (<b>juntos-datos-….json</b>).</p>
+    <input type="file" id="f" accept=".json,application/json" style="display:none" onchange="leer(this.files[0])">
+    <button class="btn sec" onclick="f.click()">Elegir archivo</button>
+    <div id="det" hidden>
+      <ul id="resumen"></ul>
+      <label class="op"><input type="checkbox" id="cComp" checked><span><b>Datos compartidos</b><br><small>Inventario, ahorros, vacaciones, autos y gastos compartidos. <b>Reemplaza</b> lo compartido que haya ahora en JuntOS. Alcanza con que lo haga uno de los dos.</small></span></label>
+      <label class="op"><input type="checkbox" id="cPers" checked><span><b>Mis gastos personales y ajustes</b><br><small>Solo para tu cuenta. Tu pareja tiene que importar su propio archivo.</small></span></label>
+      <button class="btn" id="bImp" onclick="importar()">Importar</button>
+    </div>
+    <div id="res"></div>
+  </div>
+  <a class="btn sec" href="index.html">Volver a JuntOS</a>
+</main>
+<script>
+const CACHES=['inv_v2','categories_v2','ahorros_v1','viajes_v1','copito_v1','compartidos_v1','compartidos_v1_p'];
+let DATA=null;
+const $=id=>document.getElementById(id);
+function leer(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{const d=JSON.parse(r.result);if(d.formato!=='juntos-migracion-1')throw new Error('No es un archivo de JuntOS');DATA=d;}
+    catch(e){$('res').innerHTML=`<p class="err">❌ ${e.message}</p>`;return}
+    const n=c=>DATA.docs.filter(d=>d.c===c).length;
+    let g=0;try{g=Object.values(JSON.parse(DATA.personal['gastos-mensuales']||'{}')).reduce((t,m)=>t+(Array.isArray(m)?m.length:0),0)}catch(e){}
+    $('resumen').innerHTML=[`Archivo del ${new Date(DATA.fecha).toLocaleDateString('es-AR')}`,`Inventario: ${n('inv')} productos`,`Vacaciones: ${n('vacaciones')} viajes`,
+      `Ahorros / autos / gastos compartidos: ${n('ahorros')} bloques`,`Gastos personales: ${g}`].map(x=>`<li>${x}</li>`).join('');
+    $('cComp').checked=DATA.docs.length>0;$('cComp').disabled=!DATA.docs.length;
+    $('det').hidden=false;$('res').innerHTML='';
+  };
+  r.readAsText(file);
+}
+async function importar(){
+  if(!DATA)return;
+  const comp=$('cComp').checked,pers=$('cPers').checked;
+  if(!comp&&!pers)return;
+  if(comp&&!confirm('Se van a reemplazar los datos compartidos que haya ahora en JuntOS. ¿Seguimos?'))return;
+  $('bImp').disabled=true;$('bImp').textContent='Importando…';
+  try{
+    const db=firebase.firestore();
+    if(comp){
+      // Borro lo compartido actual de inventario y vacaciones (para que no queden mezclados) y cargo lo del archivo.
+      for(const col of ['inv','vacaciones']){const s=await db.collection(col).get();s.docs.forEach(d=>db.collection(col).doc(d.id).delete());}
+      await Promise.all(DATA.docs.map(d=>db.collection(d.c).doc(d.i).set(d.d)));
+      CACHES.forEach(k=>localStorage.removeItem(k));
+    }
+    if(pers)Object.entries(DATA.personal||{}).forEach(([k,v])=>localStorage.setItem(k,v));
+    await new Promise(r=>setTimeout(r,1500));   // que terminen de subir los datos personales
+    $('det').hidden=true;
+    $('res').innerHTML='<p class="ok">✅ ¡Listo! Tus datos ya están en JuntOS.</p><a class="btn" href="index.html">Abrir JuntOS</a>';
+  }catch(e){$('res').innerHTML=`<p class="err">❌ No se pudo importar: ${e.message}</p>`;$('bImp').disabled=false;$('bImp').textContent='Reintentar';}
+}
+</script>
+</body>
+</html>

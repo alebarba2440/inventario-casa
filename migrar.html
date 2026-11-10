@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pasar datos a JuntOS</title>
+<script src="firebase-config.js"></script>
+<style>
+  body{margin:0;font-family:system-ui,sans-serif;background:#FFF7E6;color:#1a1a1a;padding:24px 18px;display:flex;justify-content:center}
+  main{max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px}
+  h1{margin:0;font-size:1.4rem}
+  .card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 6px 20px rgba(0,0,0,.07)}
+  .btn{width:100%;font:inherit;font-weight:800;font-size:1.05rem;padding:14px;border:0;border-radius:14px;background:#DB2777;color:#fff;cursor:pointer}
+  .btn:disabled{opacity:.5}
+  ul{margin:8px 0 0;padding-left:20px;line-height:1.6}
+  .ok{color:#15803d;font-weight:700}.err{color:#b91c1c;font-weight:700}
+</style>
+</head>
+<body>
+<main>
+  <h1>📦 Pasar mis datos a JuntOS</h1>
+  <div class="card">
+    <p style="margin-top:0">Esto descarga un archivo con <b>todo lo de esta app</b>: lo compartido (inventario, ahorros, vacaciones, autos, gastos compartidos) y <b>tus gastos personales de este celu</b>.</p>
+    <p>Después lo cargás en la JuntOS nueva. <b>Acá no se borra nada.</b></p>
+    <button class="btn" id="b" onclick="exportar()">Descargar mis datos</button>
+    <div id="res"></div>
+  </div>
+</main>
+<script>
+// Claves de este celu que son de cada persona (las mismas que la JuntOS nueva guarda por usuario).
+const PERSONAL=['cfg_v2','gastos-mensuales','categorias','nombres-categoria','grupos-colapsados','tend-cat','ultima-categoria','sonidos','personajes_v1','copito_anios','viaje_sel'];
+const DOCS=[['ahorros','data'],['ahorros','copito'],['ahorros','compartidos'],['categorias','lista']];
+const COLS=['inv','vacaciones'];
+function cargar(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+// Las fechas de Firebase se pasan a milisegundos.
+function limpio(v){
+  if(v&&typeof v.toMillis==='function')return v.toMillis();
+  if(Array.isArray(v))return v.map(limpio);
+  if(v&&typeof v==='object'){const o={};for(const k in v)o[k]=limpio(v[k]);return o}
+  return v;
+}
+async function exportar(){
+  const b=document.getElementById('b'),res=document.getElementById('res');
+  b.disabled=true;b.textContent='Juntando datos…';res.innerHTML='';
+  const out={formato:'juntos-migracion-1',fecha:new Date().toISOString(),docs:[],personal:{}};
+  const resumen=[];
+  try{
+    const c=window.getFbConfig&&window.getFbConfig();
+    if(c){
+      await cargar('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+      await cargar('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
+      if(!firebase.apps.length)firebase.initializeApp(c);
+      const db=firebase.firestore();
+      for(const [col,id] of DOCS){const d=await db.collection(col).doc(id).get({source:'server'});if(d.exists)out.docs.push({c:col,i:id,d:limpio(d.data())});}
+      for(const col of COLS){const s=await db.collection(col).get({source:'server'});s.forEach(d=>out.docs.push({c:col,i:d.id,d:limpio(d.data())}));resumen.push(`${col==='inv'?'Inventario':'Vacaciones'}: ${s.size}`);}
+      resumen.unshift(`Datos compartidos: ${out.docs.length} registros`);
+    } else resumen.push('⚠️ Sin conexión a Firebase en este celu: solo van tus datos personales');
+    PERSONAL.forEach(k=>{const v=localStorage.getItem(k);if(v!=null)out.personal[k]=v;});
+    const g=JSON.parse(out.personal['gastos-mensuales']||'{}');
+    resumen.push(`Gastos personales: ${Object.values(g).reduce((t,m)=>t+(Array.isArray(m)?m.length:0),0)} en ${Object.keys(g).length} meses`);
+    const nombre=`juntos-datos-${new Date().toISOString().slice(0,10)}.json`;
+    const blob=new Blob([JSON.stringify(out)],{type:'application/json'});
+    const f=new File([blob],nombre,{type:'application/json'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],title:'Datos JuntOS'})}catch(e){}}
+    else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=nombre;a.click();}
+    res.innerHTML=`<p class="ok">✅ Archivo listo: ${nombre}</p><ul>${resumen.map(x=>`<li>${x}</li>`).join('')}</ul><p>Guardalo (en Archivos o Drive) y cargalo en la JuntOS nueva.</p>`;
+  }catch(e){res.innerHTML=`<p class="err">❌ No se pudo: ${e.message}</p>`}
+  b.disabled=false;b.textContent='Descargar de nuevo';
+}
+</script>
+</body>
+</html>
