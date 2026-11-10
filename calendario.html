@@ -271,7 +271,23 @@ function guardar(){
     creado:prev?prev.creado:Date.now(),autor:prev?prev.autor||null:yo(),editado:Date.now()};
   EV[id]=e;wr(LS,EV);wr('cal_quien',e.quien);
   if(db)db.collection(COL).doc(id).set(e).catch(()=>{});
+  if(!prev)aGoogle(e);   // evento nuevo: se abre Google Calendar con el evento cargado (Google se encarga del aviso)
   cerrarForm();snd(prev?'aceptar':'agregar');elegir(fecha);
+}
+/* Google Calendar: abre la pantalla de "nuevo evento" de Google ya completa */
+function aGoogle(e){
+  try{
+    const p=n=>String(n).padStart(2,'0'),d=e.fecha.replace(/-/g,'');
+    let dates;
+    if(e.hora){const [h,m]=e.hora.split(':').map(Number),f=new Date(2000,0,1,h+1,m);
+      const fin=(h===23?(()=>{const x=new Date(e.fecha+'T00:00');x.setDate(x.getDate()+1);return x.getFullYear()+p(x.getMonth()+1)+p(x.getDate())})():d)+'T'+p(f.getHours())+p(f.getMinutes())+'00';
+      dates=d+'T'+p(h)+p(m)+'00/'+fin;}
+    else{const x=new Date(e.fecha+'T00:00');x.setDate(x.getDate()+1);dates=d+'/'+x.getFullYear()+p(x.getMonth()+1)+p(x.getDate());}
+    const fr={semana:'WEEKLY',mes:'MONTHLY',anio:'YEARLY'}[e.rep]||(e.tipo==='cumple'?'YEARLY':'');
+    const q=new URLSearchParams({action:'TEMPLATE',text:(TIPO[e.tipo]||'')+' '+e.titulo,dates,details:e.notas||'',ctz:'America/Argentina/Buenos_Aires'});
+    if(fr)q.set('recur','RRULE:FREQ='+fr);
+    window.open('https://calendar.google.com/calendar/render?'+q.toString(),'_blank');
+  }catch(err){}
 }
 function borrar(){
   if(!editando||!confirm('¿Eliminar "'+EV[editando].titulo+'"?'))return;
