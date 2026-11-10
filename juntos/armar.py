@@ -40,6 +40,7 @@ def main():
             shutil.copy2(RAIZ / f, app / f)
     shutil.copytree(RAIZ / 'img', app / 'img')
 
+    versiones = {r: hashlib.md5((RAIZ / r).read_bytes()).hexdigest()[:8] for r in ['tema.js', 'sonidos.js', 'personajes.js', 'comun.css', 'fondo.css'] if (RAIZ / r).exists()}
     extras = sorted((JUNTOS / 'extra').glob('*.html'))
     for f in PAGINAS + extras:
         html = Path(f).read_text(encoding='utf-8') if isinstance(f, Path) else (RAIZ / f).read_text(encoding='utf-8')
@@ -51,6 +52,9 @@ def main():
             html, n = re.subn(r'(<head[^>]*>)', r'\1\n' + tag, html, count=1, flags=re.I)
         assert n, f'{f}: no encontré <head>'
         assert 'src="firebase-config.js"' not in html, f'{f}: quedó firebase-config.js'
+        # Versión según el contenido en los .css/.js comunes: así los celus no se quedan con uno viejo guardado
+        for res, h in versiones.items():
+            html = re.sub(r'((?:src|href)=")' + re.escape(res) + r'(?:\?v=[^"]*)?"', lambda m: f'{m.group(1)}{res}?v={h}"', html)
         (app / Path(f).name).write_text(html, encoding='utf-8')
     print(f'Listo: {SALIDA} ({len(PAGINAS) + len(extras)} páginas, adaptador v{v})')
 

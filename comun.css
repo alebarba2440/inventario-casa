@@ -55,10 +55,8 @@ input[type="date"],input[type="time"],input[type="month"],input[type="datetime-l
 input[type="date"]::-webkit-date-and-time-value,input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
 *:has(> input[type="date"]),*:has(> input[type="time"]){min-width:0}
 
-/* Botones con esquinas cruzadas (igual que la página de presentación):
+/* Botones con esquinas cruzadas en TODA la app (igual que la página de presentación):
    poca curva arriba-izquierda y abajo-derecha, mucha arriba-derecha y abajo-izquierda.
-   Solo botones con texto: no toca los redondos, interruptores, pestañas ni encabezados de desplegables. */
-.btn,.cta-b,.add,.agregar,.pdf-btn,
-.close-btn,.submit-btn,.confirm-cancel,.confirm-ok,
-.def{border-radius:6px 22px 6px 22px !important}
-.mini,.hoy-b,.aviso-b,.small-btn,.addest,.wipe{border-radius:4px 14px 4px 14px !important}
+   Quedan afuera solo los que son redondos o no se ven como botón: interruptores, botones circulares,
+   los días del calendario, los encabezados de los desplegables y las opciones de los selectores deslizantes. */
+button:not(.sw):not(.sw2):not(.gear):not(.cuenta-btn):not(.camera-fab):not(.home-link):not(.home-btn):not(.chk):not(.icon-btn):not(.dia):not(.acc-h):not(.anio-h):not(.mes-h):not(.dia-h):not(.car-h):not(.reg-h):not(.grp-h):not(.oacc-h):not(.lap):not(.pj):not(.nav-btn):not(.d):not(.cc-dot):not(.rn):not(.desliz>button):not(#intro button),a.btn,.btn,a.add,a.cta-b{border-radius:6px 20px 6px 20px !important}
