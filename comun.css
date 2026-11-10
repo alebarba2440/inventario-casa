@@ -17,9 +17,9 @@
   padding:calc(env(safe-area-inset-top,0px) + 12px) 56px 12px !important}
 .top .home-link,.top-header .home-link{position:absolute;left:8px;top:calc(env(safe-area-inset-top,0px) + 12px)}
 .top h1{flex:0 0 auto !important;text-align:center;margin:0}
-/* en Ahorros el título queda centrado y el selector de año va pegado a su derecha */
-.tcenter{position:relative;display:inline-block}
-.tcenter .year{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%)}
+/* en Ahorros el título queda centrado y el selector de año va contra el borde derecho (a la altura de la casita) */
+.tcenter{display:inline-block}
+.tcenter .year{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 32px);transform:translateY(-50%)}
 
 /* El estado de sincronización no se muestra (se puede revisar en Ajustes del inicio) */
 .sync,#syncDot,#syncLabel{display:none !important}
