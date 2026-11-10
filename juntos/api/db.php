@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 1;
+const VERSION_ESQUEMA = 2;
 
 function config(): array {
   static $c = null;
@@ -55,6 +55,26 @@ function esquema(PDO $db): void {
       creado DATETIME NOT NULL,
       expira DATETIME NOT NULL,
       INDEX (usuario_id),
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 2) {
+    // Datos de las secciones: un "documento" JSON por (pareja, colección, id), como en Firebase.
+    $db->exec("CREATE TABLE IF NOT EXISTS docs (
+      pareja_id INT NOT NULL,
+      col VARCHAR(64) NOT NULL,
+      id VARCHAR(128) NOT NULL,
+      data MEDIUMTEXT NULL,
+      ver BIGINT NOT NULL,
+      PRIMARY KEY (pareja_id, col, id),
+      INDEX (pareja_id, ver),
+      FOREIGN KEY (pareja_id) REFERENCES parejas(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->exec("CREATE TABLE IF NOT EXISTS seq (n BIGINT AUTO_INCREMENT PRIMARY KEY) ENGINE=InnoDB");
+    // Datos de cada persona (gastos personales, ajustes): no se comparten con la pareja.
+    $db->exec("CREATE TABLE IF NOT EXISTS personal (
+      usuario_id INT PRIMARY KEY,
+      data MEDIUMTEXT NOT NULL,
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }

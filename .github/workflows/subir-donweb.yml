@@ -1,11 +1,11 @@
-# Sube la carpeta juntos/ al hosting de DonWeb (barbamanager.website/juntos) cada vez que cambia algo ahí.
+# Arma JuntOS (juntos/armar.py: login + las mismas secciones de siempre conectadas a la base de DonWeb)
+# y lo sube a barbamanager.website/juntos en cada cambio.
 # La configuración de la base se arma con los secretos DB_* y se guarda FUERA de public_html (no accesible desde la web).
 # Los datos del FTP están guardados en GitHub › Settings › Secrets (FTP_SERVER, FTP_USERNAME, FTP_PASSWORD).
 name: Subir JuntOS a DonWeb
 on:
   push:
     branches: [main]
-    paths: ['juntos/**', '.github/workflows/subir-donweb.yml']
   workflow_dispatch:   # también se puede lanzar a mano desde la pestaña Actions
 jobs:
   ftp:
@@ -26,6 +26,8 @@ jobs:
           php -r 'echo "<?php\nreturn " . var_export(["host"=>getenv("DB_HOST"),"name"=>getenv("DB_NAME"),"user"=>getenv("DB_USER"),"pass"=>getenv("DB_PASS"),"admins"=>getenv("ADMIN_EMAILS")], true) . ";\n";' > /tmp/cfg/juntos-config.php
           php -l /tmp/cfg/juntos-config.php
           [ -n "$DB_HOST" ] && [ -n "$DB_NAME" ] && [ -n "$DB_USER" ] && [ -n "$DB_PASS" ] && echo "Secretos DB: los 4 cargados"; [ -n "$ADMIN_EMAILS" ] && echo "Admins: cargado" || echo "::warning::ADMIN_EMAILS vacío: nadie puede entrar al panel" || { echo "::error::Falta algún secreto DB_*"; exit 1; }
+      - name: Armar JuntOS (login + secciones con la base de DonWeb)
+        run: python3 juntos/armar.py /tmp/deploy
       - name: Copiar archivos por FTPS (conexión cifrada, la que exige DonWeb)
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
@@ -41,7 +43,7 @@ jobs:
             set net:max-retries 2;
             set net:timeout 30;
             mkdir -p public_html/juntos;
-            mirror -R --verbose --exclude-glob .git* ./juntos/ public_html/juntos/;
+            mirror -R --verbose --exclude-glob .git* /tmp/deploy/ public_html/juntos/;
             put /tmp/cfg/juntos-config.php -o juntos-config.php;
             rm -f public_html/juntos/api/prueba.php;
             bye"

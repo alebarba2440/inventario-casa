@@ -221,7 +221,7 @@ const uid=()=>Math.random().toString(36).slice(2,9);
 const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 let state;
 try{state=JSON.parse(localStorage.getItem(LS))}catch(e){}
-if(!state||!Array.isArray(state.months))state={names:{j:'Juli',a:'Ale'},months:[]};
+if(!state||!Array.isArray(state.months))state={names:((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'}),months:[]};
 const emptyMonth=label=>({id:uid(),label,mov:{j:[],a:[]},est:{j:0,a:0}});
 const sum=a=>a.reduce((x,y)=>x+(+y||0),0);
 const cellTot=(m,p)=>sum(m.mov[p].map(x=>x.amt));
@@ -429,7 +429,7 @@ function borrarTodo(){
   if(!t||t.trim().toUpperCase()!=='BORRAR')return;
   try{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='ahorros-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();}catch(e){}
-  state={names:state.names||{j:'Juli',a:'Ale'},months:[]};openMes=undefined;openYear=undefined;
+  state={names:state.names||((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'}),months:[]};openMes=undefined;openYear=undefined;
   save();render();
 }
 /* borrar un mes de Ahorrado (por ejemplo, un mes en el que no ahorraron) */

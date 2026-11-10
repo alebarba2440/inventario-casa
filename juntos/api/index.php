@@ -71,6 +71,45 @@ function esAdmin(array $u): bool {
 }
 function requerirAdmin(): array { $u = requerirUsuario(); if (!esAdmin($u)) error_('No tenés acceso al panel', 403); return $u; }
 
+// ---------- Datos de las secciones ----------
+const MAX_DOC = 900000; // ~900 KB por documento
+
+function nuevaVersion(): int { db()->exec('INSERT INTO seq () VALUES ()'); $v = (int)db()->lastInsertId(); if ($v % 500 === 0) db()->exec("DELETE FROM seq WHERE n < $v"); return $v; }
+
+// Une como Firebase "set con merge": mezcla objetos en profundidad. {"__op":"delete"} borra, {"__op":"ts"} = hora del servidor.
+// Se trabaja con objetos (stdClass) para no confundir {} con [] al guardar.
+function esOp($x, string $n): bool { return is_object($x) && count((array)$x) === 1 && (($x->__op ?? null) === $n); }
+function resolver($v) {
+  if (esOp($v, 'ts')) return (int)round(microtime(true) * 1000);
+  if (is_object($v)) { $o = new stdClass; foreach ($v as $k => $x) { if (!esOp($x, 'delete')) $o->$k = resolver($x); } return $o; }
+  if (is_array($v)) return array_map('resolver', $v);
+  return $v;
+}
+function mezclar(stdClass $base, stdClass $cambios): stdClass {
+  foreach ($cambios as $k => $x) {
+    if (esOp($x, 'delete')) { unset($base->$k); continue; }
+    if (is_object($x) && !esOp($x, 'ts') && isset($base->$k) && is_object($base->$k)) $base->$k = mezclar($base->$k, $x);
+    else $base->$k = resolver($x);
+  }
+  return $base;
+}
+
+function parejaActiva(array $u): array {
+  if (!$u['pareja_id']) error_('Primero creá o unite a una pareja', 409);
+  $q = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $q->execute([$u['pareja_id']]); return $q->fetch();
+}
+function soloLectura(array $p): bool {
+  $h = max(strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0);
+  return $h < time();
+}
+function docsDesde(int $pid, int $desde): array {
+  $q = db()->prepare('SELECT col, id, data, ver FROM docs WHERE pareja_id = ? AND ver > ? ORDER BY ver');
+  $q->execute([$pid, $desde]);
+  $out = []; $max = $desde;
+  foreach ($q as $r) { $out[] = ['c' => $r['col'], 'i' => $r['id'], 'd' => $r['data'] === null ? null : json_decode($r['data']), 'v' => (int)$r['ver']]; $max = max($max, (int)$r['ver']); }
+  return [$out, $max];
+}
+
 function codigoNuevo(): string {
   $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   do {
@@ -139,6 +178,65 @@ try {
       $db->prepare('UPDATE usuarios SET pareja_id = ? WHERE id = ?')->execute([$pid, $u['id']]);
       $db->commit();
       responder(estado(requerirUsuario()));
+
+    case 'GET boot':
+      // Todo lo que una pantalla necesita al abrir: quién sos, tu pareja, los datos compartidos y los tuyos.
+      $u = usuarioActual();
+      if (!$u) responder(['usuario' => null]);
+      $e = estado($u);
+      if (!$u['pareja_id']) responder($e);
+      [$docs, $ver] = docsDesde((int)$u['pareja_id'], (int)($_GET['desde'] ?? 0));
+      $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$u['id']]);
+      $e['pareja_id'] = (int)$u['pareja_id']; $e['usuario_id'] = (int)$u['id'];
+      $e['docs'] = $docs; $e['ver'] = $ver; $e['personal'] = json_decode($q->fetchColumn() ?: '{}', true) ?: new stdClass;
+      responder($e);
+
+    case 'GET cambios':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      [$docs, $ver] = docsDesde((int)$p['id'], (int)($_GET['desde'] ?? 0));
+      responder(['docs' => $docs, 'ver' => $ver]);
+
+    case 'POST escribir':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      if (soloLectura($p)) error_('Tu período terminó: podés ver todo, pero no guardar cambios', 402);
+      $in = json_decode(file_get_contents('php://input') ?: '{}'); // como objetos, para respetar {} vs []
+      $ops = $in->ops ?? [];
+      if (!is_array($ops) || count($ops) > 500) error_('Pedido inválido');
+      $db = db(); $db->beginTransaction();
+      $sel = $db->prepare('SELECT data FROM docs WHERE pareja_id = ? AND col = ? AND id = ? FOR UPDATE');
+      $put = $db->prepare('INSERT INTO docs (pareja_id, col, id, data, ver) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE data = VALUES(data), ver = VALUES(ver)');
+      foreach ($ops as $o) {
+        if (!is_object($o)) { $db->rollBack(); error_('Pedido inválido'); }
+        $col = (string)($o->c ?? ''); $id = (string)($o->i ?? ''); $tipo = $o->t ?? '';
+        if (!preg_match('/^[A-Za-z0-9_\-]{1,64}$/', $col) || $id === '' || strlen($id) > 128 || preg_match('/[\/\x00-\x1f]/', $id)) { $db->rollBack(); error_('Documento inválido'); }
+        if ($tipo === 'delete') { $data = null; }
+        else {
+          $d = $o->d ?? null; if (!is_object($d)) { $db->rollBack(); error_('Datos inválidos'); }
+          if ($tipo === 'merge') { $sel->execute([$p['id'], $col, $id]); $prev = $sel->fetchColumn(); $base = $prev ? json_decode($prev) : null; $data = mezclar(is_object($base) ? $base : new stdClass, $d); }
+          else $data = resolver($d);
+          $data = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION);
+          if (strlen($data) > MAX_DOC) { $db->rollBack(); error_('Documento demasiado grande'); }
+        }
+        $put->execute([$p['id'], $col, $id, $data, nuevaVersion()]);
+      }
+      $db->commit();
+      [$docs, $ver] = docsDesde((int)$p['id'], (int)($in->desde ?? 0));
+      responder(['docs' => $docs, 'ver' => $ver]);
+
+    case 'POST personal':
+      // Guarda claves propias de esta persona (ej. gastos personales). null = borrar la clave.
+      $u = requerirUsuario();
+      $cambios = entrada()['claves'] ?? [];
+      if (!is_array($cambios)) error_('Pedido inválido');
+      $db = db(); $db->beginTransaction();
+      $q = $db->prepare('SELECT data FROM personal WHERE usuario_id = ? FOR UPDATE'); $q->execute([$u['id']]);
+      $data = json_decode($q->fetchColumn() ?: '{}', true) ?: [];
+      foreach ($cambios as $k => $v) { if (!is_string($k) || strlen($k) > 80) continue; if ($v === null) unset($data[$k]); else $data[$k] = (string)$v; }
+      $j = json_encode($data ?: new stdClass, JSON_UNESCAPED_UNICODE);
+      if (strlen($j) > 4000000) { $db->rollBack(); error_('Demasiados datos personales'); }
+      $db->prepare('INSERT INTO personal (usuario_id, data) VALUES (?, ?) ON DUPLICATE KEY UPDATE data = VALUES(data)')->execute([$u['id'], $j]);
+      $db->commit();
+      responder(['ok' => true]);
 
     case 'GET admin_datos':
       requerirAdmin();

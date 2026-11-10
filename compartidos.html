@@ -200,14 +200,15 @@ const hoyISO=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMont
 const fFecha=f=>{const [y,m,d]=f.split('-');return `${+d}/${+m}`;};
 
 /* nombres: los mismos que en Ahorros */
-const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};return {j:n.j||'Juli',a:n.a||'Ale'};})();
+const NOM=(()=>{const n=(rd('ahorros_v1',{})||{}).names||{};const d=((window.JUNTOS&&JUNTOS.nombres)||{j:'Juli',a:'Ale'});return {j:n.j||d.j,a:n.a||d.a};})();
 
 /* cada gasto se guarda por separado ({id: gasto}) para que si los dos cargan a la vez no se pise nada.
    Gastos fijos: S = {serie: {id, desde:'AAAA-MM', hasta:null|'AAAA-MM', saltar:{'AAAA-MM':true}}}.
    Cada mes hasta el que viene (por ejemplo, en enero se ve febrero pero no marzo) se crea solo el gasto de la serie con id "serie_AAAA-MM", copiando descripción y monto del mes anterior
    y sin quién lo pagó; así si los dos celus lo crean a la vez, es el mismo y no se duplica. */
 let G=rd(LS,{})||{},S=rd(LS+'_s',{})||{};
-const FOTO={j:'img/avatar-juli.webp?v=6',a:'img/avatar-ale.webp?v=6'};
+const inicial=(n,c)=>'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" fill="${c}"/><text x="20" y="27" font-family="system-ui,sans-serif" font-size="19" font-weight="800" fill="#fff" text-anchor="middle">${String(n||'?').trim().charAt(0).toUpperCase().replace(/[<&>]/g,'')}</text></svg>`);
+const FOTO=window.JUNTOS?{j:(JUNTOS.fotos&&JUNTOS.fotos.j)||inicial(NOM.j,'#DB2777'),a:(JUNTOS.fotos&&JUNTOS.fotos.a)||inicial(NOM.a,'#0284C7')}:{j:'img/avatar-juli.webp?v=6',a:'img/avatar-ale.webp?v=6'};
 const mesDe=f=>f.slice(0,7);
 const mesActual=()=>hoyISO().slice(0,7);
 /* el mes que viene (AAAA-MM): los fijos se precargan hasta ahí nomás, para no llenar la base de meses lejanos */

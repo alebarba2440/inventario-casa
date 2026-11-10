@@ -81,6 +81,7 @@
       <button class="btn sec" style="margin-top:10px" onclick="compartir()">Compartir invitación</button>
     </div>
     <div class="plan" id="plan"></div>
+    <a class="btn" href="app/" style="text-decoration:none">Abrir JuntOS →</a>
   </section>
 
   <p class="err" id="err"></p>
@@ -132,6 +133,8 @@ function mostrar(e){
     : p.plan === 'pago' ? `✅ Suscripción activa hasta el <b>${f}</b>`
     : `🎁 Prueba gratis: te quedan <b>${p.dias_restantes} días</b> (hasta el ${f})`;
   ver('vListo');
+  // Pareja completa: vamos directo a la app (salvo que vengan a ver la cuenta).
+  if (p.miembros.length >= 2 && !/[?&]cuenta=/.test(location.search) && !mostrar.yaFue) { mostrar.yaFue = true; location.replace('app/'); }
 }
 
 let gIniciado = false;
