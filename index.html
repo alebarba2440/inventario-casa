@@ -249,8 +249,9 @@
   @keyframes escribe{to{clip-path:inset(-15% -2% -15% -2%)}}
   @keyframes sube{0%{opacity:0;transform:translateY(10px)}100%{opacity:1;transform:none}}
   #intro.sin-cor .cor{display:none}
-  #intro .pt{position:absolute;left:50%;top:48%;pointer-events:none;z-index:1;line-height:1}
-  #intro .pt.f{z-index:3}
+  /* todos los efectos van por delante de la ilustración (la imagen tiene fondo blanco y los taparía) */
+  #intro .pt{position:absolute;left:50%;top:48%;pointer-events:none;z-index:3;line-height:1}
+  #intro .cor{z-index:3 !important}
   @media (prefers-reduced-motion:reduce){#intro{display:none}}
   .logo{display:inline-block;position:relative;height:1em;width:calc(1em * 2.866);vertical-align:middle;line-height:0}
   .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(img/logo-texto.png) center/contain no-repeat;mask:url(img/logo-texto.png) center/contain no-repeat}
