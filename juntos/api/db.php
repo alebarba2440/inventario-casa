@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 3;
+const VERSION_ESQUEMA = 4;
 
 function config(): array {
   static $c = null;
@@ -97,5 +97,48 @@ function esquema(PDO $db): void {
       INDEX (enviado)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
+  if ($v < 4) {
+    // Archivos (fotos y documentos): el contenido va a una carpeta fuera de la web; acá solo los datos.
+    $db->exec("CREATE TABLE IF NOT EXISTS archivos (
+      id CHAR(24) PRIMARY KEY,
+      pareja_id INT NOT NULL,
+      nombre VARCHAR(160) NOT NULL DEFAULT '',
+      tipo VARCHAR(60) NOT NULL,
+      bytes INT NOT NULL,
+      creado DATETIME NOT NULL,
+      INDEX (pareja_id),
+      FOREIGN KEY (pareja_id) REFERENCES parejas(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
+}
+
+// ---------- Archivos ----------
+const MAX_ARCHIVO = 10 * 1024 * 1024;        // 10 MB por archivo
+const CUOTA_PAREJA = 300 * 1024 * 1024;     // 300 MB por pareja
+const TIPOS_ARCHIVO = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
+
+// Carpeta de archivos: fuera de public_html si se puede (junto a juntos-config.php); si no, una carpeta protegida.
+function carpetaArchivos(): string {
+  static $c = null;
+  if ($c) return $c;
+  $fuera = getenv('JUNTOS_ARCHIVOS') ?: dirname(__DIR__, 3) . '/juntos-archivos';
+  if ((is_dir($fuera) || @mkdir($fuera, 0750, true)) && is_writable($fuera)) return $c = $fuera;
+  $dentro = __DIR__ . '/archivos';
+  if (!is_dir($dentro)) @mkdir($dentro, 0750, true);
+  if (!file_exists("$dentro/.htaccess")) @file_put_contents("$dentro/.htaccess", "Require all denied\nDeny from all\n");
+  if (!file_exists("$dentro/index.html")) @file_put_contents("$dentro/index.html", '');
+  return $c = $dentro;
+}
+function rutaArchivo(int $pid, string $id, string $tipo): string {
+  return carpetaArchivos() . '/' . $pid . '/' . $id . '.' . (TIPOS_ARCHIVO[$tipo] ?? 'bin');
+}
+// Tipo real del archivo mirando su contenido (no lo que dice el navegador)
+function tipoReal(string $ruta): ?string {
+  $h = (string)@file_get_contents($ruta, false, null, 0, 16);
+  if (strncmp($h, "\xFF\xD8\xFF", 3) === 0) return 'image/jpeg';
+  if (strncmp($h, "\x89PNG\r\n\x1A\n", 8) === 0) return 'image/png';
+  if (strncmp($h, 'RIFF', 4) === 0 && substr($h, 8, 4) === 'WEBP') return 'image/webp';
+  if (strncmp($h, '%PDF', 4) === 0) return 'application/pdf';
+  return null;
 }

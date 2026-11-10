@@ -263,6 +263,46 @@ try {
       db()->prepare('DELETE FROM push_subs WHERE endpoint_hash = ? AND usuario_id = ?')->execute([hash('sha256', (string)(entrada()['endpoint'] ?? '')), $u['id']]);
       responder(['ok' => true]);
 
+    // ---------- Archivos (fotos y documentos de la pareja) ----------
+    case 'POST archivo_subir':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      if (soloLectura($p)) error_('Tu período terminó: podés ver todo, pero no guardar cambios', 402);
+      $f = $_FILES['f'] ?? null;
+      if (!$f || !is_array($f) || ($f['error'] ?? 1) !== UPLOAD_ERR_OK) error_(($f['error'] ?? 0) === UPLOAD_ERR_INI_SIZE ? 'El archivo es muy grande' : 'No llegó el archivo');
+      if ($f['size'] > MAX_ARCHIVO) error_('El archivo es muy grande (máximo 10 MB)');
+      $tipo = tipoReal($f['tmp_name']);
+      if (!$tipo) error_('Solo se pueden subir fotos (JPG, PNG, WEBP) o PDF');
+      $q = db()->prepare('SELECT COALESCE(SUM(bytes),0) FROM archivos WHERE pareja_id = ?'); $q->execute([$p['id']]);
+      if ((int)$q->fetchColumn() + $f['size'] > CUOTA_PAREJA) error_('Se llenó el espacio para archivos (300 MB)');
+      $id = bin2hex(random_bytes(12));
+      $ruta = rutaArchivo((int)$p['id'], $id, $tipo);
+      if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
+      if (!move_uploaded_file($f['tmp_name'], $ruta)) error_('No se pudo guardar el archivo', 500);
+      $nombre = mb_substr(preg_replace('/[\x00-\x1f\/\\\\]/u', '', (string)($f['name'] ?? '')), 0, 160);
+      db()->prepare('INSERT INTO archivos (id, pareja_id, nombre, tipo, bytes, creado) VALUES (?,?,?,?,?,?)')
+        ->execute([$id, $p['id'], $nombre, $tipo, (int)$f['size'], ahora()]);
+      responder(['id' => $id, 'tipo' => $tipo, 'bytes' => (int)$f['size']]);
+
+    case 'GET archivo':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      $q = db()->prepare('SELECT * FROM archivos WHERE id = ? AND pareja_id = ?'); $q->execute([(string)($_GET['id'] ?? ''), $p['id']]);
+      $a = $q->fetch(); if (!$a) error_('No existe ese archivo', 404);
+      $ruta = rutaArchivo((int)$p['id'], $a['id'], $a['tipo']);
+      if (!is_file($ruta)) error_('No existe ese archivo', 404);
+      header('Content-Type: ' . $a['tipo']);
+      header('Content-Length: ' . filesize($ruta));
+      header('Cache-Control: private, max-age=31536000, immutable');
+      header("Content-Security-Policy: default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; plugin-types application/pdf");
+      header('Content-Disposition: inline; filename="' . (isset($_GET['bajar']) ? 'juntos-' : '') . $a['id'] . '.' . (TIPOS_ARCHIVO[$a['tipo']] ?? 'bin') . '"');
+      readfile($ruta); exit;
+
+    case 'POST archivo_borrar':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      $id = (string)(entrada()['id'] ?? '');
+      $q = db()->prepare('SELECT * FROM archivos WHERE id = ? AND pareja_id = ?'); $q->execute([$id, $p['id']]);
+      if ($a = $q->fetch()) { @unlink(rutaArchivo((int)$p['id'], $a['id'], $a['tipo'])); db()->prepare('DELETE FROM archivos WHERE id = ?')->execute([$id]); }
+      responder(['ok' => true]);
+
     case 'GET admin_datos':
       requerirAdmin();
       $ps = db()->query('SELECT * FROM parejas ORDER BY creado DESC')->fetchAll();

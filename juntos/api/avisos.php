@@ -130,6 +130,61 @@ try {
     }
   }
 
+  // ---------- Hijos: cumpleaños, próximas vacunas y fechas importantes (controles, turnos, colegio) ----------
+  // Todos avisan el día anterior a las 20; ese día a las 9 (o 1 hora antes si tienen hora).
+  $TF = ['control' => '🩺 Control pediátrico', 'turno' => '🏥 Turno médico', 'escolar' => '🎒 Inscripción escolar', 'colegio' => '🏫 Evento del colegio', 'otro' => '📌'];
+  $leer = function (int $pid, string $col) use ($db) {
+    $q = $db->prepare("SELECT id, data FROM docs WHERE pareja_id = ? AND col = ? AND data IS NOT NULL"); $q->execute([$pid, $col]);
+    $o = []; foreach ($q as $r) { $x = json_decode($r['data'], true); if (is_array($x)) { $x['id'] = $r['id']; $o[] = $x; } } return $o;
+  };
+  foreach ($parejas as $pid) {
+    $pid = (int)$pid;
+    $hijos = []; foreach ($leer($pid, 'hijos') as $h) $hijos[$h['id']] = $h;
+    if (!$hijos) continue;
+    $m = $db->prepare('SELECT id FROM usuarios WHERE pareja_id = ?'); $m->execute([$pid]);
+    $todos = array_map('intval', $m->fetchAll(PDO::FETCH_COLUMN));
+    $items = [];   // [clave, hijo, fecha, hora, título, cuerpo-mañana, cuerpo-hoy]
+    foreach ($hijos as $h) {
+      if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $h['nac'] ?? '', $n)) {
+        foreach ([$hoy, $manana] as $dia) if (substr($dia, 5) === "$n[2]-$n[3]") {
+          $anios = (int)substr($dia, 0, 4) - (int)$n[1];
+          $items[] = ["cumple|{$h['id']}", $h, $dia, '', '🎂 Cumple de ' . $h['nombre'], "Mañana cumple $anios " . ($anios === 1 ? 'año' : 'años'), "¡Hoy cumple $anios " . ($anios === 1 ? 'año' : 'años') . '! 🎉'];
+        }
+      }
+    }
+    $vacs = $leer($pid, 'hijo_vac');
+    $nm = fn($s) => mb_strtolower(trim((string)$s));
+    foreach ($vacs as $v) {
+      $px = (string)($v['prox'] ?? '');
+      if (!isset($hijos[$v['hijo'] ?? '']) || ($px !== $hoy && $px !== $manana)) continue;
+      foreach ($vacs as $o) if ($o['id'] !== $v['id'] && $nm($o['nombre'] ?? '') === $nm($v['nombre'] ?? '') && (($o['fecha'] ?? '') >= $px || (!empty($v['fecha']) && empty($o['fecha'])))) continue 2;
+      $h = $hijos[$v['hijo']];
+      $items[] = ["vac|{$v['id']}", $h, $px, '', '💉 ' . ($v['nombre'] ?? 'Vacuna') . ' de ' . $h['nombre'], 'Mañana le toca la vacuna', 'Hoy le toca la vacuna'];
+    }
+    foreach ($leer($pid, 'hijo_fecha') as $f) {
+      $fe = (string)($f['fecha'] ?? '');
+      if (!isset($hijos[$f['hijo'] ?? '']) || ($fe !== $hoy && $fe !== $manana)) continue;
+      $h = $hijos[$f['hijo']]; $t = $TF[$f['tipo'] ?? 'otro'] ?? '📌';
+      $tit = trim($t . ' ' . ($f['titulo'] ?? '')) . ' · ' . $h['nombre'];
+      $hr = preg_match('/^\d{2}:\d{2}$/', $f['hora'] ?? '') ? $f['hora'] : '';
+      $items[] = ["fecha|{$f['id']}", $h, $fe, $hr, $tit, 'Mañana' . ($hr ? " a las $hr hs" : ''), $hr ? "En 1 hora · $hr hs" : 'Hoy'];
+    }
+    foreach ($items as [$clave, $h, $dia, $hr, $tit, $tMan, $tHoy]) {
+      $pasos = [['vispera', (new DateTime("$dia " . HORA_VISPERA, $tz))->modify('-1 day'), $tMan],
+                ['dia', $hr ? (new DateTime("$dia $hr", $tz))->modify('-' . ANTES_MIN . ' minutes') : new DateTime("$dia " . HORA_DIA, $tz), $tHoy]];
+      foreach ($pasos as [$tipo, $tt, $texto]) {
+        $dif = ($ahora->getTimestamp() - $tt->getTimestamp()) / 60;
+        if ($dif < 0 || $dif > TOLERANCIA) continue;
+        $msg = ['title' => $tit, 'body' => $texto, 'url' => 'hijos.html#h=' . $h['id'] . '&s=fechas', 'tag' => 'hijo-' . $clave];
+        foreach ($todos as $uid) {
+          $marca->execute([hash('sha256', "$pid|h|$clave|$dia|$hr|$tipo|$uid")]);
+          if ($marca->rowCount() === 0) continue;
+          $enviados += pushUsuario($uid, $msg);
+        }
+      }
+    }
+  }
+
   echo json_encode(['ok' => true, 'enviados' => $enviados, 'hora' => $ahora->format('Y-m-d H:i')]);
 } catch (Throwable $e) {
   error_log('JuntOS avisos: ' . $e->getMessage());

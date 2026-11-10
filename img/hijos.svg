@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <!-- provisoria hasta tener la ilustración de Hijos: chupete + corazón -->
+  <g stroke="#3B2414" stroke-width="7" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="200" cy="300" r="46" fill="none" stroke="#7FB7E8" stroke-width="16"/>
+    <path d="M90 190c0-40 50-70 110-70s110 30 110 70-50 70-110 70S90 230 90 190z" fill="#F9A8C9"/>
+    <rect x="170" y="230" width="60" height="34" rx="12" fill="#7FB7E8"/>
+    <path d="M200 120c-10-34 0-60 0-60" fill="none"/>
+  </g>
+  <path d="M200 222c-6-6-40-26-40-50 0-14 10-24 23-24 8 0 14 4 17 10 3-6 9-10 17-10 13 0 23 10 23 24 0 24-34 44-40 50z" fill="#E8435A"/>
+  <ellipse cx="150" cy="168" rx="16" ry="9" fill="#fff" opacity=".45"/>
+</svg>

@@ -210,7 +210,17 @@ function calcMascotas(){const ult={};
   VM=Object.values(ult).filter(r=>r.prox).map(r=>{const p=MP[r.mascota],t=MT[r.tipo]||MT.otro;
     return {id:'m_'+r.id,titulo:t[0]+' '+t[1]+' de '+(p.nombre||'tu mascota'),fecha:r.prox,hora:'',quien:'ambos',virtual:true,mascota:r.mascota,emoji:p.emoji||'🐾'};});}
 calcMascotas();
-function delDia(s){return Object.values(EV).concat(VM).filter(e=>cae(e,s)).sort((x,y)=>(x.hora||'').localeCompare(y.hora||'')||(x.creado||0)-(y.creado||0))}
+/* hijos: cumpleaños, próximas vacunas y fechas importantes (se editan en Hijos) */
+let HJ=rd('hijos_v1',{}),HV=rd('hijo_vac_v1',{}),HF=rd('hijo_fecha_v1',{}),VH=[];
+function calcHijos(){VH=[];const nm=s=>String(s||'').trim().toLowerCase(),vs=Object.values(HV),TFc={control:'🩺 Control pediátrico',turno:'🏥 Turno médico',escolar:'🎒 Inscripción escolar',colegio:'🏫 Evento del colegio',otro:'📌'};
+  Object.values(HJ).forEach(h=>{if(h&&h.nac)VH.push({id:'hc_'+h.id,titulo:'🎂 Cumple de '+h.nombre,fecha:h.nac,rep:'anio',hora:'',quien:'ambos',virtual:true,link:'hijos.html#h='+h.id,chip:'🧒 Hijos'});});
+  vs.forEach(v=>{if(!v||!v.prox||!HJ[v.hijo])return;
+    if(vs.some(o=>o!==v&&nm(o.nombre)===nm(v.nombre)&&((o.fecha&&o.fecha>=v.prox)||(v.fecha&&!o.fecha))))return;
+    VH.push({id:'hv_'+v.id,titulo:'💉 '+v.nombre+' de '+HJ[v.hijo].nombre,fecha:v.prox,hora:'',quien:'ambos',virtual:true,link:'hijos.html#h='+v.hijo+'&s=vacunas',chip:'🧒 Hijos'});});
+  Object.values(HF).forEach(f=>{if(!f||!f.fecha||!HJ[f.hijo])return;
+    VH.push({id:'hf_'+f.id,titulo:((TFc[f.tipo]||'📌')+' '+(f.titulo||'')).trim()+' · '+HJ[f.hijo].nombre,fecha:f.fecha,hora:f.hora||'',quien:'ambos',virtual:true,link:'hijos.html#h='+f.hijo+'&s=fechas',chip:'🧒 Hijos'});});}
+calcHijos();
+function delDia(s){return Object.values(EV).concat(VM,VH).filter(e=>cae(e,s)).sort((x,y)=>(x.hora||'').localeCompare(y.hora||'')||(x.creado||0)-(y.creado||0))}
 
 function render(){
   // mes
@@ -241,8 +251,8 @@ function render(){
 function item(e){
   const q=e.quien||'ambos',col=q==='j'?'var(--juli)':q==='a'?'var(--ale)':'var(--dos)';
   const me=yo(),nuevo=me&&e.autor&&e.autor!==me&&(e.creado||0)>visto;
-  if(e.virtual)return `<div class="ev" onclick="location.href='mascotas.html#m=${encodeURIComponent(e.mascota)}'"><span class="bar" style="background:var(--dos)"></span>
-    <span class="hora"><span style="font-size:.7rem">Todo el día</span></span><div class="tx"><b>${esc(e.titulo)}</b><span class="chip gris">${esc(e.emoji)} Mascotas</span></div></div>`;
+  if(e.virtual)return `<div class="ev" onclick="location.href='${e.link?esc(e.link):'mascotas.html#m='+encodeURIComponent(e.mascota)}'"><span class="bar" style="background:var(--dos)"></span>
+    <span class="hora">${e.hora?esc(e.hora):'<span style="font-size:.7rem">Todo el día</span>'}</span><div class="tx"><b>${esc(e.titulo)}</b><span class="chip gris">${esc(e.chip||e.emoji+' Mascotas')}</span></div></div>`;
   return `<div class="ev" onclick="abrirForm('${esc(e.id)}')"><span class="bar" style="background:${col}"></span>
     <span class="hora">${e.hora?esc(e.hora):'<span style="font-size:.7rem">Todo el día</span>'}</span>
     <div class="tx"><b>${TIPO[e.tipo]||'📅'} ${esc(e.titulo)}</b>${e.notas?`<small>${esc(e.notas)}</small>`:''}
@@ -361,8 +371,8 @@ async function initFb(){
       primera=false;EV=r;wr(LS,EV);
       if(!document.getElementById('fm').classList.contains('show'))render();
     },()=>{});
-    [['mascotas','mascotas_v1',v=>MP=v],['mascota_reg','mascota_reg_v1',v=>MR=v]].forEach(([col,ls,set])=>db.collection(col).onSnapshot(snap=>{
-      const r={};snap.docs.forEach(d=>{const x=d.data();if(x)r[d.id]=Object.assign({},x,{id:d.id})});set(r);wr(ls,r);calcMascotas();
+    [['mascotas','mascotas_v1',v=>MP=v],['mascota_reg','mascota_reg_v1',v=>MR=v],['hijos','hijos_v1',v=>HJ=v],['hijo_vac','hijo_vac_v1',v=>HV=v],['hijo_fecha','hijo_fecha_v1',v=>HF=v]].forEach(([col,ls,set])=>db.collection(col).onSnapshot(snap=>{
+      const r={};snap.docs.forEach(d=>{const x=d.data();if(x)r[d.id]=Object.assign({},x,{id:d.id})});set(r);wr(ls,r);calcMascotas();calcHijos();
       if(!document.getElementById('fm').classList.contains('show'))render();},()=>{}));
   }catch(e){}
 }
