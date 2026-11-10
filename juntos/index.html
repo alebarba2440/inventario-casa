@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>JuntOS · La app para organizar la vida en pareja</title>
-<meta name="description" content="Inventario de la casa, ahorros, vacaciones, el auto, gastos personales y gastos compartidos. Todo en una app para los dos. 30 días gratis.">
+<meta name="description" content="Inventario de la casa, ahorros, vacaciones, el auto, gastos personales y compartidos, calendario, mascotas e hijos. Todo en una app para los dos. 30 días gratis.">
 <meta name="theme-color" content="#FCE7F3">
 <meta property="og:title" content="JuntOS · La app para organizar la vida en pareja">
-<meta property="og:description" content="Casa, ahorros, viajes, auto y gastos compartidos en una sola app para los dos. Probala 30 días gratis.">
-<meta property="og:image" content="app/img/solos.webp">
+<meta property="og:description" content="Casa, ahorros, viajes, auto, gastos, calendario, mascotas e hijos en una sola app para los dos. Probala 30 días gratis.">
+<meta property="og:image" content="https://juntosapp.com.ar/app/img/pareja-hero.webp">
 <link rel="icon" href="app/img/icono.png?v=10">
 <link rel="apple-touch-icon" href="app/img/apple-touch.png?v=10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,7 +47,8 @@
   .hero h1{font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.08;margin:0 0 16px;font-weight:900;letter-spacing:-.02em}
   .hero h1 .marca{font-size:1.35em;display:inline-block}
   .hero p.lead{font-size:1.18rem;color:var(--gris);margin:0 0 26px;max-width:520px}
-  .hero .ctas{display:flex;gap:12px;flex-wrap:wrap}
+  .hero .ctas{display:flex;gap:10px;flex-wrap:wrap}
+  .hero .ctas .btn{padding:11px 20px;font-size:.98rem;line-height:1.2}
   .hero .nota{margin-top:14px;font-size:.9rem;color:var(--gris)}
   .hero .ilus{position:relative;display:flex;justify-content:center}
   .hero .ilus::before{content:"";position:absolute;inset:8% 6% 2%;background:#fff;border-radius:46% 54% 50% 50%/55% 50% 50% 45%;opacity:.7}
@@ -129,7 +130,7 @@
     .hero p.lead{margin-left:auto;margin-right:auto}
     .hero .ctas{justify-content:center}
     .hero .ilus{order:-1}
-    .hero .ilus img{max-height:260px}
+    .hero .ilus img{max-height:300px}
     .grid,.pasos{grid-template-columns:1fr 1fr}
     .extras{grid-template-columns:1fr 1fr}
     .instalar{grid-template-columns:1fr}
@@ -139,7 +140,7 @@
   @media (max-width:560px){
     .grid,.pasos{grid-template-columns:1fr}
     .sec .pic{height:130px}.sec .pic img{max-height:122px}
-    .hero .ctas .btn{width:100%}
+    .hero .ctas .btn{flex:1 1 auto;padding:10px 14px;font-size:.93rem;white-space:nowrap}
   }
   .logo{display:inline-block;position:relative;height:1em;width:calc(1em * 2.866);vertical-align:middle;line-height:0}
   .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(app/img/logo-texto.png) center/contain no-repeat;mask:url(app/img/logo-texto.png) center/contain no-repeat}
@@ -160,14 +161,14 @@
   <div class="wrap">
     <div>
       <h1>Organicen la vida en pareja con <span class="logo enh1" role="img" aria-label="Juntos"><i></i><i class="c"></i></span></h1>
-      <p class="lead">La casa, los ahorros, los viajes, el auto y los gastos de los dos, en una sola app. Lo que carga uno, lo ve el otro al instante.</p>
+      <p class="lead">La casa, los ahorros, los viajes, el auto, los gastos, las mascotas, los chicos y la agenda de los dos, en una sola app. Lo que carga uno, lo ve el otro al instante.</p>
       <div class="ctas">
         <a class="btn pri jx-empezar" href="entrar.html">Probar gratis 30 días</a>
         <a class="btn sec" href="#que">Ver qué hace</a>
       </div>
       <p class="nota">Sin tarjeta · Entrás con tu cuenta de Google · Android y iPhone</p>
     </div>
-    <div class="ilus"><img src="app/img/solos.webp" alt="Ilustración de una pareja sonriendo" width="335" height="450"></div>
+    <div class="ilus"><img src="app/img/pareja-hero.webp?v=1" alt="Ilustración de una pareja abrazada" width="528" height="699" fetchpriority="high"></div>
   </div>
 </header>
 
@@ -175,7 +176,7 @@
   <div class="wrap">
     <div class="tit rev">
       <span class="eti">Qué hace</span>
-      <h2>Seis herramientas, un solo lugar</h2>
+      <h2>Nueve herramientas, un solo lugar</h2>
       <p>Pensadas para el día a día de dos personas que comparten casa, plata y planes.</p>
     </div>
     <div class="grid">
@@ -191,6 +192,12 @@
         <h3>Gastos personales</h3><p>Tus gastos por categoría, con gráficos, comparación con el mes anterior y la tendencia del año. Solo los ves vos.</p></article>
       <article class="sec rev" style="--c:#FEF9C3"><div class="pic"><img src="app/img/compartidos.webp" alt="" loading="lazy"></div>
         <h3>Gastos compartidos</h3><p>Quién pagó qué y cuánto le toca a cada uno. Los gastos fijos se cargan solos cada mes y la cuenta sale sola.</p></article>
+      <article class="sec rev" style="--c:#DBEAFE"><div class="pic"><img src="app/img/calendario.webp" alt="" loading="lazy"></div>
+        <h3>Calendario</h3><p>La agenda de los dos: turnos, cumpleaños, el colegio. Eventos que se repiten y aviso al celu antes de cada uno.</p></article>
+      <article class="sec rev" style="--c:#DCFCE7"><div class="pic"><img src="app/img/mascotas.svg" alt="" loading="lazy"></div>
+        <h3>Mascotas</h3><p>Vacunas, desparasitación, veterinario y peso de cada mascota, con lo que gastan por mes y aviso de lo que viene.</p></article>
+      <article class="sec rev" style="--c:#FCE7F3"><div class="pic"><img src="app/img/hijos.svg" alt="" loading="lazy"></div>
+        <h3>Hijos</h3><p>Vacunas, pediatra, alergias y cómo van creciendo (peso y altura), más fotos del DNI y la partida siempre a mano.</p></article>
     </div>
   </div>
 </section>
@@ -231,7 +238,7 @@
     <div class="tit rev">
       <span class="eti">Precio</span>
       <h2>Un precio, todo incluido</h2>
-      <p>Una suscripción por pareja, con las seis herramientas.</p>
+      <p>Una suscripción por pareja, con las nueve herramientas.</p>
     </div>
     <div class="plan rev">
       <span class="badge">🎁 30 días gratis</span>
@@ -239,7 +246,7 @@
       <div class="monto">$5.000 <small>/ mes</small></div>
       <div class="cada">$2.500 cada uno · por los dos</div>
       <ul>
-        <li>Las 6 secciones, sin límites</li>
+        <li>Las 9 secciones, sin límites</li>
         <li>Dos cuentas: vos y tu pareja</li>
         <li>Sincronizado entre los dos celus</li>
         <li>Android, iPhone y computadora</li>
@@ -257,7 +264,7 @@
     <div class="faq">
       <details class="rev"><summary>¿Tengo que descargarla de una tienda?</summary><p>No. JuntOS se abre desde el navegador y la podés agregar a la pantalla de inicio para que funcione como cualquier app.</p></details>
       <details class="rev"><summary>¿Funciona en iPhone y en Android?</summary><p>Sí, en los dos, y también en la computadora. Cada uno puede usar el celu que tenga.</p></details>
-      <details class="rev"><summary>¿Quién ve mis datos?</summary><p>Lo compartido (casa, ahorros, viajes, auto y gastos compartidos) lo ven solo ustedes dos. Los gastos personales los ve solo quien los carga.</p></details>
+      <details class="rev"><summary>¿Quién ve mis datos?</summary><p>Lo compartido (casa, ahorros, viajes, auto, gastos compartidos, calendario, mascotas e hijos) lo ven solo ustedes dos. Los gastos personales los ve solo quien los carga.</p></details>
       <details class="rev"><summary>¿Qué pasa cuando terminan los 30 días?</summary><p>Si deciden seguir, activan la suscripción y siguen igual. Si no, sus datos quedan guardados y los pueden seguir viendo, pero sin cargar cosas nuevas.</p></details>
       <details class="rev"><summary>¿Y si mi pareja todavía no se sumó?</summary><p>Podés empezar a usarla solo/a. Cuando tu pareja entre con el código, va a ver todo lo que ya cargaste.</p></details>
       <details class="rev"><summary>¿Necesito crear una contraseña?</summary><p>No. Entrás con tu cuenta de Google, la misma de Gmail.</p></details>
