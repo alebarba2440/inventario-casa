@@ -133,7 +133,7 @@
   .sheet .two{display:flex;gap:8px}.sheet .two .btn{flex:1}
   .sheet .col{display:flex;flex-direction:column;gap:8px}
   /* botón de configuración a la derecha del título */
-  .top .cfg{margin-left:auto;width:40px;height:40px;border:none;border-radius:12px;background:var(--accent-light);color:var(--accent);font-size:1.35rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .top .cfg{position:absolute;right:8px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;border:none;border-radius:12px;background:var(--accent-light);color:var(--accent);font-size:1.35rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
   .top .cfg:active{transform:scale(.94)}
   @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .top .cfg{background:rgba(255,255,255,.08)}}
   :root[data-theme="dark"] .top .cfg{background:rgba(255,255,255,.08)}
