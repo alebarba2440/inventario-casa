@@ -124,9 +124,9 @@
   .tipos button i{font-style:normal;font-size:1.35rem}
   .tipos button span{font-size:.68rem;font-weight:800;line-height:1.1;text-align:center}
   .tipos button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
-  .emos{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:232px;overflow-y:auto;padding:2px}
-  .emos button{aspect-ratio:1;border:2.5px solid var(--border2) !important;background:#fff;cursor:pointer;padding:0;overflow:hidden}
-  .emos button img{width:100%;height:100%;object-fit:cover;display:block}
+  .emos{display:grid;grid-template-columns:repeat(auto-fill,62px);grid-auto-rows:62px;justify-content:space-between;gap:8px;max-height:226px;overflow-y:auto;padding:2px}
+  .emos button{width:62px;height:62px;min-height:62px;border:2.5px solid var(--border2) !important;background:#fff;cursor:pointer;padding:0;overflow:hidden;display:block;position:relative;-webkit-appearance:none;appearance:none}
+  .emos button img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
   .emos button.on{border-color:var(--accent) !important;box-shadow:0 0 0 2px var(--accent-light)}
   .ops{display:flex;flex-wrap:wrap;gap:6px}
   .ops button{border:2px solid var(--border2);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:800;font-size:.85rem;cursor:pointer}
