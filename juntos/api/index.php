@@ -68,6 +68,7 @@ function estado(array $u): array {
       'activo_hasta' => gmdate('c', $hasta),
       'dias_restantes' => max(0, (int)ceil(($hasta - time()) / 86400)),
       'solo_lectura' => $hasta < time(),
+      'tuvo_pago' => (bool)$p['pago_hasta'],
     ];
   }
   return $out;
@@ -206,10 +207,11 @@ try {
 
     case 'POST escribir':
       $u = requerirUsuario(); $p = parejaActiva($u);
-      if (soloLectura($p)) error_('Tu período terminó: podés ver todo, pero no guardar cambios', 402);
       $in = json_decode(file_get_contents('php://input') ?: '{}'); // como objetos, para respetar {} vs []
       $ops = $in->ops ?? [];
       if (!is_array($ops) || count($ops) > 500) error_('Pedido inválido');
+      // Período vencido: solo se pueden guardar las opciones (nombres, personajes, colores: documento juntos/pareja)
+      if (soloLectura($p)) foreach ($ops as $o) if (!is_object($o) || ($o->c ?? '') !== 'juntos' || ($o->i ?? '') !== 'pareja') error_('Tu período terminó: activá la suscripción para seguir usando JuntOS', 402);
       $db = db(); $db->beginTransaction();
       $sel = $db->prepare('SELECT data FROM docs WHERE pareja_id = ? AND col = ? AND id = ? FOR UPDATE');
       $put = $db->prepare('INSERT INTO docs (pareja_id, col, id, data, ver) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE data = VALUES(data), ver = VALUES(ver)');

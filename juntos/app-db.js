@@ -139,6 +139,7 @@
   }
   window.__jxValor = valor;
   publicarYo(YO);
+  if (paginaBloqueada()) document.documentElement.style.visibility = 'hidden';   // vencido (según lo guardado): no mostrar la sección mientras redirige
   function pendiente(k) { return pend.some(function (p) { return clave(p.c, p.i) === k; }); }
   function guardarEstado() { wr(K_DOCS, cache); wr(K_PEND, pend); }
 
@@ -265,7 +266,7 @@
         // Período vencido o datos rechazados: descarto lo pendiente y vuelvo a lo del servidor.
         var ks = lote.map(function (p) { var w = esperas[p.n]; if (w) { w[1](e); delete esperas[p.n]; } return clave(p.c, p.i); });
         pend = pend.slice(lote.length); guardarEstado(); notificar(ks);
-        if (e.status === 402) { if (YO && YO.pareja) YO.pareja.solo_lectura = true; publicarYo(YO); bandaSoloLectura(); aviso('⏸️ Tu período terminó: podés ver todo, pero no guardar cambios.'); }
+        if (e.status === 402) { if (YO && YO.pareja) YO.pareja.solo_lectura = true; publicarYo(YO); bandaSoloLectura(); modalSuscripcion(); }
         else aviso('No se pudo guardar: ' + e.message);
       } else setTimeout(enviar, 5000);   // sin conexión: reintento
     });
@@ -381,13 +382,76 @@
     d.style.cssText = 'position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;background:#1a1a1a;color:#fff;padding:12px 16px;border-radius:14px;font:600 14px system-ui;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)';
     (document.body || document.documentElement).appendChild(d); setTimeout(function () { d.remove(); }, 4500);
   }
+  /* ---------- Período vencido: se ven las tarjetas del inicio, pero no se entra a ninguna sección.
+     Opciones (ajustes del inicio, personaje, sonidos) y la cuenta siguen andando. ---------- */
+  var URL_SUSCRIPCION = '';   // link de pago (Mercado Pago): cuando esté, el botón "Suscribirme" lleva ahí
+  function vencido() { return !!(window.JUNTOS && window.JUNTOS.soloLectura); }
+  function esLibre(pagina) { return ['', 'index.html', 'personajes.html', 'sonidos.html'].indexOf(String(pagina || '').toLowerCase()) >= 0; }
+  function paginaActual() { return location.pathname.split('/').pop(); }
+  function paginaBloqueada() { return vencido() && !esLibre(paginaActual()); }
+  function revisarBloqueo() {
+    if (!vencido()) { document.documentElement.style.visibility = ''; return; }
+    if (paginaBloqueada()) { location.replace('index.html?vencido=1'); return; }
+    if (/[?&]vencido=1/.test(location.search)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} modalSuscripcion(); }
+  }
+  // tocar una tarjeta (o cualquier link a una sección) con el período vencido → modal en vez de entrar
+  document.addEventListener('click', function (e) {
+    if (!vencido() || !e.target.closest) return;
+    var a = e.target.closest('a[href]'); if (!a) return;
+    var h = a.getAttribute('href') || '';
+    if (/^(https?:|mailto:|tel:|#|\.\.\/)/.test(h)) return;
+    var dest = h.split('#')[0].split('?')[0].split('/').pop();
+    if (!/\.html$/i.test(dest) || esLibre(dest)) return;
+    e.preventDefault(); e.stopPropagation(); modalSuscripcion();
+  }, true);
+
+  function modalSuscripcion() {
+    if (document.getElementById('jxSus') || !document.body) return;
+    var p = (window.JUNTOS && window.JUNTOS.pareja) || {}, pago = !!p.tuvo_pago;
+    if (!document.getElementById('jxSusCss')) {
+      var st = document.createElement('style'); st.id = 'jxSusCss';
+      st.textContent =
+        '#jxSus{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
+        '#jxSus.on{opacity:1}' +
+        '#jxSus .c{background:#fff;color:#1a1a1a;width:100%;max-width:380px;border-radius:10px 30px 10px 30px;padding:26px 22px 18px;text-align:center;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
+        '#jxSus.on .c{transform:none}' +
+        '#jxSus .ic{width:64px;height:64px;margin:0 auto 12px;border-radius:8px 22px 8px 22px;background:#FCE7F3;display:grid;place-items:center;font-size:2rem}' +
+        '#jxSus h3{margin:0 0 6px;font-size:1.3rem;font-weight:900}' +
+        '#jxSus p{margin:0 0 16px;color:#5f5f58;font-size:.95rem;line-height:1.45}' +
+        '#jxSus .precio{display:inline-block;background:#FFF7E6;border-radius:6px 18px 6px 18px;padding:8px 14px;margin-bottom:16px;font-weight:900}' +
+        '#jxSus .precio small{display:block;font-weight:700;color:#5f5f58;font-size:.78rem}' +
+        '#jxSus .si{display:block;width:100%;border:0;border-radius:6px 20px 6px 20px;background:#DB2777;color:#fff;font:900 1.02rem Nunito,system-ui,sans-serif;padding:14px;cursor:pointer;text-decoration:none;box-shadow:0 8px 20px rgba(219,39,119,.3)}' +
+        '#jxSus .si:active{transform:scale(.97)}' +
+        '#jxSus .fila{display:flex;justify-content:space-between;margin-top:12px}' +
+        '#jxSus .fila a,#jxSus .fila button{background:none;border:0;color:#5f5f58;font:700 .9rem Nunito,system-ui,sans-serif;cursor:pointer;text-decoration:none;padding:6px}' +
+        '@media (prefers-color-scheme:dark){#jxSus .c{background:#1c1c1e;color:#f5f5f5}#jxSus p,#jxSus .fila a,#jxSus .fila button,#jxSus .precio small{color:#aaa}#jxSus .precio{background:#2c2c2e}#jxSus .ic{background:rgba(219,39,119,.2)}}';
+      document.head.appendChild(st);
+    }
+    var m = document.createElement('div'); m.id = 'jxSus'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    m.innerHTML = '<div class="c"><div class="ic">' + (pago ? '⏰' : '💞') + '</div>' +
+      '<h3>' + (pago ? 'Tu suscripción venció' : 'Terminó tu prueba gratis') + '</h3>' +
+      '<p>Para seguir usando JuntOS, activá la suscripción. <b>Todo lo que cargaron está guardado</b> y vuelve a estar disponible apenas la actives.</p>' +
+      '<div class="precio">$5.000 / mes<small>Una sola suscripción para los dos</small></div>' +
+      '<a class="si" href="' + (URL_SUSCRIPCION || '#') + '"' + (URL_SUSCRIPCION ? ' target="_blank" rel="noopener"' : '') + '>Suscribirme</a>' +
+      '<div class="fila"><a href="../entrar.html?cuenta=1">Ver mi cuenta</a><button type="button" class="no">Ahora no</button></div></div>';
+    function cerrar() { m.classList.remove('on'); setTimeout(function () { m.remove(); }, 200); }
+    m.addEventListener('click', function (e) { if (e.target === m || e.target.closest('.no')) cerrar(); });
+    m.querySelector('.si').addEventListener('click', function (e) { if (!URL_SUSCRIPCION) { e.preventDefault(); aviso('Muy pronto vas a poder suscribirte desde acá 💞'); } });
+    document.body.appendChild(m);
+    requestAnimationFrame(function () { m.classList.add('on'); });
+  }
+  window.jxSuscripcion = modalSuscripcion;
+
   function bandaSoloLectura() {
+    revisarBloqueo();
     var ya = document.getElementById('juntosRO');
-    if (!(window.JUNTOS && window.JUNTOS.soloLectura)) { if (ya) ya.remove(); return; }
+    if (!vencido()) { if (ya) ya.remove(); return; }
     if (ya || !document.body) return;
-    var a = document.createElement('a'); a.id = 'juntosRO'; a.href = '../entrar.html?cuenta=1';
-    a.textContent = '⏸️ Período terminado · solo lectura. Tocá para ver tu cuenta';
-    a.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;background:#FFEDD5;color:#9a3412;font:700 13px system-ui;text-align:center;padding:calc(6px + env(safe-area-inset-top)) 10px 6px;text-decoration:none';
+    var p = (window.JUNTOS && window.JUNTOS.pareja) || {};
+    var a = document.createElement('button'); a.id = 'juntosRO'; a.type = 'button';
+    a.textContent = (p.tuvo_pago ? '⏰ Venció tu suscripción' : '⏰ Terminó tu prueba gratis') + ' · Tocá acá';
+    a.onclick = modalSuscripcion;
+    a.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;border:0;width:100%;cursor:pointer;background:#DB2777;color:#fff;font:800 13px Nunito,system-ui,sans-serif;text-align:center;padding:calc(7px + env(safe-area-inset-top)) 10px 7px';
     document.body.appendChild(a);
   }
   document.addEventListener('DOMContentLoaded', bandaSoloLectura);
