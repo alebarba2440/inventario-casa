@@ -1127,10 +1127,7 @@
       </div>
     </div>
     
-    <div class="fb-status-row">
-      <div style="display:flex;align-items:center;gap:8px;"><div class="sync-dot" id="syncDot"></div><span id="syncLabel" style="font-size:13px;color:var(--text2)">Solo local</span></div>
-      <button class="fb-export" onclick="exportDataInline()"><i class="ti ti-download"></i> Exportar JSON</button>
-    </div>
+    <div hidden><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Solo local</span></div>
 
     <button class="close-btn" onclick="closeConfig()">Cerrar</button>
   </div>
@@ -1760,7 +1757,6 @@ function scrollWarn(dir) { const el = document.getElementById('warnInner'); if (
       fbOn = true;
       document.getElementById('syncDot').className = 'sync-dot on';
       document.getElementById('syncLabel').textContent = 'Conectado ✓';
-      toast('🔥 Conectado');
       if (categoriesUnsubscribe) categoriesUnsubscribe();
       categoriesUnsubscribe = db.collection(FB_CAT).doc('lista').onSnapshot(async doc => {
         if (doc.exists && Array.isArray(doc.data().items) && doc.data().items.length > 0) {
