@@ -41,10 +41,10 @@
   .pj.on .fig{background:var(--accent-light)}
   .pj .ok{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;font-style:normal;display:none;place-items:center;font-size:.9rem;box-shadow:0 2px 6px rgba(0,0,0,.2)}
   .pj.on .ok{display:grid}
-  .def{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;border:2.5px solid var(--border2);background:var(--surface);border-radius:16px;padding:12px;cursor:pointer;font-family:inherit;color:var(--text)}
-  .def b{font-size:1rem;font-weight:900}.def small{color:var(--text2);font-weight:700;font-size:.82rem}
+  .def{position:relative;display:flex;align-items:center;justify-content:center;margin:18px auto 0;min-width:130px;border:2px solid var(--border2);background:var(--surface);border-radius:12px;padding:8px 18px;cursor:pointer;font-family:inherit;color:var(--text)}
+  .def b{font-size:.9rem;font-weight:900}.def small{color:var(--text2);font-weight:700;font-size:.82rem}
   .def.on{border-color:var(--accent);background:var(--accent-light)}
-  .def .ok{position:absolute;top:50%;right:12px;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
+  .def .ok{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:20px;height:20px;font-size:.75rem;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
   .def.on .ok{display:grid}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1a1a;color:#fff;font-weight:800;padding:11px 18px;border-radius:999px;transition:all .25s;pointer-events:none;z-index:60;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -59,9 +59,9 @@
 </div>
 <main>
   <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small></div></section>
-  <button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Default</b><small>Juli y Ale, como viene la app</small></button>
   <h2>Mujeres</h2><div class="grid" id="gF"></div>
   <h2>Hombres</h2><div class="grid" id="gM"></div>
+  <button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Default</b></button>
 </main>
 <div class="toast" id="toast"></div>
 <script>
