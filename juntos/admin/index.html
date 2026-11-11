@@ -103,6 +103,10 @@
   .dias button.menos{color:#b91c1c}.dias button.mas{color:#15803d}
   .dias input{width:74px;font:inherit;font-weight:800;padding:7px 8px;border:1.5px solid var(--borde);border-radius:4px 12px 4px 12px;text-align:center;outline:none}
   .dias input:focus{border-color:var(--rosa)}
+  .dias .libre{display:inline-flex;align-items:stretch}
+  .dias .libre .sg{width:38px;padding:0;font-size:1.1rem;border-right:0;border-radius:4px 0 0 12px}
+  .dias .libre .sg.mas{background:#DCFCE7}.dias .libre .sg.menos{background:#FEE2E2}
+  .dias .libre input{border-radius:0 12px 4px 0;width:70px}
   .fila{display:flex;gap:8px;flex-wrap:wrap}
   .btn{font:inherit;font-weight:800;font-size:.9rem;padding:10px 14px;border:0;border-radius:5px 16px 5px 16px;cursor:pointer;background:#15803d;color:#fff}
   .btn.sec{background:#fff;color:#b91c1c;border:1.5px solid #f3c4c4}
@@ -413,7 +417,7 @@ function item(c){
         <div class="dias">
           <button class="menos" onclick="dias(${c.id},-7)">−7</button><button class="menos" onclick="dias(${c.id},-1)">−1</button>
           <button class="mas" onclick="dias(${c.id},1)">+1</button><button class="mas" onclick="dias(${c.id},7)">+7</button><button class="mas" onclick="dias(${c.id},30)">+30</button>
-          <input type="number" id="dn${c.id}" placeholder="días" inputmode="numeric" aria-label="Cantidad de días"><button onclick="diasLibre(${c.id})">Aplicar</button>
+          <span class="libre"><button type="button" class="sg mas" id="ds${c.id}" onclick="cambiarSigno(${c.id})" aria-label="Sumar o restar (tocá para cambiar)">+</button><input type="number" id="dn${c.id}" placeholder="días" inputmode="numeric" min="1" aria-label="Cantidad de días"></span><button onclick="diasLibre(${c.id})">Aplicar</button>
         </div>
         <div style="font-size:.85rem;font-weight:700;color:var(--gris);margin:14px 0 6px">Registrar pago (por transferencia o a mano)</div>
         <div class="fila"><button class="btn" onclick="pago(${c.id},'sumar_mes')">+1 mes pago</button><button class="btn" onclick="pago(${c.id},'sumar_anio')">+1 año pago</button>
@@ -533,7 +537,8 @@ function dias(id, n){
   confirmar(`¿${n > 0 ? 'Sumar' : 'Restar'} <b>${Math.abs(n)} ${Math.abs(n) === 1 ? 'día' : 'días'}</b> de prueba a <b>${esc(p.nombre)}</b>?<br><small>Prueba hasta hoy: ${fecha(p.prueba_hasta)}.${n > 0 && p.estado === 'vencida' ? ' Como ya venció, se cuentan desde hoy.' : ''}</small>`,
     n > 0 ? '' : 'rosa', async () => { await api('admin_pago', {pareja_id: id, op: 'dias', dias: n}); toast(`${n > 0 ? '+' : '−'}${Math.abs(n)} días a ${p.nombre}`); });
 }
-function diasLibre(id){ const n = parseInt($('dn' + id).value, 10); if (!n) { $('dn' + id).focus(); return; } dias(id, n); }
+function cambiarSigno(id){ const b = $('ds' + id), mas = b.textContent !== '+'; b.textContent = mas ? '+' : '−'; b.className = 'sg ' + (mas ? 'mas' : 'menos'); }
+function diasLibre(id){ const n = Math.abs(parseInt($('dn' + id).value, 10)); if (!n) { $('dn' + id).focus(); return; } dias(id, $('ds' + id).textContent === '+' ? n : -n); }
 function ingresoMes(){ return D.parejas.filter(p => p.estado === 'pago').reduce((t, p) => t + (p.plan_pago === 'anual' ? PREC.anual / 12 : PREC.mensual), 0); }
 function pago(id, op){
   const p = D.parejas.find(x => x.id === id);
