@@ -45,7 +45,8 @@
   footer .marca{display:flex}
   nav .links{display:flex;gap:22px;margin-left:auto;font-weight:700;font-size:.95rem}
   nav .links a{text-decoration:none;color:var(--gris)}
-  nav .links a:hover{color:var(--tinta)}
+  nav .links a{transition:color .25s ease}
+  nav .links a:hover,nav .links a:active,nav .links a:focus-visible{color:var(--rosa)}
   nav .menu-btn{display:none;place-items:center;width:42px;height:42px;flex-shrink:0;border:1.5px solid var(--borde);background:#fff;border-radius:4px 14px 4px 14px;cursor:pointer;padding:0;color:var(--tinta)}
   nav .menu-btn svg{width:22px;height:22px}
   nav .menu-btn .x{display:none}nav.abierto .menu-btn .x{display:block}nav.abierto .menu-btn .h{display:none}
