@@ -1,12 +1,12 @@
 /* Elementos comunes a las 3 apps */
 
 /* Botón para volver al inicio: solo la casita rellena, sin fondo, a la izquierda */
-.home-link{width:40px;height:40px;flex-shrink:0;color:var(--accent);background:none;border:none;
+.home-link{width:44px;height:44px;flex-shrink:0;color:var(--accent);background:none;border:none;
   display:flex;align-items:center;justify-content:center;text-decoration:none;border-radius:10px;
   transition:transform .12s ease,opacity .12s ease}
 .home-link svg{display:none !important}
 /* la casita con corazón (img/casa.png) se pinta con el color elegido por el usuario */
-.home-link::before{content:"";display:block;width:30px;height:30px;background:currentColor;
+.home-link::before{content:"";display:block;width:36px;height:36px;background:currentColor;
   -webkit-mask:url(img/casa.png?v=1) center/contain no-repeat;mask:url(img/casa.png?v=1) center/contain no-repeat}
 .home-link:active{transform:scale(.88);opacity:.8}
 .home-link:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
