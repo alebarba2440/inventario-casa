@@ -120,6 +120,8 @@
       if (!b.dataset.jxi) { b.dataset.jxi = '1'; b.addEventListener('click', function (e) { e.preventDefault(); instalar(); }); }
     });
     document.querySelectorAll('[data-instalar-ya]').forEach(function (el) { el.hidden = !instalada(); });
+    // el texto de "abrí desde Chrome…" solo cuando no hay botón para instalar ni ya está instalada
+    document.querySelectorAll('[data-instalar-nada]').forEach(function (el) { el.hidden = !!m || instalada(); });
     if (window.JX_INSTALAR_AVISO) aviso(m);
   }
   function ocultarTodo() { document.querySelectorAll('[data-instalar]').forEach(function (b) { b.hidden = true; }); var a = document.querySelector('.jxi-aviso'); if (a) a.remove(); }
