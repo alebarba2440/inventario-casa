@@ -111,6 +111,10 @@
   .aviso-b{position:absolute;right:8px;top:calc(env(safe-area-inset-top,0px) + 12px);height:40px;min-width:40px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);padding:0 12px;font-family:inherit;font-weight:800;font-size:.82rem;cursor:pointer;white-space:nowrap}
   .aviso-b .ic{font-size:1.1rem;line-height:1}
   @media (max-width:520px){.aviso-b{padding:0;width:40px}.aviso-b .tx{display:none}}
+  /* cargando: ruedita dentro del botón mientras se activan/desactivan los avisos */
+  .aviso-b .spin{width:18px;height:18px;border-radius:50%;border:2.5px solid color-mix(in srgb,currentColor 25%,transparent);border-top-color:var(--accent);animation:girar .7s linear infinite}
+  .aviso-b[aria-busy="true"]{pointer-events:none}
+  @keyframes girar{to{transform:rotate(360deg)}}
   .aviso-b.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
 </style>
 <link rel="stylesheet" href="fondo.css">
@@ -326,24 +330,26 @@ async function avApi(a,body){const r=await fetch('../api/?a='+a,{method:'POST',c
 async function avSub(){const reg=await navigator.serviceWorker.getRegistration();return reg?reg.pushManager.getSubscription():null;}
 async function avEstado(){
   if(typeof window.__jxValor!=='function'){avB.hidden=true;return}
-  avB.hidden=false;
+  avB.hidden=false;avB.removeAttribute('aria-busy');
   const pintar=(ic,tx)=>{avB.innerHTML='<span class="ic" aria-hidden="true">'+ic+'</span><span class="tx">'+tx+'</span>';avB.title=tx;avB.setAttribute('aria-label',tx);};
   if(!avSoporte()){pintar('🔕','Avisos');avB.dataset.s='no';avB.classList.remove('on');return}
   let on=false;try{on=Notification.permission==='granted'&&!!(await avSub())}catch(e){}
   pintar(on?'🔔':'🔕',on?'Avisos activos':'Activar avisos');avB.dataset.s=on?'on':'off';avB.classList.toggle('on',on);
 }
+function avCargando(){avB.innerHTML='<span class="spin" aria-hidden="true"></span>';avB.setAttribute('aria-busy','true');avB.setAttribute('aria-label','Cargando…');}
 async function avToggle(){
   const s=avB.dataset.s;
   if(s==='no'){alert(avIOS?'En iPhone los avisos funcionan con JuntOS instalado:\n1. Abrí JuntOS en Safari\n2. Tocá Compartir ⬆️ › "Agregar a inicio"\n3. Abrí JuntOS desde el ícono y activá los avisos acá.':'Este navegador no permite notificaciones. Probá con Chrome.');return}
   try{
     if(s==='on'){
       if(!confirm('¿Desactivar los avisos en este celu?'))return;
+      avCargando();
       const sub=await avSub();if(sub){await avApi('push_baja',{endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe();}
       snd('aceptar');return avEstado();
     }
     const perm=await Notification.requestPermission();
     if(perm!=='granted'){alert('No se dio permiso para las notificaciones.\nPodés habilitarlo en los ajustes del navegador, en los permisos de este sitio.');return}
-    avB.textContent='Activando…';
+    avCargando();
     const reg=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;
     const r=await fetch('../api/?a=push_clave',{credentials:'same-origin'});const {clave}=await r.json();
     const k=atob(clave.replace(/-/g,'+').replace(/_/g,'/')),u8=Uint8Array.from(k,ch=>ch.charCodeAt(0));
