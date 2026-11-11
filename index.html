@@ -64,6 +64,7 @@
   .cta-cod{font-size:1.7rem;font-weight:900;letter-spacing:.3em;text-align:center;background:var(--accent-light);color:var(--accent);border-radius:12px;padding:10px;margin:8px 0}
   .cta-plan{border-radius:12px;padding:12px;text-align:center;background:var(--surface2);line-height:1.4}
   .cta-b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-weight:800;padding:13px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;margin-top:8px;text-decoration:none}
+  .cta-b[hidden]{display:none !important}   /* el botón del panel solo para admins (sin esto, display:flex le ganaba a hidden) */
   .cta-b.salir{color:#c0392b;border-color:rgba(192,57,43,.35)}
   .gear .dot{display:none !important;position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#aaa;border:2px solid var(--surface)}
   .gear .dot.on{background:var(--ok)} .gear .dot.err{background:var(--err)}

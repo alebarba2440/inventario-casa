@@ -111,6 +111,16 @@ function soloLectura(array $p): bool {
   $h = max(strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0);
   return $h < time();
 }
+// La sección Auto traía como "datos iniciales" el auto de Ale y Juli (Clio 2014 y sus services). Si una cuenta nueva
+// llegó a guardarlos, se borran (solo en parejas que no son la de ellos) para que cada uno vea únicamente lo suyo.
+function limpiarAutoEjemplo(int $pid): void {
+  $q = db()->prepare("SELECT COUNT(*) FROM usuarios WHERE pareja_id = ? AND LOWER(email) IN ('alejandrobarba021@gmail.com','gionejulieta@gmail.com')");
+  $q->execute([$pid]); if ((int)$q->fetchColumn() > 0) return;
+  $q = db()->prepare("SELECT id FROM docs WHERE pareja_id = ? AND col = 'ahorros' AND id = 'copito' AND data IS NOT NULL
+    AND (data LIKE '%CONFORT ABS ABCP 2014%' OR data LIKE '%Yul_n - Crespo%' OR data LIKE '%Cintar Santa Fe%')");
+  $q->execute([$pid]);
+  if ($q->fetchColumn()) db()->prepare("UPDATE docs SET data = NULL, ver = ? WHERE pareja_id = ? AND col = 'ahorros' AND id = 'copito'")->execute([nuevaVersion(), $pid]);
+}
 function docsDesde(int $pid, int $desde): array {
   $q = db()->prepare('SELECT col, id, data, ver FROM docs WHERE pareja_id = ? AND ver > ? ORDER BY ver');
   $q->execute([$pid, $desde]);
@@ -194,6 +204,7 @@ try {
       if (!$u) responder(['usuario' => null]);
       $e = estado($u);
       if (!$u['pareja_id']) responder($e);
+      limpiarAutoEjemplo((int)$u['pareja_id']);
       [$docs, $ver] = docsDesde((int)$u['pareja_id'], (int)($_GET['desde'] ?? 0));
       $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$u['id']]);
       $e['pareja_id'] = (int)$u['pareja_id']; $e['usuario_id'] = (int)$u['id'];

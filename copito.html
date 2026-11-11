@@ -233,26 +233,12 @@ const fFecha=f=>{if(!f)return '';const [y,m,d]=f.split('-');return `${+d}/${+m}/
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 
-/* ================= datos iniciales (de la planilla) ================= */
+/* ================= cuenta nueva: arranca vacío, con el mes actual y las líneas típicas para completar ================= */
 function semilla(){
-  const L=(...p)=>p.map(([d,m])=>({id:uid(),d,m:m==null?'':String(m)}));
-  const vacio=()=>L(['CUOTA X18'],['SEGURO'],['NAFTA Prom'],['SERVIS YPF BOX'],['COCHERA'],['CUOTA SOCIO ARG']);
-  const mes=(y,k,lineas)=>({id:`m${y}_${k}`,y,k,pagado:false,lineas});
-  return{
-    meses:[
-      mes(2026,7,L(['CUOTA X18',316000],['SEGURO',57900],['NAFTA Prom',80000],['COCHERA'],['CUOTA SOCIO ARG',13500])),
-      mes(2026,8,L(['CUOTA X18',316000],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['COCHERA'],['CUOTA SOCIO ARG',15500])),
-      mes(2026,9,L(['CUOTA X18',315794],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['COCHERA'],['CUOTA SOCIO ARG',15500])),
-      mes(2026,10,L(['CUOTA X18',315797],['SEGURO',57900],['NAFTA Prom',80000],['SERVIS YPF BOX',18000],['CUOTA SOCIO ARG',15500],['TAZAS',36000])),
-      mes(2026,11,vacio()),mes(2027,0,vacio()),mes(2027,1,vacio()),mes(2027,2,vacio()),mes(2027,3,vacio())],
-    auto:{modelo:'CLIO MÍO 5P CONFORT ABS ABCP 2014',km:'216000',kmFecha:'2026-11-01'},
-    mant:[
-      {id:uid(),fecha:'2022-11-08',km:'177000',tipo:'Distribución',com:'Kit correas, tensores y bomba de agua',taller:'Yulín - Crespo',costo:'103536',proxKm:'235000',proxFecha:''},
-      {id:uid(),fecha:'2024-09-12',km:'206732',tipo:'Servicio completo',com:'Aceite y filtro',taller:'Marcos Puz',costo:'78450',proxKm:'',proxFecha:''},
-      {id:uid(),fecha:'2024-10-08',km:'207250',tipo:'ARB',com:'Alineación, rotación y balanceo',taller:'Niki Imhoff',costo:'32000',proxKm:'217250',proxFecha:''},
-      {id:uid(),fecha:'2026-07-22',km:'213000',tipo:'RTV',com:'Revisión técnica vehicular',taller:'Cintar Santa Fe',costo:'77000',proxKm:'',proxFecha:'2027-07-22'},
-      {id:uid(),fecha:'2026-07-31',km:'213500',tipo:'Servicio completo',com:'Servicio Premium',taller:'YPF BOXES',costo:'108000',proxKm:'223500',proxFecha:''}]
-  };
+  const L=(...p)=>p.map(([d])=>({id:uid(),d,m:''}));
+  const h=new Date();
+  return{meses:[{id:`m${h.getFullYear()}_${h.getMonth()}`,y:h.getFullYear(),k:h.getMonth(),pagado:false,lineas:L(['Cuota'],['Seguro'],['Nafta'],['Service'],['Cochera'],['Patente'])}],
+    auto:{modelo:'',km:'',kmFecha:''},mant:[]};
 }
 /* antes había un solo auto (D.auto + D.mant); ahora D.autos = [{id, modelo, km, kmFecha, mant:[…]}] */
 function migrar(d){
