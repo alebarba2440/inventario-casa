@@ -481,7 +481,7 @@
   function escH(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function sinLeer() { return (MSG.items || []).filter(function (m) { return !m.leido; }); }
   // mensajes globales que todavía no saltaron como cartel al abrir la app
-  function globalesNuevos() { return (MSG.items || []).filter(function (m) { return m.tipo === 'mensaje' && m.id > (MSG.visto || 0) && !m.leido; }); }
+  function globalesNuevos() { return (MSG.items || []).filter(function (m) { return !m.leido && ((m.tipo === 'mensaje' && m.id > (MSG.visto || 0)) || m.tipo === 'directo'); }); }
   function recibirBandeja(items, vistoSrv) {
     MSG = { items: Array.isArray(items) ? items : [], visto: Math.max(+MSG.visto || 0, +vistoSrv || 0) };
     wr(K_MSG, { visto: MSG.visto }); botonMensajes(); mostrarMensajesNuevos();

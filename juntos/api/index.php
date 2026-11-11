@@ -141,7 +141,7 @@ function bandeja(array $u): array {
     $q = db()->prepare('SELECT id, titulo, texto, emoji, url, tipo, ref, creado FROM notifs WHERE pareja_id = ? AND (usuario_id IS NULL OR usuario_id = ?) ORDER BY id DESC LIMIT 30');
     $q->execute([$u['pareja_id'], $u['id']]);
     // Los avisos de prueba/vencimiento solo se ven si siguen valiendo (si se sumaron días o se pagó, desaparecen)
-    foreach ($q->fetchAll() as $n) if (!in_array($n['tipo'], ['prueba', 'vence'], true) || $n['ref'] === $hasta) $items[] = ['k' => 'n' . $n['id'], 'tipo' => 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
+    foreach ($q->fetchAll() as $n) if (!in_array($n['tipo'], ['prueba', 'vence'], true) || $n['ref'] === $hasta) $items[] = ['k' => 'n' . $n['id'], 'tipo' => $n['tipo'] === 'directo' ? 'directo' : 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
   }
   usort($items, fn($a, $b) => strcmp($b['creado'], $a['creado']));
   $items = array_slice($items, 0, 40);
@@ -283,6 +283,28 @@ try {
         catch (Throwable $e) { error_log('JuntOS push mensaje: ' . $e->getMessage()); }
       }
       responder(['ok' => true, 'id' => $mid, 'push' => $push]);
+
+    // Mensajes a una sola cuenta (pareja): van a su casilla como aviso, salen como cartel al abrir y llegan por push
+    case 'GET admin_notifs':
+      requerirAdmin();
+      $q = db()->prepare("SELECT id, titulo, texto, emoji, creado FROM notifs WHERE pareja_id = ? AND tipo = 'directo' ORDER BY id DESC LIMIT 50");
+      $q->execute([(int)($_GET['pareja_id'] ?? 0)]);
+      responder(['mensajes' => array_map(fn($m) => ['id' => (int)$m['id'], 'titulo' => $m['titulo'], 'texto' => $m['texto'], 'emoji' => $m['emoji'], 'creado' => iso($m['creado'])], $q->fetchAll())]);
+
+    case 'POST admin_notif':
+      requerirAdmin();
+      $in = entrada(); $pid = (int)($in['pareja_id'] ?? 0);
+      $titulo = trim((string)($in['titulo'] ?? '')); $texto = trim(str_replace("\r", '', (string)($in['texto'] ?? ''))); $emoji = mb_substr(trim((string)($in['emoji'] ?? '')), 0, 8);
+      if ($titulo === '' || mb_strlen($titulo) > 120) error_('Poné un título (hasta 120 letras)');
+      if ($texto === '' || mb_strlen($texto) > 500) error_('Escribí el mensaje (hasta 500 letras)');
+      $q = db()->prepare('SELECT id FROM parejas WHERE id = ?'); $q->execute([$pid]); if (!$q->fetchColumn()) error_('No existe esa cuenta', 404);
+      notificar($pid, null, 'directo|' . $pid . '|' . bin2hex(random_bytes(8)), $titulo, $texto, $emoji ?: '📣', '', 'directo');
+      responder(['ok' => true]);
+
+    case 'POST admin_notif_borrar':
+      requerirAdmin();
+      db()->prepare("DELETE FROM notifs WHERE id = ? AND tipo = 'directo'")->execute([(int)(entrada()['id'] ?? 0)]);
+      responder(['ok' => true]);
 
     case 'POST admin_mensaje_borrar':
       requerirAdmin();

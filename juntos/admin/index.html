@@ -120,6 +120,13 @@
   dialog::backdrop{background:rgba(0,0,0,.4)}
   dialog p{margin:0 0 16px}
   dialog .fila .btn{flex:1}
+  /* Sub-pestañas de cada cuenta */
+  .subt{display:grid;gap:4px;background:var(--fondo);border-radius:6px 18px 6px 18px;padding:4px}
+  .subt button{font:inherit;font-weight:800;font-size:.8rem;border:0;background:none;padding:8px 2px;border-radius:5px 14px 5px 14px;cursor:pointer;color:var(--gris);display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}
+  .subt button span{font-size:1.05rem}
+  .subt button.on{background:#111;color:#fff}
+  .subp{padding-top:2px}
+  .subp>.persona:first-child{border-top:0}
   /* Mensajes */
   .campo{display:flex;flex-direction:column;gap:5px;font-size:.8rem;font-weight:800;color:var(--gris)}
   .campo input,.campo textarea{font:inherit;font-size:1rem;font-weight:600;color:var(--tinta);padding:11px 12px;border:1.5px solid var(--borde);border-radius:5px 15px 5px 15px;outline:none;background:#fff;width:100%}
@@ -309,13 +316,56 @@ function listar(){
   const ver_ = l.slice((PAG - 1) * POR_PAG, PAG * POR_PAG);
   $('cuenta').textContent = l.length ? `${l.length} cuenta${l.length === 1 ? '' : 's'} · mostrando ${(PAG - 1) * POR_PAG + 1}–${(PAG - 1) * POR_PAG + ver_.length}` : '';
   $('lista').innerHTML = ver_.length ? ver_.map(item).join('') : '<div class="card vacio">No hay cuentas para mostrar</div>';
-  $('lista').querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => d.open ? ABIERTOS.add(d.dataset.id) : ABIERTOS.delete(d.dataset.id)));
+  // Al abrir una cuenta arranca siempre en "Contacto" (si se vuelve a dibujar la lista, queda en la pestaña que estaba)
+  $('lista').querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => {
+    const id = d.dataset.id;
+    if (!d.open) { ABIERTOS.delete(id); return; }
+    if (!ABIERTOS.has(id)) { ABIERTOS.add(id); subTab(id, 'contacto'); }
+    else if (SUBT[id] === 'mensajes') cargarCta(id);
+  }));
   // paginación
   if (pags <= 1) { $('pag').innerHTML = ''; return; }
   const nums = [...new Set([1, PAG - 1, PAG, PAG + 1, pags])].filter(n => n >= 1 && n <= pags).sort((a, b) => a - b);
   let h = `<button ${PAG === 1 ? 'disabled' : ''} onclick="irPag(${PAG - 1})" aria-label="Anterior">‹</button>`, ant = 0;
   nums.forEach(n => { if (n - ant > 1) h += '<span style="color:var(--gris2)">…</span>'; h += `<button class="${n === PAG ? 'on' : ''}" onclick="irPag(${n})">${n}</button>`; ant = n; });
   $('pag').innerHTML = h + `<button ${PAG === pags ? 'disabled' : ''} onclick="irPag(${PAG + 1})" aria-label="Siguiente">›</button>`;
+}
+const SUBT = {}, EMOC = {};
+function subTab(id, k){
+  SUBT[id] = k;
+  const d = document.querySelector(`details.cta[data-id="${id}"]`); if (!d) return;
+  d.querySelectorAll('.subt button').forEach(b => b.classList.toggle('on', b.getAttribute('onclick').includes(`'${k}'`)));
+  d.querySelectorAll('.subp').forEach(p => p.hidden = p.dataset.s !== k);
+  if (k === 'mensajes') cargarCta(id);
+}
+function emojisCta(id){ const e = EMOC[id] || EMOJIS[0]; return EMOJIS.map(x => `<button type="button" class="${x === e ? 'on' : ''}" onclick="EMOC[${id}]='${x}';$('ce${id}').innerHTML=emojisCta(${id})">${x}</button>`).join(''); }
+async function cargarCta(id){
+  const el = $('cl' + id); if (!el) return;
+  try {
+    const r = await api('admin_notifs&pareja_id=' + id);
+    el.innerHTML = r.mensajes.length ? r.mensajes.map(m => `<div class="msg"><div class="e">${esc(m.emoji || '📣')}</div>
+      <div class="tx"><b>${esc(m.titulo)}</b><small>${fecha(m.creado, true)}</small><p>${esc(m.texto)}</p></div>
+      <button class="mini" style="color:#b91c1c" onclick="borrarCta(${id},${m.id})">Borrar</button></div>`).join('')
+      : '<div class="vacio" style="padding:8px">Todavía no le mandaste mensajes</div>';
+  } catch(e){ el.innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+function mandarCta(id){
+  const titulo = $('ct' + id).value.trim(), texto = $('cx' + id).value.trim(), emoji = EMOC[id] || EMOJIS[0];
+  const p = D.parejas.find(x => x.id === id) || {};
+  if (!titulo) { toast('Poné un título'); $('ct' + id).focus(); return; }
+  if (!texto) { toast('Escribí el mensaje'); $('cx' + id).focus(); return; }
+  $('dTxt').innerHTML = `¿Mandar este mensaje a <b>${esc(p.nombre || 'esta cuenta')}</b>?<br><br>${esc(emoji)} <b>${esc(titulo)}</b><br><small style="white-space:pre-wrap">${esc(texto.length > 160 ? texto.slice(0, 160) + '…' : texto)}</small>`;
+  $('dOk').className = 'btn rosa';
+  $('dOk').onclick = async () => { dlg.close();
+    try { await api('admin_notif', {pareja_id: id, titulo, texto, emoji}); $('ct' + id).value = $('cx' + id).value = ''; toast('Mensaje enviado ✉️'); cargarCta(id); }
+    catch(e){ toast(e.message); } };
+  dlg.showModal();
+}
+function borrarCta(id, mid){
+  $('dTxt').innerHTML = '¿Borrar este mensaje?<br><small>Desaparece de la casilla de esta cuenta.</small>';
+  $('dOk').className = 'btn sec';
+  $('dOk').onclick = async () => { dlg.close(); try { await api('admin_notif_borrar', {id: mid}); toast('Mensaje borrado'); cargarCta(id); } catch(e){ toast(e.message); } };
+  dlg.showModal();
 }
 function irPag(n){ PAG = n; listar(); scrollTo({top:0, behavior:'smooth'}); }
 
@@ -324,15 +374,10 @@ function item(c){
   const sub = c.tipo === 'suelto' ? (ms[0].email || '') : c.estado === 'vencida' ? `venció ${fecha(c.activo_hasta)}` : `${c.dias} ${c.dias === 1 ? 'día' : 'días'} · ${esc(nombres)}`;
   const persona = m => `<div class="persona">${avatar(m)}<div class="tx"><b>${esc(m.nombre || '—')}</b><small>${esc(m.email)}<br>Alta ${fecha(m.creado)} · último ingreso ${hace(m.ultimo_ingreso)}</small></div>
       <div class="fila" style="flex-wrap:nowrap"><a class="mini" href="mailto:${esc(m.email)}">✉️ Mail</a><button class="mini" onclick="copiar('${esc(m.email)}')">Copiar</button></div></div>`;
-  let cuerpo = `<div class="blq"><h3>Contacto</h3>${ms.map(persona).join('')}${c.tipo === 'pareja' && ms.length < 2 ? '<div class="falta">Falta que se una la pareja</div>' : ''}</div>`;
+  const contacto = `${ms.map(persona).join('')}${c.tipo === 'pareja' && ms.length < 2 ? '<div class="falta">Falta que se una la pareja</div>' : ''}`;
+  const secs = [['contacto', '👥', 'Contacto', contacto]];
   if (c.tipo === 'pareja') {
-    cuerpo += `<div class="blq"><h3>Cuenta</h3><div class="datos">
-        <div><span>Código</span><b>${esc(c.codigo)}</b></div><div><span>Alta</span><b>${fecha(c.creado)}</b></div>
-        <div><span>Prueba hasta</span><b>${fecha(c.prueba_hasta)}</b></div><div><span>Pago hasta</span><b>${c.pago_hasta ? fecha(c.pago_hasta) : '—'}</b></div>
-        <div><span>Último ingreso</span><b>${hace(c.ultimo_ingreso)}</b></div><div><span>Registros</span><b>${num(c.registros)}</b></div>
-        <div><span>Fotos</span><b>${c.fotos || 0} · ${c.fotos_mb || 0} MB</b></div><div><span>Avisos activos</span><b>${c.avisos ? c.avisos + ' celu' + (c.avisos > 1 ? 's' : '') : 'no'}</b></div>
-      </div></div>
-      <div class="blq"><h3>Acciones</h3>
+    secs.push(['acciones', '⚙️', 'Acciones', `
         <div style="font-size:.85rem;font-weight:700;color:var(--gris);margin-bottom:6px">Días de prueba</div>
         <div class="dias">
           <button class="menos" onclick="dias(${c.id},-7)">−7</button><button class="menos" onclick="dias(${c.id},-1)">−1</button>
@@ -340,18 +385,31 @@ function item(c){
           <input type="number" id="dn${c.id}" placeholder="días" inputmode="numeric" aria-label="Cantidad de días"><button onclick="diasLibre(${c.id})">Aplicar</button>
         </div>
         <div class="fila" style="margin-top:12px"><button class="btn" onclick="pago(${c.id},'sumar_mes')">+1 mes pago</button>
-          ${c.pago_hasta ? `<button class="btn sec" onclick="pago(${c.id},'anular')">Anular pago</button>` : ''}</div>
+          ${c.pago_hasta ? `<button class="btn sec" onclick="pago(${c.id},'anular')">Anular pago</button>` : ''}</div>`]);
+    secs.push(['mensajes', '✉️', 'Mensajes', `
+        <p class="nota" style="margin:0 0 10px">Le llega solo a esta cuenta: a su casilla, como cartel al abrir la app y como notificación al celu.</p>
+        <div class="emojis" id="ce${c.id}">${emojisCta(c.id)}</div>
+        <label class="campo" style="margin-top:10px">Título<input id="ct${c.id}" maxlength="120" placeholder="Ej: ¡Hola! Te escribimos de JuntOS"></label>
+        <label class="campo" style="margin-top:8px">Mensaje<textarea id="cx${c.id}" maxlength="500" style="min-height:90px" placeholder="Escribí el mensaje…"></textarea></label>
+        <button class="btn rosa" style="width:100%;margin-top:10px" onclick="mandarCta(${c.id})">✉️ Mandar a esta cuenta</button>
+        <div class="blq" style="margin-top:14px"><h3>Enviados a esta cuenta</h3><div id="cl${c.id}"><div class="vacio">Cargando…</div></div></div>`]);
+    secs.push(['datos', '🗂️', 'Datos de cuenta', `<div class="datos">
+        <div><span>Código</span><b>${esc(c.codigo)}</b></div><div><span>Alta</span><b>${fecha(c.creado)}</b></div>
+        <div><span>Prueba hasta</span><b>${fecha(c.prueba_hasta)}</b></div><div><span>Pago hasta</span><b>${c.pago_hasta ? fecha(c.pago_hasta) : '—'}</b></div>
+        <div><span>Último ingreso</span><b>${hace(c.ultimo_ingreso)}</b></div><div><span>Registros</span><b>${num(c.registros)}</b></div>
+        <div><span>Fotos</span><b>${c.fotos || 0} · ${c.fotos_mb || 0} MB</b></div><div><span>Avisos activos</span><b>${c.avisos ? c.avisos + ' celu' + (c.avisos > 1 ? 's' : '') : 'no'}</b></div>
       </div>
-      <div class="blq"><h3>Datos de la cuenta</h3>
-        <div class="fila"><button class="btn azul" onclick="backupCuenta(${c.id})">⬇️ Descargar backup</button>
+        <div class="fila" style="margin-top:12px"><button class="btn azul" onclick="backupCuenta(${c.id})">⬇️ Descargar backup</button>
           <button class="btn sec" style="color:var(--tinta);border-color:var(--borde)" onclick="elegirRestCuenta(${c.id})">⬆️ Restaurar backup</button></div>
         ${esAdminCta(c) ? '<p class="nota">🔒 Es una cuenta de administrador: no se puede borrar desde acá.</p>'
-          : `<button class="btn borrar" onclick="borrarCuenta(${c.id})">🗑️ Borrar cuenta</button><p class="nota">Borra de la base los datos, fotos, avisos y usuarios de esta cuenta. Antes se descarga sola un backup.</p>`}
-      </div>`;
+          : `<button class="btn borrar" onclick="borrarCuenta(${c.id})">🗑️ Borrar cuenta</button><p class="nota">Borra de la base los datos, fotos, avisos y usuarios de esta cuenta. Antes se descarga sola un backup.</p>`}`]);
   } else {
-    cuerpo += `<div class="blq"><h3>Acciones</h3>${esAdminCta(c) ? '<p class="nota">🔒 Es un administrador.</p>'
-      : `<button class="btn borrar" onclick="borrarUsuario('${esc(ms[0].email)}')">🗑️ Borrar usuario</button><p class="nota">Entró con Google pero nunca creó ni se unió a un espacio.</p>`}</div>`;
+    secs.push(['acciones', '⚙️', 'Acciones', esAdminCta(c) ? '<p class="nota">🔒 Es un administrador.</p>'
+      : `<button class="btn borrar" style="margin-top:0" onclick="borrarUsuario('${esc(ms[0].email)}')">🗑️ Borrar usuario</button><p class="nota">Entró con Google pero nunca creó ni se unió a un espacio.</p>`]);
   }
+  const tab = secs.some(x => x[0] === SUBT[c.id]) ? SUBT[c.id] : 'contacto';
+  const cuerpo = `<div class="subt" style="grid-template-columns:repeat(${secs.length},1fr)">${secs.map(([k, ic, t]) => `<button type="button" class="${k === tab ? 'on' : ''}" onclick="subTab('${c.id}','${k}')"><span>${ic}</span>${t}</button>`).join('')}</div>
+    ${secs.map(([k, , , h]) => `<div class="subp" data-s="${k}" ${k === tab ? '' : 'hidden'}>${h}</div>`).join('')}`;
   const est = c.estado;
   return `<details class="cta" data-id="${c.id}" ${ABIERTOS.has(String(c.id)) ? 'open' : ''}>
     <summary><div class="avs">${ms.slice(0, 2).map(avatar).join('') || '<div class="ini">?</div>'}</div>
