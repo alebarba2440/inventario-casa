@@ -90,6 +90,10 @@
   .hero .ilus{position:relative;display:flex;justify-content:center}
   .hero .ilus::before{content:"";position:absolute;inset:8% 6% 2%;background:#fff;border-radius:46% 54% 50% 50%/55% 50% 50% 45%;opacity:.7}
   .hero .ilus img{position:relative;max-height:440px;width:auto;filter:drop-shadow(0 18px 30px rgba(0,0,0,.12))}
+  /* Ilustraciones que van rotando cada 2,5 s (se funden una con otra) */
+  .hero .rota{position:relative;height:440px;aspect-ratio:528/699;max-width:100%}
+  .hero .rota img{position:absolute;inset:0;width:100%;height:100%;max-height:none;object-fit:contain;object-position:center bottom;opacity:0;transform:scale(.97);transition:opacity .7s ease,transform .7s ease}
+  .hero .rota img.on{opacity:1;transform:none}
 
   section{padding:72px 0}
   .tit{text-align:center;max-width:620px;margin:0 auto 40px}
@@ -175,6 +179,7 @@
     .hero .ctas{justify-content:center}
     .hero .ilus{order:-1}
     .hero .ilus img{max-height:300px}
+    .hero .rota{height:300px}
     .grid,.pasos{grid-template-columns:1fr 1fr}
     .extras{grid-template-columns:1fr 1fr}
     .instalar{grid-template-columns:1fr}
@@ -217,7 +222,14 @@
       <p class="nota">Sin tarjeta · Entrás con tu cuenta de Google · Android y iPhone</p>
       <button type="button" class="inst-link" data-instalar hidden><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span><span class="t">Instalar la app<small>Gratis · en un toque</small></span></button>
     </div>
-    <div class="ilus"><img src="app/img/pareja-hero.webp?v=1" alt="Ilustración de una pareja abrazada" width="528" height="699" fetchpriority="high"></div>
+    <div class="ilus"><div class="rota" id="rota" role="img" aria-label="Ilustraciones de una pareja usando JuntOS">
+      <img class="on" src="app/img/pareja-hero.webp?v=1" alt="" width="528" height="699" fetchpriority="high">
+      <img src="app/img/vacaciones.webp" alt="" width="399" height="520" decoding="async">
+      <img src="app/img/calendario.webp" alt="" width="388" height="520" decoding="async">
+      <img src="app/img/inventario.webp" alt="" width="520" height="513" decoding="async">
+      <img src="app/img/copito.webp?v=5" alt="" width="520" height="419" decoding="async">
+      <img src="app/img/compartidos.webp" alt="" width="387" height="520" decoding="async">
+    </div></div>
   </div>
 </header>
 
@@ -342,6 +354,10 @@ const nav = document.getElementById('nav');
 addEventListener('scroll', () => nav.classList.toggle('sombra', scrollY > 8), {passive: true});
 
 // Logo: en el celu, tocarlo lo pone rosa un ratito (en la compu alcanza con pasar el mouse)
+// Ilustración del inicio: cambia cada 2,5 s (no si la persona pidió menos animaciones, ni con la pestaña oculta)
+(function(){ const r = document.getElementById('rota'); if (!r) return; const im = [...r.querySelectorAll('img')]; let i = 0;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setInterval(() => { if (document.hidden) return; im[i].classList.remove('on'); i = (i + 1) % im.length; im[i].classList.add('on'); }, 2500); })();
 document.querySelectorAll('.logo').forEach(l => l.addEventListener('touchstart', () => { l.classList.add('rosa'); clearTimeout(l._t); l._t = setTimeout(() => l.classList.remove('rosa'), 1500); }, {passive: true}));
 
 // Menú del celu (☰): abre/cierra; se cierra al elegir una opción, tocar afuera o con Escape
