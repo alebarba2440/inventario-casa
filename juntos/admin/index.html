@@ -184,8 +184,8 @@ const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleuser
 const $ = id => document.getElementById(id);
 const POR_PAG = 30, PRECIO = 5000;
 let D = null, YO = null, FILTRO = 'todas', PAG = 1, ABIERTOS = new Set();
-const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas', vence:'Por vencer', suelto:'Sin pareja'};
-const EST = {prueba:'Prueba', pago:'Paga', vencida:'Vencida', suelto:'Sin pareja'};
+const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas', vence:'Por vencer', solos:'Esperando pareja', suelto:'Sin espacio'};
+const EST = {prueba:'Prueba', pago:'Paga', vencida:'Vencida', suelto:'Sin espacio'};
 const SECC = {juntos:'Ajustes', inv:'Inventario', categorias:'Inventario', 'ahorros/data':'Ahorros', 'ahorros/compartidos':'Gastos compartidos', 'ahorros/copito':'Vehículos', vacaciones:'Vacaciones', calendario:'Calendario',
   mascotas:'Mascotas', mascota_reg:'Mascotas', hijos:'Hijos', hijo_vac:'Hijos', hijo_med:'Hijos', hijo_doc:'Hijos', hijo_fecha:'Hijos'};
 
@@ -241,8 +241,9 @@ function pestana(t){
 function kpis(el, l){ $(el).innerHTML = l.map(([c,n,t,s]) => `<div class="kpi ${c}"><span>${t}</span><b>${n}</b>${s ? `<small>${s}</small>` : ''}</div>`).join(''); }
 function dashboard(){
   const r = D.resumen, pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
-  kpis('kCuentas', [['', num(r.parejas), 'Parejas', `${num(r.completas)} completas`], ['', num(r.usuarios), 'Usuarios'],
-    ['', num(r.sin_pareja), 'Sin pareja', 'crearon cuenta y no se unieron'], ['rosa', num(r.altas_semana), 'Altas · 7 días', `${num(r.altas_mes)} en 30 días`]]);
+  kpis('kCuentas', [['', num(r.parejas), 'Espacios', `${num(r.completas)} con los dos`], ['', num(r.usuarios), 'Usuarios'],
+    ['prueba', num(r.parejas - r.completas), 'Esperando pareja', 'crearon el espacio y falta el otro'],
+    ['', num(r.sin_pareja), 'Sin espacio', 'entraron y no crearon ni se unieron'], ['rosa', num(r.altas_semana), 'Altas · 7 días', `${num(r.altas_mes)} en 30 días`]]);
   kpis('kSus', [['prueba', num(r.prueba), 'En prueba'], ['pago', num(r.pago), 'Pagas', 'conversión ' + pct(r.pago, r.parejas)],
     ['vencida', num(r.vencidas), 'Vencidas'], ['prueba', num(r.por_vencer), 'Por vencer', '7 días o menos'],
     ['pago', '$ ' + num(r.pago * PRECIO), 'Ingreso mensual', 'estimado ($' + num(PRECIO) + ' c/u)']]);
@@ -262,14 +263,15 @@ function irA(id){ FILTRO = 'todas'; $('q').value = ''; ABIERTOS.add(String(id));
   setTimeout(() => document.querySelector(`details[data-id="${id}"]`)?.scrollIntoView({block:'center', behavior:'smooth'}), 50); }
 
 /* ---------- CUENTAS ---------- */
+function filtroOk(c, k){ return k === 'todas' ? true : k === 'vence' ? c.vence : k === 'solos' ? (c.tipo === 'pareja' && c.miembros.length < 2) : c.estado === k; }
 function filtradas(){
   const q = ($('q').value || '').trim().toLowerCase();
   const ok = c => !q || [c.nombre, c.codigo, ...c.miembros.flatMap(m => [m.nombre, m.email])].some(x => String(x || '').toLowerCase().includes(q));
-  const fil = c => FILTRO === 'todas' ? true : FILTRO === 'vence' ? c.vence : c.estado === FILTRO;
+  const fil = c => filtroOk(c, FILTRO);
   return D.cuentas.filter(c => fil(c) && ok(c));
 }
 function listar(){
-  const cnt = k => D.cuentas.filter(c => k === 'todas' ? true : k === 'vence' ? c.vence : c.estado === k).length;
+  const cnt = k => D.cuentas.filter(c => filtroOk(c, k)).length;
   $('filtros').innerHTML = Object.keys(NOM).map(k => `<button class="chip ${k === FILTRO ? 'on' : ''}" onclick="FILTRO='${k}';PAG=1;listar()">${NOM[k]}<i>${cnt(k)}</i></button>`).join('');
   const l = filtradas(), pags = Math.max(1, Math.ceil(l.length / POR_PAG)); PAG = Math.min(PAG, pags);
   const ver_ = l.slice((PAG - 1) * POR_PAG, PAG * POR_PAG);
