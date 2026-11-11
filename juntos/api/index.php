@@ -285,6 +285,49 @@ try {
       responder(['ok' => true, 'id' => $mid, 'push' => $push]);
 
     // Mensajes a una sola cuenta (pareja): van a su casilla como aviso, salen como cartel al abrir y llegan por push
+    // ---------- Respuestas privadas ----------
+    // chequeo-AAAA-SS: las respuestas de los dos se ven recién cuando contestaron ambos
+    // deseos: cada uno marca si / tal / no; solo se devuelven las coincidencias (lo que el otro marcó "no" nunca se ve)
+    case 'GET privado':
+      $u = requerirUsuario(); $p = parejaActiva($u);
+      $clave = (string)($_GET['clave'] ?? '');
+      if (!preg_match('/^(chequeo-\d{4}-\d{2}|deseos)$/', $clave)) error_('Clave inválida');
+      $q = db()->prepare('SELECT usuario_id, data FROM privado WHERE pareja_id = ? AND clave = ?'); $q->execute([$p['id'], $clave]);
+      $mio = null; $otro = null;
+      foreach ($q->fetchAll() as $r) { $d = json_decode($r['data'], true); if ((int)$r['usuario_id'] === (int)$u['id']) $mio = $d; else $otro = $d; }
+      $out = ['mio' => $mio, 'otro_listo' => $otro !== null];
+      if ($clave === 'deseos') {
+        $co = [];
+        if (is_array($mio) && is_array($otro)) foreach ($mio as $k => $v) {
+          $o = $otro[$k] ?? null;
+          if (in_array($v, ['si', 'tal'], true) && in_array($o, ['si', 'tal'], true)) $co[$k] = ($v === 'si' && $o === 'si') ? 'si' : 'tal';
+        }
+        $out['coincidencias'] = $co;
+      } elseif ($mio !== null && $otro !== null) $out['otro'] = $otro;
+      responder($out);
+
+    case 'POST privado':
+      $u = requerirUsuario(); $p = parejaActiva($u); $in = entrada();
+      $clave = (string)($in['clave'] ?? '');
+      if (!preg_match('/^(chequeo-\d{4}-\d{2}|deseos)$/', $clave)) error_('Clave inválida');
+      $data = json_encode($in['data'] ?? null, JSON_UNESCAPED_UNICODE);
+      if (strlen($data) > 20000) error_('Demasiados datos');
+      db()->prepare('REPLACE INTO privado (usuario_id, pareja_id, clave, data, actualizado) VALUES (?,?,?,?,?)')->execute([$u['id'], $p['id'], $clave, $data, ahora()]);
+      responder(['ok' => true]);
+
+    // Aviso a mi pareja (casilla + push): gratitud, cupones, "te toca tirar el dado"
+    case 'POST avisar_pareja':
+      $u = requerirUsuario(); $p = parejaActiva($u); $in = entrada();
+      $titulo = mb_substr(trim((string)($in['titulo'] ?? '')), 0, 120); $texto = mb_substr(trim((string)($in['texto'] ?? '')), 0, 300);
+      $url = (string)($in['url'] ?? ''); if (!preg_match('/^[a-z0-9_-]+\.html([#?][a-z0-9=&_#-]*)?$/i', $url)) $url = '';
+      if ($titulo === '') error_('Falta el título');
+      $n = db()->prepare("SELECT COUNT(*) FROM notifs WHERE pareja_id = ? AND tipo = 'pareja' AND creado > UTC_TIMESTAMP() - INTERVAL 1 HOUR"); $n->execute([$p['id']]);
+      if ((int)$n->fetchColumn() >= 30) error_('Muchos avisos seguidos, probá en un rato', 429);
+      $o = db()->prepare('SELECT id FROM usuarios WHERE pareja_id = ? AND id <> ?'); $o->execute([$p['id'], $u['id']]);
+      $oid = (int)$o->fetchColumn(); if (!$oid) error_('Tu pareja todavía no se unió');
+      notificar((int)$p['id'], $oid, 'pareja|' . $u['id'] . '|' . bin2hex(random_bytes(8)), $titulo, $texto, mb_substr((string)($in['emoji'] ?? '💞'), 0, 8), $url, 'pareja');
+      responder(['ok' => true]);
+
     case 'GET precios':
       // Público: lo usa la landing para mostrar precios y datos de transferencia
       header('Cache-Control: public, max-age=300');

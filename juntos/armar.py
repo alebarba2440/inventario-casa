@@ -16,8 +16,8 @@ JUNTOS = RAIZ / 'juntos'
 SALIDA = Path(sys.argv[1]).resolve()
 
 PAGINAS = ['index.html', 'inventario.html', 'ahorros.html', 'vacaciones.html', 'copito.html',
-           'gastos.html', 'compartidos.html', 'calendario.html', 'mascotas.html', 'hijos.html', 'personajes.html', 'sonidos.html']
-ARCHIVOS = ['tema.js', 'sonidos.js', 'personajes.js', 'comun.css', 'fondo.css', 'manifest.json',
+           'gastos.html', 'compartidos.html', 'calendario.html', 'mascotas.html', 'hijos.html', 'coaching.html', 'intimidad.html', 'personajes.html', 'sonidos.html']
+ARCHIVOS = ['tema.js', 'sonidos.js', 'personajes.js', 'coaching-datos.js', 'intimidad-datos.js', 'comun.css', 'fondo.css', 'manifest.json',
             'logo.png', 'logo2.png', 'logo3.png']
 
 
@@ -42,7 +42,7 @@ def main():
             shutil.copy2(RAIZ / f, app / f)
     shutil.copytree(RAIZ / 'img', app / 'img')
 
-    versiones = {r: hashlib.md5((RAIZ / r).read_bytes()).hexdigest()[:8] for r in ['tema.js', 'sonidos.js', 'personajes.js', 'comun.css', 'fondo.css'] if (RAIZ / r).exists()}
+    versiones = {r: hashlib.md5((RAIZ / r).read_bytes()).hexdigest()[:8] for r in ['tema.js', 'sonidos.js', 'personajes.js', 'coaching-datos.js', 'intimidad-datos.js', 'comun.css', 'fondo.css'] if (RAIZ / r).exists()}
     extras = sorted((JUNTOS / 'extra').glob('*.html'))
     for f in PAGINAS + extras:
         html = Path(f).read_text(encoding='utf-8') if isinstance(f, Path) else (RAIZ / f).read_text(encoding='utf-8')

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Intimidad">
+<meta name="robots" content="noindex">
+<link rel="apple-touch-icon" href="img/apple-touch.png?v=10">
+<link rel="icon" type="image/png" href="img/icono.png?v=10">
+<title>Intimidad</title>
+<script src="tema.js"></script>
+<script src="sonidos.js"></script>
+<script src="firebase-config.js"></script>
+<script src="intimidad-datos.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{--accent:#1D9E75;--accent-dark:#0F6E56;--accent-light:#E1F5EE;--neg:#E24B4A;--ok:#15803d;--fuego:#E11D48;
+        --bg:#f5f5f0;--surface:#fff;--surface2:#f5f5f0;--border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);--text:#1a1a1a;--text2:#666;
+        --juli:#DB2777;--juli-l:#FCE7F3;--ale:#0284C7;--ale-l:#E0F2FE}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa}}
+  :root[data-theme="dark"]{--bg:#111;--surface:#1c1c1e;--surface2:#2c2c2e;--border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.2);--text:#f5f5f5;--text2:#aaa}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none !important}
+  body{font-family:'Nunito',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+  .top{background:var(--surface);border-bottom:3px solid var(--accent);padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20}
+  .top h1{font-size:1.1rem;color:var(--accent);font-weight:800;letter-spacing:.05em}
+  .top .cfgb{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 12px);width:44px;height:44px;border:0;background:none;color:var(--accent);font-size:1.6rem;cursor:pointer;display:grid;place-items:center}
+  main{max-width:560px;margin:0 auto;padding:14px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 40px)}
+  input,select,button,textarea{font-family:inherit;color:var(--text)}
+  .card{background:var(--surface);border:.5px solid var(--border);border-radius:18px;padding:14px}
+  h2{font-size:.95rem;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  h2 i{color:var(--accent)}
+  .btn{border:none;border-radius:14px;padding:13px;font-size:1rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:#fff;width:100%}
+  .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+  .btn.danger{background:var(--neg)}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.45}
+  .nota{color:var(--text2);font-size:.85rem;font-weight:600;line-height:1.4}
+  .vacio{text-align:center;color:var(--text2);padding:14px 0;font-weight:700}
+  .seg{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 67px);z-index:15}
+  .seg button{border:0;background:none;border-radius:12px;padding:8px 1px;font-weight:800;font-size:.72rem;color:var(--text2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .seg button i{font-size:1.25rem}
+  .seg button.on{background:var(--accent);color:#fff}
+  .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chips button{border:2px solid var(--border2);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:800;font-size:.85rem;cursor:pointer;white-space:nowrap}
+  .chips button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  /* dados */
+  .mesa{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .jug{display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 8px;border-radius:10px 26px 10px 26px}
+  .jug{background:var(--surface)}.jug.j{box-shadow:inset 0 0 0 999px var(--juli-l)}.jug.a{box-shadow:inset 0 0 0 999px var(--ale-l)}
+  .jug.gana.j{box-shadow:inset 0 0 0 999px var(--juli-l),0 0 0 3px var(--accent)}.jug.gana.a{box-shadow:inset 0 0 0 999px var(--ale-l),0 0 0 3px var(--accent)}
+  .jug b{font-weight:900}
+  .dado{width:84px;height:84px;border-radius:20px;background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.12),inset 0 -4px 0 rgba(0,0,0,.06);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:12px;gap:2px}
+  .dado.vacio{display:grid;place-items:center;grid-template-columns:1fr;grid-template-rows:1fr;font-size:2rem;color:#bbb;background:rgba(255,255,255,.6);padding:0}
+  .dado i{width:14px;height:14px;border-radius:50%;background:#1a1a1a;place-self:center;visibility:hidden}
+  .dado i.p{visibility:visible}
+  .dado.rueda{animation:rueda .12s linear infinite}
+  @keyframes rueda{0%{transform:rotate(-8deg) scale(1.02)}50%{transform:rotate(8deg) scale(.98)}100%{transform:rotate(-8deg) scale(1.02)}}
+  .jug small{font-size:.78rem;font-weight:800;color:var(--text2)}
+  .resultado{text-align:center;padding:18px 14px;border-radius:10px 30px 10px 30px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;display:flex;flex-direction:column;gap:6px;animation:aparece .35s ease-out}
+  .resultado small{font-weight:900;letter-spacing:.06em;text-transform:uppercase;opacity:.9;font-size:.75rem}
+  .resultado b{font-size:1.25rem;font-weight:900;line-height:1.3}
+  @keyframes aparece{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+  .tirar{font-size:1.15rem;padding:16px}
+  /* cartas verdad o reto */
+  .vr{min-height:200px;border-radius:10px 30px 10px 30px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:22px;gap:10px;border:2px solid var(--accent);background:var(--surface);animation:aparece .3s ease-out}
+  .vr small{font-weight:900;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+  .vr p{font-size:1.25rem;font-weight:800;line-height:1.35}
+  /* deseos */
+  .des{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--border)}
+  .des:first-of-type{border-top:0}
+  .des b{font-weight:700;font-size:.95rem;flex:1}
+  .tri{display:flex;gap:3px;flex-shrink:0}
+  .tri button{border:1.5px solid var(--border2);background:var(--surface2);border-radius:10px;padding:6px 8px;font-weight:800;font-size:.78rem;cursor:pointer}
+  .tri button.on.si{background:#DCFCE7;border-color:#16a34a;color:#166534}
+  .tri button.on.tal{background:#FEF3C7;border-color:#d97706;color:#92400E}
+  .tri button.on.no{background:#FEE2E2;border-color:#dc2626;color:#991B1B}
+  .match{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px 18px 6px 18px;font-weight:800}
+  .match.si{background:#DCFCE7;color:#166534}.match.tal{background:#FEF3C7;color:#92400E}
+  /* cupones */
+  .cup{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px 22px 8px 22px;border:2px dashed var(--border2);background:var(--surface)}
+  .cup .e{font-size:2rem}
+  .cup .tx{flex:1;min-width:0}.cup .tx b{display:block;font-weight:800}.cup .tx small{color:var(--text2);font-weight:700;font-size:.78rem}
+  .cup.nuevo{border-color:var(--accent);background:var(--accent-light)}
+  .cup.usado{opacity:.55}
+  .cup .mini{border:0;background:var(--accent);color:#fff;font-weight:800;border-radius:10px;padding:8px 12px;cursor:pointer;flex-shrink:0}
+  .modelos{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .modelos button{border:1.5px solid var(--border2);background:var(--surface2);border-radius:12px;padding:9px 8px;font-weight:700;font-size:.82rem;cursor:pointer;text-align:left;display:flex;gap:6px;align-items:center}
+  .modelos button.on{border-color:var(--accent);background:var(--accent-light)}
+  textarea.in,input.in{font-size:1rem;font-weight:700;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px;outline:none;width:100%;min-width:0}
+  textarea.in{resize:vertical;min-height:70px;font-weight:600}
+  /* puerta */
+  .puerta{text-align:center;padding:30px 18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .puerta .big{font-size:3.4rem}
+  .puerta b{font-size:1.15rem;font-weight:900}
+  .puerta .btn{max-width:300px}
+  .pin{display:flex;gap:8px;justify-content:center}
+  .pin input{width:150px;text-align:center;font-size:1.6rem;letter-spacing:.4em}
+  .palabra{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px 18px 6px 18px;background:#FEF3C7;color:#92400E;font-weight:800;font-size:.9rem}
+  /* hoja */
+  .bgm{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .bgm.show{display:flex}
+  .sheet{background:var(--surface);width:100%;max-width:520px;max-height:92dvh;overflow-y:auto;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;gap:12px}
+  @media (min-width:760px){.bgm{align-items:center}.sheet{border-radius:20px}}
+  .sheet h3{text-align:center;font-weight:900}
+  .lbl{font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.03em;display:flex;flex-direction:column;gap:5px}
+  .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 30px);transform:translate(-50%,20px);background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:999px;font-weight:800;font-size:.9rem;opacity:0;pointer-events:none;transition:all .25s;z-index:60;white-space:nowrap}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+<link rel="stylesheet" href="fondo.css">
+<link rel="stylesheet" href="comun.css">
+</head>
+<body>
+<div class="top">
+  <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg></a>
+  <h1>INTIMIDAD</h1>
+  <button class="cfgb" id="cfgb" onclick="abrirAjustes()" aria-label="Ajustes de Intimidad" hidden><i class="ti ti-adjustments-heart"></i></button>
+</div>
+<main id="main"><div class="card vacio">Cargando…</div></main>
+
+<!-- ajustes -->
+<div class="bgm" id="fmA" onclick="if(event.target===this)cerrar('fmA')">
+  <form class="sheet" onsubmit="event.preventDefault();guardarAjustes()">
+    <h3>Acuerdos y privacidad</h3>
+    <label class="lbl">PALABRA DE SEGURIDAD (LA VEN LOS DOS)<input class="in" id="aPal" maxlength="30" placeholder="Ej: frutilla" autocomplete="off"></label>
+    <p class="nota" style="margin-top:-6px">Si alguno la dice, se frena todo, sin preguntas.</p>
+    <label class="lbl">LÍMITES (LO QUE NO, PARA LOS DOS)<textarea class="in" id="aLim" maxlength="500" placeholder="Ej: nada de fotos, nada en lugares públicos"></textarea></label>
+    <label class="lbl">PIN PARA ENTRAR (SOLO EN ESTE CELU, 4 NÚMEROS)<input class="in" id="aPin" inputmode="numeric" maxlength="4" placeholder="Dejalo vacío para no usar PIN" autocomplete="off"></label>
+    <p class="nota">Para ocultar la tarjeta del inicio: Ajustes › Accesos directos. Los avisos al celu usan textos neutros.</p>
+    <div class="dos"><button type="button" class="btn ghost" onclick="cerrar('fmA')">Cancelar</button><button type="submit" class="btn"><i class="ti ti-check"></i> Guardar</button></div>
+  </form>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== Intimidad (+18): dados de a dos (cada uno en su celu), verdad o reto, retos, lista de deseos con coincidencias privadas y cupones ===== */
+const D=window.INTIM;
+const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
+const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const snd=n=>{try{window.sonido&&sonido(n)}catch(e){}};
+const $=id=>document.getElementById(id);
+const p2=n=>String(n).padStart(2,'0');
+const nid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const J=()=>window.JUNTOS||{};
+const yo=()=>J().miSlot||null;
+const otro=()=>yo()==='j'?'a':'j';
+const nom=s=>((J().nombres||{})[s])||(s==='j'?'Ella':'Él');
+const azar=a=>a[Math.floor(Math.random()*a.length)];
+const DEL=()=>firebase.firestore.FieldValue.delete();
+function semana(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);
+  const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);return y+'-'+p2(w);}
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400);}
+function cerrar(id){$(id).classList.remove('show');}
+
+let db=null,TAB=rd('int_tab','dados'),nivel=rd('int_nivel','suave'),unCelu=rd('int_uncelu',false);
+let DADO=rd('int_dado_v1',{}),RETOS=rd('int_retos_v1',{}),ACU=rd('int_acu_v1',{}),CUP=rd('int_cup_v1',{});
+let rodando=false,vr=null,retoAzar=null,DES=null,MATCH=null,cupSel=null;
+
+/* ---------- puerta: JuntOS, cumpleaños, +18, confirmación y PIN ---------- */
+function puerta(){
+  const j=J();
+  if(!window.jxPrivado)return `<div class="card puerta"><div class="big">🔒</div><b>Disponible en JuntOS</b><p class="nota">Esta sección funciona con tu cuenta de JuntOS.</p></div>`;
+  if(!j.miCumple&&!j.perfilListo)return 'esperar';
+  if(!j.miCumple)return `<div class="card puerta"><div class="big">🎂</div><b>Falta tu cumpleaños</b><p class="nota">Para entrar tenés que completar tu perfil con tu fecha de cumpleaños.</p><a class="btn" href="index.html">Completar en el inicio</a></div>`;
+  if(j.miEdad<18)return `<div class="card puerta"><div class="big">🔞</div><b>Solo para mayores de 18</b><p class="nota">Esta sección es para mayores de edad.</p></div>`;
+  if(!rd('int_ok',false))return `<div class="card puerta"><div class="big">🔞</div><b>Contenido para adultos</b>
+    <p class="nota">Juegos y propuestas para la intimidad de la pareja. Todo es <b>entre los dos y con consentimiento</b>: cualquiera puede decir que no o frenar en cualquier momento.</p>
+    <button class="btn" onclick="wr('int_ok',true);snd('aceptar');render()">Soy mayor de 18, entrar</button><a class="btn ghost" href="index.html">Volver</a></div>`;
+  const pin=rd('int_pin','');let okPin=false;try{okPin=sessionStorage.getItem('int_pin_ok')===pin;}catch(e){}
+  if(pin&&!okPin)return `<div class="card puerta"><div class="big">🔐</div><b>Ingresá tu PIN</b>
+    <div class="pin"><input class="in" id="pinIn" type="password" inputmode="numeric" maxlength="4" autocomplete="off" oninput="probarPin(this)"></div><p class="nota" id="pinErr"></p></div>`;
+  return '';
+}
+function probarPin(i){if(i.value.length<4)return;if(i.value===rd('int_pin','')){try{sessionStorage.setItem('int_pin_ok',i.value);}catch(e){}snd('aceptar');render();}else{$('pinErr').textContent='PIN incorrecto';i.value='';snd('error');}}
+
+const TABS=[['dados','ti-dice-5','Dados'],['vr','ti-cards','Verdad/Reto'],['retos','ti-flame','Retos'],['deseos','ti-heart','Deseos'],['cupones','ti-ticket','Cupones']];
+function render(){
+  const p=puerta();if(p==='esperar')return;
+  $('cfgb').hidden=!!p;
+  if(p){$('main').innerHTML=p;const pi=$('pinIn');if(pi)setTimeout(()=>pi.focus(),50);window.jxSyncCada&&jxSyncCada();return;}
+  const pal=ACU.palabra?`<div class="palabra">🛑 Palabra de seguridad: <span>${esc(ACU.palabra)}</span></div>`:'';
+  $('main').innerHTML=`<nav class="seg">${TABS.map(([k,i,t])=>`<button class="${k===TAB?'on':''}" onclick="irTab('${k}')"><i class="ti ${i}"></i>${t}</button>`).join('')}</nav>`
+    +'<div id="sec" style="display:flex;flex-direction:column;gap:12px"></div>'+pal;
+  ({dados:rDados,vr:rVR,retos:rRetos,deseos:rDeseos,cupones:rCupones}[TAB]||rDados)();
+  // mientras están en los dados, se sincroniza cada 1,5 s para ver la tirada del otro casi al instante
+  window.jxSyncCada&&jxSyncCada(TAB==='dados'?1500:5000);
+}
+function irTab(k){TAB=k;wr('int_tab',k);snd('tap');render();scrollTo({top:0});}
+const chipsNivel=()=>`<div class="chips">${D.niveles.map(n=>`<button class="${n.id===nivel?'on':''}" onclick="nivel='${n.id}';wr('int_nivel',nivel);vr=null;retoAzar=null;snd('tap');render()">${n.emoji} ${n.nombre}</button>`).join('')}</div>`;
+
+/* ---------- Dados de a dos: cada uno tira en su celu; el que saca más alto hace la acción ---------- */
+const PUNTOS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+const caraDado=(v,cl='')=>v?`<div class="dado ${cl}">${Array.from({length:9},(_,i)=>`<i class="${PUNTOS[v].includes(i)?'p':''}"></i>`).join('')}</div>`:`<div class="dado vacio ${cl}">?</div>`;
+const val=s=>DADO[s]&&DADO[s].r===DADO.ronda?DADO[s].v:0;
+function accionDe(r,n){const l=D.acciones[n]||D.acciones.suave;return l[((r*7919)%l.length+l.length)%l.length];}
+function rDados(){
+  const yS=yo(),oS=otro(),mv=val(yS),ov=val(oS),ambos=mv&&ov,n=D.niveles.find(x=>x.id===(DADO.nivel||nivel))||D.niveles[0];
+  const gana=ambos&&mv!==ov?(mv>ov?yS:oS):null;
+  let estado='';
+  if(ambos&&gana)estado=`<div class="resultado"><small>${n.emoji} Gana ${esc(nom(gana))} con un ${Math.max(mv,ov)}</small><b>${esc(nom(gana))}: ${esc(accionDe(DADO.ronda,DADO.nivel||nivel))}</b></div>`;
+  else if(ambos)estado=`<div class="resultado"><small>¡Empate!</small><b>Sacaron los dos ${mv}. Tiren de nuevo 🎲</b></div>`;
+  else if(mv&&!unCelu)estado=`<div class="card puerta" style="padding:16px"><b>Esperando a ${esc(nom(oS))}…</b><p class="nota">Cuando tire en su celu, acá aparece el resultado.</p>
+    <button class="btn ghost" onclick="avisarTirar()"><i class="ti ti-bell"></i> Avisarle que tire</button></div>`;
+  $('sec').innerHTML=chipsNivel()+`<div class="mesa">
+      <div class="jug ${yS}${gana===yS?' gana':''}"><b>${esc(nom(yS))}</b><span id="dYo">${caraDado(mv)}</span><small>${unCelu?'':'Vos'}</small></div>
+      <div class="jug ${oS}${gana===oS?' gana':''}"><b>${esc(nom(oS))}</b><span id="dOt">${caraDado(ov)}</span><small>${unCelu?'':'En su celu'}</small></div></div>
+    ${estado}
+    <button class="btn tirar" id="bTirar" onclick="tirar()" ${!ambos&&mv&&!unCelu?'disabled':''}><i class="ti ti-dice"></i> ${unCelu?'Tirar los dos':ambos||!mv?'Tirar mi dado':'Ya tiraste'}</button>
+    <button class="btn ghost" onclick="unCelu=!unCelu;wr('int_uncelu',unCelu);render()">${unCelu?'📱📱 Jugar cada uno en su celu':'📱 Jugar con un solo celu'}</button>
+    <p class="nota" style="text-align:center">Nivel de las acciones: el que elija quien empieza la ronda. Si empatan, se vuelve a tirar.</p>`;
+}
+function tirar(){
+  if(rodando)return;rodando=true;snd('tap');
+  const yS=yo(),oS=otro(),mv=val(yS),ov=val(oS),nueva=!(mv===0&&ov)||unCelu;  // ronda nueva salvo que el otro ya haya tirado y yo no
+  const v1=1+Math.floor(Math.random()*6),v2=1+Math.floor(Math.random()*6);
+  const els=[$('dYo')].concat(unCelu?[$('dOt')]:[]);let k=0;
+  const t=setInterval(()=>{els.forEach(e=>e.innerHTML=caraDado(1+Math.floor(Math.random()*6),'rueda'));if(++k>8){clearInterval(t);fin();}},80);
+  function fin(){
+    const r=nueva?(DADO.ronda||0)+1:DADO.ronda,ahora=Date.now(),d={ronda:r,nivel:nueva?nivel:(DADO.nivel||nivel)};
+    d[yS]={v:v1,t:ahora,r};
+    if(unCelu)d[oS]={v:v2,t:ahora,r};else if(nueva)d[oS]=null;
+    DADO=Object.assign({},DADO,d);wr('int_dado_v1',DADO);
+    const env=Object.assign({},d);if(env[oS]===null)env[oS]=DEL();
+    if(db)db.collection('int').doc('dado').set(env,{merge:true}).catch(()=>{});
+    rodando=false;snd('agregar');render();
+    if(!unCelu&&nueva)window.jxAvisarPareja&&jxAvisarPareja({titulo:'🎲 Te toca tirar',texto:'Tu pareja ya tiró el dado.',emoji:'🎲',url:'intimidad.html#dados'}).catch(()=>{});
+  }
+}
+function avisarTirar(){window.jxAvisarPareja({titulo:'🎲 Te toca tirar',texto:'Tu pareja te está esperando.',emoji:'🎲',url:'intimidad.html#dados'}).then(()=>toast('Le avisamos 🎲')).catch(e=>toast(e.message||'No se pudo avisar'));}
+
+/* ---------- Verdad o reto ---------- */
+function rVR(){
+  const n=D.niveles.find(x=>x.id===nivel);
+  $('sec').innerHTML=chipsNivel()+`<div class="dos"><button class="btn" onclick="sacarVR('v')">🗣️ Verdad</button><button class="btn" onclick="sacarVR('r')">⚡ Reto</button></div>
+    ${vr?`<div class="vr"><small>${vr.k==='v'?'🗣️ Verdad':'⚡ Reto'} · ${n.emoji} ${n.nombre}</small><p>${esc(vr.t)}</p></div>
+      <button class="btn ghost" onclick="sacarVR(vr.k)"><i class="ti ti-refresh"></i> Otra ${vr.k==='v'?'verdad':'reto'}</button>`
+    :'<div class="card vacio">Elijan verdad o reto 😏</div>'}`;
+}
+function sacarVR(k){const l=(k==='v'?D.verdades:D.retos)[nivel].filter(t=>!vr||t!==vr.t);vr={k,t:azar(l)};snd('tap');render();}
+
+/* ---------- Retos ---------- */
+function rRetos(){
+  const sem=semana(),w=parseInt(sem.slice(5)),rs=D.semanales[(w+parseInt(sem))%D.semanales.length],hecho=RETOS[sem];
+  $('sec').innerHTML=`<div class="card" style="text-align:center"><h2 style="justify-content:center"><i class="ti ti-calendar-week"></i> Reto de la semana</h2>
+      <p style="font-size:1.25rem;font-weight:900;margin:8px 0 12px">${esc(rs)}</p>
+      <button class="btn ${hecho?'ghost':''}" onclick="retoHecho()">${hecho?'✅ ¡Cumplido! (tocá para desmarcar)':'Marcar como cumplido'}</button>
+      <p class="nota" style="margin-top:8px">Es el mismo para los dos y cambia cada lunes.</p></div>`
+    +chipsNivel()+`<button class="btn" onclick="retoAzar=azar(D.retos[nivel].filter(t=>t!==retoAzar));snd('tap');render()"><i class="ti ti-flame"></i> Reto al azar</button>
+    ${retoAzar?`<div class="vr"><small>⚡ Reto · ${D.niveles.find(x=>x.id===nivel).nombre}</small><p>${esc(retoAzar)}</p></div>`:''}`;
+}
+function retoHecho(){const sem=semana(),v=!RETOS[sem];if(v)RETOS[sem]=true;else delete RETOS[sem];wr('int_retos_v1',RETOS);
+  if(db)db.collection('int').doc('retos').set({[sem]:v?true:DEL()},{merge:true}).catch(()=>{});snd(v?'agregar':'tap');render();}
+
+/* ---------- Lista de deseos (privada; solo se ven las coincidencias) ---------- */
+let guardarDes=null;
+function rDeseos(){
+  if(!DES){$('sec').innerHTML='<div class="card vacio">Cargando…</div>';cargarDeseos();return;}
+  const m=MATCH||{},ks=Object.keys(m),nMarc=D.deseos.filter(d=>DES[d.id]).length;
+  $('sec').innerHTML=`<div class="card"><h2><i class="ti ti-sparkles"></i> Coincidencias</h2>
+      ${!MATCH_OK?`<p class="nota">Cuando ${esc(nom(otro()))} complete su lista, acá aparece lo que les gusta a los dos.</p>`
+      :ks.length?ks.map(k=>{const d=D.deseos.find(x=>x.id===k);return d?`<div class="match ${m[k]}" style="margin-top:6px">${m[k]==='si'?'🔥':'🤔'} ${esc(d.t)}<span style="margin-left:auto;font-size:.75rem">${m[k]==='si'?'A los dos les encanta':'Tal vez'}</span></div>`:'';}).join('')
+      :'<p class="nota">Todavía no coinciden en nada. ¡Sigan probando!</p>'}</div>
+    <div class="card"><h2><i class="ti ti-lock"></i> Mi lista</h2>
+      <p class="nota" style="margin-bottom:6px"><b>Es privada:</b> ${esc(nom(otro()))} nunca ve lo que marcaste. Solo se muestran las cosas en las que los dos dijeron sí o tal vez. Marcaste ${nMarc} de ${D.deseos.length}.</p>
+      ${D.deseos.map(d=>`<div class="des"><b>${esc(d.t)}</b><div class="tri">${[['si','Sí'],['tal','Tal vez'],['no','No']].map(([v,t])=>`<button class="${v}${DES[d.id]===v?' on':''}" onclick="marcarDeseo('${d.id}','${v}')">${t}</button>`).join('')}</div></div>`).join('')}</div>`;
+}
+let MATCH_OK=false;
+async function cargarDeseos(){try{const r=await window.jxPrivado.leer('deseos');DES=r.mio||{};MATCH=r.coincidencias||{};MATCH_OK=!!r.otro_listo;}catch(e){DES=DES||{};}
+  if(TAB==='deseos')render();}
+function marcarDeseo(id,v){if(DES[id]===v)delete DES[id];else DES[id]=v;snd('tap');
+  document.querySelectorAll('.des').forEach(()=>{});rDeseos();
+  clearTimeout(guardarDes);guardarDes=setTimeout(async()=>{try{await window.jxPrivado.guardar('deseos',DES);const r=await window.jxPrivado.leer('deseos');MATCH=r.coincidencias||{};MATCH_OK=!!r.otro_listo;if(TAB==='deseos'){const y=scrollY;rDeseos();scrollTo({top:y});}}catch(e){toast('No se pudo guardar');}},900);}
+
+/* ---------- Cupones ---------- */
+function rCupones(){
+  const yS=yo(),l=Object.values(CUP).sort((a,b)=>(b.creado||0)-(a.creado||0));
+  const rec=l.filter(c=>c.para===yS),env=l.filter(c=>c.de===yS);
+  const item=(c,mio)=>`<div class="cup ${c.estado==='canjeado'?'usado':mio?'nuevo':''}"><div class="e">${esc(c.e||'🎟️')}</div>
+    <div class="tx"><b>${esc(c.t)}</b><small>${mio?'De '+esc(nom(c.de)):'Para '+esc(nom(c.para))} · ${c.estado==='canjeado'?'canjeado ✓':'sin usar'}</small></div>
+    ${mio&&c.estado!=='canjeado'?`<button class="mini" onclick="canjear('${c.id}')">Canjear</button>`:''}${!mio&&c.estado!=='canjeado'?`<button class="mini" style="background:var(--surface2);color:var(--text2)" onclick="borrarCup('${c.id}')" aria-label="Borrar">✕</button>`:''}</div>`;
+  $('sec').innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><h2><i class="ti ti-gift"></i> Regalar un cupón a ${esc(nom(otro()))}</h2>
+      <div class="modelos">${D.cupones.map((c,i)=>`<button type="button" class="${cupSel===i?'on':''}" onclick="cupSel=${i};$('cupT').value=D.cupones[${i}].t;document.querySelectorAll('.modelos button').forEach((b,j)=>b.classList.toggle('on',j===${i}))"><span>${c.e}</span>${esc(c.t.replace('Vale por ',''))}</button>`).join('')}</div>
+      <input class="in" id="cupT" maxlength="80" placeholder="O escribí el tuyo: Vale por…">
+      <button class="btn" onclick="regalar()"><i class="ti ti-gift"></i> Regalar</button></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><h2><i class="ti ti-inbox"></i> Recibidos</h2>${rec.length?rec.map(c=>item(c,true)).join(''):'<p class="vacio">Todavía no te regalaron cupones</p>'}</div>
+    <div class="card" style="display:flex;flex-direction:column;gap:8px"><h2><i class="ti ti-send"></i> Regalados</h2>${env.length?env.map(c=>item(c,false)).join(''):'<p class="vacio">Todavía no regalaste cupones</p>'}</div>`;
+}
+function regalar(){const t=$('cupT').value.trim();if(!t){$('cupT').focus();return;}
+  const m=D.cupones.find(c=>c.t===t),c={id:nid('c'),de:yo(),para:otro(),t,e:m?m.e:'🎟️',estado:'nuevo',creado:Date.now()};
+  CUP[c.id]=c;wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(c.id).set(c).catch(()=>{});
+  window.jxAvisarPareja&&jxAvisarPareja({titulo:'🎁 Tenés un regalo nuevo',texto:'Entrá a JuntOS para verlo.',emoji:'🎁',url:'intimidad.html#cupones'}).catch(()=>{});
+  cupSel=null;snd('agregar');toast('¡Cupón regalado! 🎁');render();}
+function canjear(id){const c=CUP[id];if(!c||!confirm('¿Canjear "'+c.t+'" ahora?'))return;
+  c.estado='canjeado';c.canjeado=Date.now();wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(id).set({estado:'canjeado',canjeado:c.canjeado},{merge:true}).catch(()=>{});
+  window.jxAvisarPareja&&jxAvisarPareja({titulo:'😉 Usaron tu regalo',texto:'Entrá a JuntOS para verlo.',emoji:'😉',url:'intimidad.html#cupones'}).catch(()=>{});
+  snd('agregar');render();}
+function borrarCup(id){if(!confirm('¿Borrar este cupón?'))return;delete CUP[id];wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(id).delete().catch(()=>{});snd('borrar');render();}
+
+/* ---------- Ajustes: palabra de seguridad, límites y PIN ---------- */
+function abrirAjustes(){$('aPal').value=ACU.palabra||'';$('aLim').value=ACU.limites||'';$('aPin').value=rd('int_pin','');$('fmA').classList.add('show');}
+function guardarAjustes(){const pin=$('aPin').value.replace(/\D/g,'');
+  if(pin&&pin.length!==4){$('aPin').focus();toast('El PIN tiene 4 números');return;}
+  ACU={palabra:$('aPal').value.trim(),limites:$('aLim').value.trim()};wr('int_acu_v1',ACU);
+  if(db)db.collection('int').doc('acuerdos').set(ACU).catch(()=>{});
+  wr('int_pin',pin);try{sessionStorage.setItem('int_pin_ok',pin);}catch(e){}
+  cerrar('fmA');snd('aceptar');toast('Guardado');render();}
+
+/* ---------- sincronización ---------- */
+function loadScript(src){return new Promise((ok,ko)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=ko;document.head.appendChild(s)})}
+const ocupado=()=>$('fmA').classList.contains('show')||rodando||(document.activeElement&&/TEXTAREA|INPUT/.test(document.activeElement.tagName));
+async function initFb(){
+  const c=window.getFbConfig&&window.getFbConfig();if(!c)return;
+  try{
+    if(typeof firebase==='undefined'){
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+      await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js');
+    }
+    if(!firebase.apps.length)firebase.initializeApp(c);
+    db=firebase.firestore();
+    const doc=(id,set,tabs)=>db.collection('int').doc(id).onSnapshot(d=>{set(d.data()||{});if((!tabs||tabs.includes(TAB))&&!ocupado())render();},()=>{});
+    doc('dado',x=>{const antes=JSON.stringify(DADO);DADO=x;wr('int_dado_v1',x);if(antes!==JSON.stringify(x)&&TAB==='dados'&&val(otro()))snd('tap');},['dados']);
+    doc('retos',x=>{RETOS=x;wr('int_retos_v1',x);},['retos']);
+    doc('acuerdos',x=>{ACU=x;wr('int_acu_v1',x);});
+    db.collection('int_cupones').onSnapshot(s=>{const r={};s.docs.forEach(d=>{const x=d.data();if(x)r[d.id]=Object.assign({},x,{id:d.id})});CUP=r;wr('int_cup_v1',r);if(TAB==='cupones'&&!ocupado())render();},()=>{});
+  }catch(e){}
+}
+const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))TAB=h;
+window.addEventListener('juntos',()=>{if(!ocupado())render();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TAB==='deseos'){DES=null;render();}});
+window.addEventListener('pagehide',()=>{window.jxSyncCada&&jxSyncCada();});
+render();initFb();
+</script>
+</body>
+</html>

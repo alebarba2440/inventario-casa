@@ -680,7 +680,11 @@
 
   /* ---------- Arranque y actualización periódica ---------- */
   boot();
-  setInterval(cambios, 5000);
+  var sincTimer = setInterval(cambios, 5000);
+  // Una pantalla puede pedir sincronizar más seguido mientras está abierta (ej.: los dados de a dos). Sin argumento vuelve a 5 s.
+  window.jxSyncCada = function (ms) { clearInterval(sincTimer); sincTimer = setInterval(cambios, Math.max(1000, ms || 5000)); };
+  window.jxAvisarPareja = function (o) { return pedir('avisar_pareja', o); };
+  window.jxPrivado = { leer: function (clave) { return pedir('privado&clave=' + encodeURIComponent(clave)); }, guardar: function (clave, data) { return pedir('privado', { clave: clave, data: data }); } };
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { cambios(); enviar(); revisarMensajes(); } });
   window.addEventListener('online', function () { cambios(); enviar(); subirPersonal(); });
 })();

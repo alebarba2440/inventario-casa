@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 8;
+const VERSION_ESQUEMA = 9;
 
 function config(): array {
   static $c = null;
@@ -157,6 +157,20 @@ function esquema(PDO $db): void {
     if (!$c) $db->exec("ALTER TABLE parejas ADD COLUMN plan_pago VARCHAR(10) NULL");
     // Precios y datos de transferencia: texto largo (la tabla meta guarda hasta 255)
     $db->exec("CREATE TABLE IF NOT EXISTS ajustes (clave VARCHAR(40) PRIMARY KEY, valor TEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 9) {
+    // Respuestas privadas de cada uno (chequeo semanal de Coaching, lista de deseos de Intimidad):
+    // la pareja NO las puede leer; el servidor devuelve solo los resultados (las dos cuando contestaron ambos, o las coincidencias)
+    $db->exec("CREATE TABLE IF NOT EXISTS privado (
+      usuario_id INT NOT NULL,
+      pareja_id INT NOT NULL,
+      clave VARCHAR(40) NOT NULL,
+      data TEXT NOT NULL,
+      actualizado DATETIME NOT NULL,
+      PRIMARY KEY (usuario_id, clave),
+      INDEX (pareja_id, clave),
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
 }
