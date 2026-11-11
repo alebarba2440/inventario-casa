@@ -36,7 +36,7 @@
     if (!document.getElementById('jxPerfilCss')) {
       const st = document.createElement('style'); st.id = 'jxPerfilCss';
       st.textContent = '#jxPerfil{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:18px}'
-        + '#jxPerfil .bx{background:var(--surface,#fff);color:var(--text,#1a1a1a);width:100%;max-width:420px;border-radius:22px;padding:22px 18px 18px;display:flex;flex-direction:column;gap:14px;font-family:inherit;box-shadow:0 20px 50px rgba(0,0,0,.25);animation:jxSube .25s ease-out}'
+        + '#jxPerfil .bx{max-height:calc(100dvh - 36px);overflow-y:auto;background:var(--surface,#fff);color:var(--text,#1a1a1a);width:100%;max-width:420px;border-radius:22px;padding:22px 18px 18px;display:flex;flex-direction:column;gap:14px;font-family:inherit;box-shadow:0 20px 50px rgba(0,0,0,.25);animation:jxSube .25s ease-out}'
         + '@keyframes jxSube{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}'
         + '#jxPerfil h2{margin:0;text-align:center;font-size:1.3rem;font-weight:900}#jxPerfil p{margin:-6px 0 0;text-align:center;color:var(--text2,#666);font-size:.92rem}'
         + '#jxPerfil .gs{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
@@ -44,25 +44,32 @@
         + '#jxPerfil .g img{height:110px;width:auto;object-fit:contain}#jxPerfil .g.on{border-color:var(--accent,#1D9E75);background:var(--accent-light,#E1F5EE)}'
         + '#jxPerfil label{display:flex;flex-direction:column;gap:6px;font-size:.78rem;font-weight:900;letter-spacing:.06em;color:var(--text2,#666)}'
         + '#jxPerfil input{font:inherit;font-size:1.05rem;font-weight:700;padding:12px;border-radius:12px;border:1px solid var(--border2,#ddd);background:var(--surface2,#f6f6f6);color:inherit;outline:none}'
+        + '#jxPerfil .nt{margin-top:-8px;font-size:.78rem;color:var(--text2,#666);text-align:center}#jxPerfil .nt.err{color:var(--err,#E24B4A);font-weight:800}'
+        + '#jxPerfil input[type=date]{min-height:48px;-webkit-appearance:none;appearance:none}'
         + '#jxPerfil .ok{font:inherit;font-weight:900;font-size:1.05rem;padding:14px;border:none;border-radius:14px;background:var(--accent,#1D9E75);color:#fff;cursor:pointer}#jxPerfil .ok:disabled{opacity:.4;cursor:default}';
       document.head.appendChild(st);
     }
     const yo = J.miSlot, nom = (J.apodos && yo && J.apodos[yo]) || (J.usuario && String(J.usuario.nombre || '').split(' ')[0]) || '';
     let gen = J.miGenero || null;
     const d = document.createElement('div'); d.id = 'jxPerfil';
-    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">¡Bienvenido/a a JuntOS! 💞</h2><p>Contanos cómo querés aparecer en la app.</p>'
+    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">' + (J.miGenero ? 'Completá tu perfil 🎂' : '¡Bienvenido/a a JuntOS! 💞') + '</h2><p>' + (J.miGenero ? 'Nos falta tu cumpleaños.' : 'Contanos cómo querés aparecer en la app.') + '</p>'
       + '<div class="gs"><button type="button" class="g" data-g="f"><img src="' + window.personaje('julieta').img + '" alt="">Ella</button>'
       + '<button type="button" class="g" data-g="m"><img src="' + window.personaje('alejandro').img + '" alt="">Él</button></div>'
       + '<label>TU NOMBRE O APODO<input id="jxPN" maxlength="30" autocomplete="nickname" placeholder="Ej: Juli"></label>'
+      + '<label>TU CUMPLEAÑOS<input id="jxPC" type="date" autocomplete="bday"></label><small class="nt" id="jxPCn">Lo agendamos en el Calendario para que tu pareja no se lo olvide 🎂</small>'
       + '<button type="button" class="ok" id="jxPOk">Listo</button></div>';
     document.body.appendChild(d);
-    const inp = d.querySelector('#jxPN'), ok = d.querySelector('#jxPOk');
-    inp.value = nom;
-    const pintar = () => { d.querySelectorAll('.g').forEach(b => b.classList.toggle('on', b.dataset.g === gen)); ok.disabled = !gen || !inp.value.trim(); };
+    const inp = d.querySelector('#jxPN'), ok = d.querySelector('#jxPOk'), cum = d.querySelector('#jxPC'), nota = d.querySelector('#jxPCn');
+    inp.value = nom; cum.value = J.miCumple || '';
+    const hoy = new Date().toISOString().slice(0, 10); cum.max = hoy; cum.min = '1900-01-01';
+    const cumOk = () => /^\d{4}-\d{2}-\d{2}$/.test(cum.value) && cum.value <= hoy && cum.value >= '1900-01-01';
+    // Sin "ella/él", nombre y cumpleaños no deja avanzar
+    const pintar = () => { d.querySelectorAll('.g').forEach(b => b.classList.toggle('on', b.dataset.g === gen)); ok.disabled = !gen || !inp.value.trim() || !cumOk();
+      nota.classList.toggle('err', !!cum.value && !cumOk()); nota.textContent = cum.value && !cumOk() ? 'Revisá la fecha de tu cumpleaños' : 'Lo agendamos en el Calendario para que tu pareja no se lo olvide 🎂'; };
     d.querySelectorAll('.g').forEach(b => b.onclick = () => { gen = b.dataset.g; pintar(); try { window.sonido && sonido('aceptar'); } catch (e) {} });
-    inp.oninput = pintar; inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
+    inp.oninput = pintar; cum.oninput = pintar; cum.onchange = pintar; inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
     ok.onclick = () => {
-      window.guardarPerfilYo({ genero: gen, apodo: inp.value.trim() });
+      window.guardarPerfilYo({ genero: gen, apodo: inp.value.trim(), cumple: cum.value });
       d.remove(); try { window.sonido && sonido('agregar'); } catch (e) {}
       try { window.dispatchEvent(new Event('juntos')); } catch (e) {}
     };
@@ -72,7 +79,7 @@
   function revisarBienvenida() {
     const J = window.JUNTOS;
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', revisarBienvenida, { once: true }); return; }
-    if (!(J && J.perfilListo && J.miSlot && !J.miGenero && document.getElementById('grid'))) return;
+    if (!(J && J.perfilListo && J.miSlot && (!J.miGenero || !J.miCumple) && document.getElementById('grid'))) return;
     if (document.getElementById('intro')) { setTimeout(revisarBienvenida, 700); return; }   // después de la animación de inicio
     window.abrirPerfil();
   }

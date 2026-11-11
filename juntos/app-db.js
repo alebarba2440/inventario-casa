@@ -61,7 +61,17 @@
     var c = {};
     if (o.apodo !== undefined) { c.apodos = {}; c.apodos[mail] = String(o.apodo || '').trim().slice(0, 30) || { __op: 'delete' }; }
     if (o.genero === 'f' || o.genero === 'm') { c.generos = {}; c.generos[mail] = o.genero; }
+    var cumple = /^\d{4}-\d{2}-\d{2}$/.test(o.cumple || '') ? o.cumple : (perfil().cumples || {})[mail];
+    if (o.cumple && cumple === o.cumple) { c.cumples = {}; c.cumples[mail] = cumple; }
     if (Object.keys(c).length) db.collection('juntos').doc('pareja').set(c, { merge: true });
+    // El cumple queda agendado en el Calendario, todos los años (un solo evento por persona: si cambia la fecha o el apodo, se actualiza)
+    if (cumple && (o.cumple || o.apodo !== undefined)) {
+      var nom = String((o.apodo !== undefined ? o.apodo : (perfil().apodos || {})[mail]) || (YO.usuario.nombre || '').split(' ')[0] || mail).trim();
+      var id = 'cumple_' + mail.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      var prev = window.__jxValor ? window.__jxValor('calendario\u0001' + id) : null;
+      db.collection('calendario').doc(id).set({ id: id, titulo: 'Cumple de ' + nom, fecha: cumple, hora: '', tipo: 'cumple', quien: 'ambos', rep: 'anio', notas: '',
+        creado: (prev && prev.creado) || Date.now(), autor: mail, editado: Date.now(), auto: 'cumple' });
+    }
     publicarYo(YO);
   }
   window.guardarPerfilYo = guardarPerfilYo;
@@ -71,6 +81,13 @@
     var c = { apodos: {} }; c.apodos[e] = String(nombre || '').trim().slice(0, 30) || { __op: 'delete' };
     db.collection('juntos').doc('pareja').set(c, { merge: true }); publicarYo(YO); return true;
   };
+  function edad(f) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f || ''); if (!m) return null;
+    var h = new Date(), e = h.getFullYear() - +m[1];
+    if (h.getMonth() + 1 < +m[2] || (h.getMonth() + 1 === +m[2] && h.getDate() < +m[3])) e--;
+    return e;
+  }
+  window.jxEdad = edad;
   function publicarYo(y) {
     var ms = miembrosOrdenados(y);
     var pn = function (m) { return m ? String(m.nombre || m.email || '').split(' ')[0] : ''; };
@@ -84,6 +101,8 @@
       apodos: apodos,   // nombre o apodo elegido en la app (manda sobre cualquier otro nombre)
       generos: { j: (ms[0] && gn[ms[0].email]) || null, a: (ms[1] && gn[ms[1].email]) || null },
       miGenero: (mail && gn[mail]) || null,
+      miCumple: (mail && (pf.cumples || {})[mail]) || null,   // fecha de cumpleaños (AAAA-MM-DD)
+      miEdad: edad(mail && (pf.cumples || {})[mail]),
       perfilListo: !!servidorOk,   // ya llegó lo del servidor (para no preguntar de más con datos viejos)
       fotos: (ms[0] || ms[1]) ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
       miSlot: mail ? (ms[0] && ms[0].email === mail ? 'j' : ms[1] && ms[1].email === mail ? 'a' : null) : null,
