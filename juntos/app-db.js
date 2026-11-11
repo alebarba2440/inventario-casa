@@ -477,17 +477,18 @@
   /* ---------- Mensajes globales (se mandan desde el panel de admin) ----------
      Al abrir la app sale el/los mensajes nuevos; en el inicio queda un ícono (a la izquierda de Ajustes) para volver a verlos. */
   var K_MSG = 'juntos_msgs';
-  var MSG = rd(K_MSG, null) || { lista: [], visto: 0 };
+  // Los mensajes viven solo en la base: acá no se guardan (si se borran en el panel, desaparecen). Solo recuerdo hasta cuál vi.
+  var MSG = { lista: [], visto: +(rd(K_MSG, null) || {}).visto || 0 };
   function escH(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function msgsSinVer() { return (MSG.lista || []).filter(function (m) { return m.id > (MSG.visto || 0); }); }
   function recibirMensajes(lista, vistoSrv) {
     MSG = { lista: Array.isArray(lista) ? lista : [], visto: Math.max(+MSG.visto || 0, +vistoSrv || 0) };
-    wr(K_MSG, MSG); botonMensajes(); mostrarMensajesNuevos();
+    wr(K_MSG, { visto: MSG.visto }); botonMensajes(); mostrarMensajesNuevos();
   }
   function marcarVistos() {
     var max = 0; (MSG.lista || []).forEach(function (m) { if (m.id > max) max = m.id; });
     if (max <= (MSG.visto || 0)) return;
-    MSG.visto = max; wr(K_MSG, MSG); botonMensajes();
+    MSG.visto = max; wr(K_MSG, { visto: max }); botonMensajes();
     pedir('mensaje_visto', { id: max }).catch(function () {});
   }
   function cssMensajes() {
