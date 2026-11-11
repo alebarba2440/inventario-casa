@@ -1,0 +1,11 @@
+name: Diagnostico avisos
+on:
+  push:
+    branches: [diag-avisos]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "=== URL vieja"; curl -s -o /dev/null -w "%{http_code} -> %{redirect_url}\n" -m 30 https://barbamanager.website/juntos/api/avisos.php
+          echo "=== URL nueva"; curl -s -m 60 -w "\nHTTP %{http_code}\n" https://juntosapp.com.ar/api/avisos.php
