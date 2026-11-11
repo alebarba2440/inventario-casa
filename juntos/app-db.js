@@ -684,6 +684,11 @@
   // Una pantalla puede pedir sincronizar más seguido mientras está abierta (ej.: los dados de a dos). Sin argumento vuelve a 5 s.
   window.jxSyncCada = function (ms) { clearInterval(sincTimer); sincTimer = setInterval(cambios, Math.max(1000, ms || 5000)); };
   window.jxAvisarPareja = function (o) { return pedir('avisar_pareja', o); };
+  // Contenido extra (Coaching / Intimidad) cargado desde el panel: primero lo guardado, después lo del servidor
+  window.jxContenido = function (cb) {
+    var c = rd('juntos_contenido', null); if (c) cb(c);
+    pedir('contenido').then(function (r) { if (JSON.stringify(r) !== JSON.stringify(c)) { wr('juntos_contenido', r); cb(r); } }).catch(function () {});
+  };
   window.jxPrivado = { leer: function (clave) { return pedir('privado&clave=' + encodeURIComponent(clave)); }, guardar: function (clave, data) { return pedir('privado', { clave: clave, data: data }); } };
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { cambios(); enviar(); revisarMensajes(); } });
   window.addEventListener('online', function () { cambios(); enviar(); subirPersonal(); });

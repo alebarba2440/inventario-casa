@@ -328,6 +328,21 @@ try {
       notificar((int)$p['id'], $oid, 'pareja|' . $u['id'] . '|' . bin2hex(random_bytes(8)), $titulo, $texto, mb_substr((string)($in['emoji'] ?? '💞'), 0, 8), $url, 'pareja');
       responder(['ok' => true]);
 
+    // ---------- Contenido extra de Coaching / Intimidad (lo que se suma u oculta desde el panel) ----------
+    case 'GET contenido':
+      requerirUsuario();
+      $v = db()->query("SELECT valor FROM ajustes WHERE clave = 'contenido'")->fetchColumn();
+      responder(json_decode($v ?: '{}', true) ?: new stdClass);
+
+    case 'POST admin_contenido':
+      requerirAdmin();
+      $d = entrada()['data'] ?? null;
+      if (!is_array($d)) error_('Datos inválidos');
+      $j = json_encode(['agregados' => (object)($d['agregados'] ?? []), 'ocultos' => (object)($d['ocultos'] ?? [])], JSON_UNESCAPED_UNICODE);
+      if (strlen($j) > 300000) error_('Demasiado contenido');
+      db()->prepare("REPLACE INTO ajustes (clave, valor) VALUES ('contenido', ?)")->execute([$j]);
+      responder(['ok' => true]);
+
     case 'GET precios':
       // Público: lo usa la landing para mostrar precios y datos de transferencia
       header('Cache-Control: public, max-age=300');

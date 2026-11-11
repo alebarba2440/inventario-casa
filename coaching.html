@@ -126,7 +126,7 @@
 
 <script>
 /* ===== Coaching de pareja: cartas para conversar, chequeo semanal (privado), gratitud e ideas de citas ===== */
-const D=window.COACH;
+const BASE=JSON.parse(JSON.stringify(window.COACH));let D=JSON.parse(JSON.stringify(BASE));
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -142,6 +142,15 @@ const otro=()=>yo()==='j'?'a':'j';
 const azar=a=>a[Math.floor(Math.random()*a.length)];
 function semana(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);return y+'-'+p2(w);}
+// Bolsa: no repite nada hasta haber mostrado todo (se guarda en este celu); al terminar vuelve a empezar sin repetir el último
+function bolsa(key,ids){if(!ids.length)return null;let u=rd('bag_'+key,[]).filter(x=>ids.includes(x)),libres=ids.filter(x=>!u.includes(x));
+  if(!libres.length){const ult=u[u.length-1];u=ult!=null?[ult]:[];libres=ids.filter(x=>x!==ult);if(!libres.length)libres=ids;}
+  const id=azar(libres);u.push(id);wr('bag_'+key,u);return id;}
+// Suma lo agregado desde el panel y saca lo oculto
+function aplicarContenido(C){const A=(C&&C.agregados)||{},O=(C&&C.ocultos)||{},fuera=k=>new Set(O[k]||[]);
+  const oc=fuera('coach.cartas'),oi=fuera('coach.citas');
+  D.cartas=BASE.cartas.filter(c=>!oc.has(c.id)).concat((A['coach.cartas']||[]).filter(c=>c&&c.t&&c.n&&!oc.has(c.id)));
+  D.citas=BASE.citas.filter(c=>!oi.has(c.id)).concat((A['coach.citas']||[]).filter(c=>c&&c.t&&!oi.has(c.id)).map(c=>Object.assign({l:'casa',c:'gratis',e:'💞'},c)));}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400);}
 function cerrar(id){$(id).classList.remove('show');}
 
@@ -174,7 +183,7 @@ function irTab(k){TAB=k;wr('coach_tab',k);snd('tap');render();scrollTo({top:0});
 /* ---------- Cartas ---------- */
 function mazo(){return D.cartas.filter(c=>soloFav?CART.fav[c.id]:c.n===nivel);}
 function rCartas(){
-  const m=mazo();if(!carta||!m.some(c=>c.id===carta.id)){carta=azar(m)||null;vuelta=false;}
+  const m=mazo();if(!carta||!m.some(c=>c.id===carta.id)){const id=bolsa('cartas_'+(soloFav?'fav':nivel),m.map(c=>c.id));carta=m.find(c=>c.id===id)||null;vuelta=false;}
   const n=D.niveles.find(x=>x.id===(carta?carta.n:nivel))||D.niveles[0];
   const charl=D.cartas.filter(c=>c.n===nivel&&CART.hechas[c.id]).length,tot=D.cartas.filter(c=>c.n===nivel).length;
   $('sec').innerHTML=`<div class="chips">${D.niveles.map(x=>`<button class="${!soloFav&&x.id===nivel?'on':''}" onclick="elegirNivel('${x.id}')">${x.emoji} ${x.nombre}</button>`).join('')}
@@ -190,8 +199,8 @@ function rCartas(){
 }
 function elegirNivel(n){nivel=n;soloFav=false;wr('coach_nivel',n);carta=null;snd('tap');render();}
 function darVuelta(){vuelta=!vuelta;$('carta').classList.toggle('vuelta',vuelta);snd('tap');}
-function otraCarta(){const m=mazo().filter(c=>!carta||c.id!==carta.id),sin=m.filter(c=>!CART.hechas[c.id]);
-  carta=azar(sin.length?sin:m)||carta;vuelta=false;render();setTimeout(()=>{vuelta=true;const c=$('carta');c&&c.classList.add('vuelta');},60);snd('tap');}
+function otraCarta(){const m=mazo(),id=bolsa('cartas_'+(soloFav?'fav':nivel),m.map(c=>c.id));
+  carta=m.find(c=>c.id===id)||carta;vuelta=false;render();setTimeout(()=>{vuelta=true;const c=$('carta');c&&c.classList.add('vuelta');},60);snd('tap');}
 function marcar(k){if(!carta)return;const v=!CART[k][carta.id];if(v)CART[k][carta.id]=true;else delete CART[k][carta.id];
   wr('coach_cartas_v1',CART);if(db)db.collection('coach').doc('cartas').set({[k]:{[carta.id]:v?true:firebase.firestore.FieldValue.delete()}},{merge:true}).catch(()=>{});
   snd(v?'agregar':'tap');render();if(vuelta){const c=$('carta');c&&c.classList.add('vuelta');}}
@@ -259,7 +268,7 @@ function enviarGracias(){const t=$('gTxt').value.trim();if(!t){$('gTxt').focus()
 /* ---------- Ideas de citas ---------- */
 function ideas(){return D.citas.filter(c=>(!filtro.l||c.l===filtro.l)&&(!filtro.c||c.c===filtro.c));}
 function rCitas(){
-  const l=ideas();if(!idea||!l.some(c=>c.id===idea.id))idea=azar(l)||null;
+  const l=ideas();if(!idea||!l.some(c=>c.id===idea.id)){const id=bolsa('citas_'+filtro.l+filtro.c,l.map(c=>c.id));idea=l.find(c=>c.id===id)||null;}
   const ch=(k,v,t)=>`<button class="${filtro[k]===v?'on':''}" onclick="filtro.${k}='${v}';idea=null;render()">${t}</button>`;
   $('sec').innerHTML=`<div class="chips">${ch('l','','Todas')}${ch('l','casa','🏠 En casa')}${ch('l','afuera','🌳 Afuera')}</div>
     <div class="chips">${ch('c','','Cualquier costo')}${ch('c','gratis','🆓 Gratis')}${ch('c','plata','💸 Con plata')}</div>
@@ -267,7 +276,7 @@ function rCitas(){
       <div class="dos"><button class="btn ghost" onclick="otraIdea()"><i class="ti ti-refresh"></i> Otra idea</button><button class="btn" onclick="abrirAgendar()"><i class="ti ti-calendar-plus"></i> Agendar</button></div>`
     :'<div class="card vacio">No hay ideas con esos filtros</div>'}`;
 }
-function otraIdea(){const l=ideas().filter(c=>!idea||c.id!==idea.id);idea=azar(l)||idea;snd('tap');render();}
+function otraIdea(){const l=ideas(),id=bolsa('citas_'+filtro.l+filtro.c,l.map(c=>c.id));idea=l.find(c=>c.id===id)||idea;snd('tap');render();}
 function abrirAgendar(){if(!idea)return;$('cTxt').textContent=idea.e+' '+idea.t;$('cFecha').value=hoyS();$('cFecha').min=hoyS();$('cHora').value='';$('fmC').classList.add('show');}
 function agendar(){const f=$('cFecha').value;if(!f){$('cFecha').focus();return;}
   const id=nid('e'),e={id,titulo:'💞 Cita: '+idea.t,fecha:f,hora:$('cHora').value||'',tipo:'evento',quien:'ambos',rep:'no',notas:'Idea de Coaching de pareja',creado:Date.now(),autor:yo(),editado:Date.now()};
@@ -294,6 +303,7 @@ async function initFb(){
 const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))TAB=h;
 window.addEventListener('juntos',()=>{if(!ocupado())render();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TAB==='chequeo'){CHQ=null;render();}});
+window.jxContenido&&jxContenido(C=>{aplicarContenido(C);if(!ocupado())render();});
 render();initFb();
 </script>
 </body>

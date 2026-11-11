@@ -27,7 +27,7 @@
   .ib{width:40px;height:40px;border:1.5px solid var(--borde);background:#fff;border-radius:5px 15px 5px 15px;display:grid;place-items:center;cursor:pointer;color:var(--tinta)}
   .ib svg{width:20px;height:20px}
   .ib.gira svg{animation:gira .8s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
-  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#fff;border:1.5px solid var(--borde);border-radius:8px 20px 8px 20px;padding:4px}
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:#fff;border:1.5px solid var(--borde);border-radius:8px 20px 8px 20px;padding:4px}
   .tabs button{font:inherit;font-weight:800;font-size:.92rem;border:0;background:none;padding:10px 6px;border-radius:6px 16px 6px 16px;cursor:pointer;color:var(--gris);display:flex;align-items:center;justify-content:center;gap:6px}
   .tabs button.on{background:#111;color:#fff}
   .tabs svg{width:17px;height:17px}
@@ -125,6 +125,7 @@
   dialog::backdrop{background:rgba(0,0,0,.4)}
   dialog p{margin:0 0 16px}
   dialog .fila .btn{flex:1}
+  .campo-s{font:inherit;font-size:1rem;font-weight:600;padding:11px 12px;border:1.5px solid var(--borde);border-radius:5px 15px 5px 15px;background:#fff}
   .dos-c{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:480px){.dos-c{grid-template-columns:1fr}}
   /* Sub-pestañas de cada cuenta */
   .subt{display:grid;gap:4px;background:var(--fondo);border-radius:6px 18px 6px 18px;padding:4px}
@@ -160,7 +161,8 @@
       <button data-t="dash" class="on" onclick="pestana('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Dashboard</button>
       <button data-t="ctas" onclick="pestana('ctas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.6c2.6.1 4.4 1.8 5 4.4"/></svg>Cuentas</button>
       <button data-t="msgs" onclick="pestana('msgs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7l8.2 6 8.2-6"/></svg>Mensajes</button>
-      <button data-t="conf" onclick="pestana('conf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configuración</button>
+      <button data-t="cont" onclick="pestana('cont')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="13" height="17" rx="2"/><path d="M8 8h5M8 12h5M8 16h3M20 7v13a1 1 0 0 1-1 1H8"/></svg>Contenido</button>
+      <button data-t="conf" onclick="pestana('conf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Ajustes</button>
     </nav>
   </header>
 
@@ -203,6 +205,18 @@
       <h2>Mensajes enviados</h2>
       <div class="card" id="mLista"><div class="vacio">Cargando…</div></div>
     </section>
+    <!-- CONTENIDO (Coaching / Intimidad) -->
+    <section id="p-cont" hidden style="display:flex;flex-direction:column;gap:12px">
+      <h2>Contenido de Coaching e Intimidad</h2>
+      <div class="card" style="display:flex;flex-direction:column;gap:10px">
+        <p style="margin:0;color:var(--gris);font-size:.9rem">Sumá cartas, retos o ideas nuevas, u ocultá las que no te gusten. Les llega a todos la próxima vez que abren la sección.</p>
+        <div class="filtros" id="cSec"></div>
+        <div class="filtros" id="cNiv"></div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;gap:8px" id="cForm"></div>
+      <div class="info" id="cCuenta"></div>
+      <div class="card" id="cLista"></div>
+    </section>
     <!-- CONFIGURACIÓN -->
     <section id="p-conf" hidden style="display:flex;flex-direction:column;gap:12px">
       <h2>Precios y transferencia</h2>
@@ -235,6 +249,8 @@
 
 <dialog id="dlg"><p id="dTxt"></p><div class="fila"><button class="btn sec" style="color:var(--tinta);border-color:var(--borde)" onclick="dlg.close()">Cancelar</button><button class="btn" id="dOk">Confirmar</button></div></dialog>
 
+<script src="../app/coaching-datos.js"></script>
+<script src="../app/intimidad-datos.js"></script>
 <script>
 const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const $ = id => document.getElementById(id);
@@ -275,6 +291,7 @@ async function inicio(){
     await cargarPrecios();
     await cargar();
     if (!$('p-msgs').hidden) cargarMensajes();
+    if (!$('p-cont').hidden) verContenido();
     ['pMen','pAn'].forEach(id => $(id).addEventListener('input', ahorroTxt));
   } catch(e){ $('err').textContent = e.message; }
 }
@@ -292,7 +309,8 @@ async function cargar(aviso){
 }
 function pestana(t){
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['dash','ctas','msgs','conf'].forEach(x => $('p-' + x).hidden = x !== t);
+  ['dash','ctas','msgs','cont','conf'].forEach(x => $('p-' + x).hidden = x !== t);
+  if (t === 'cont') verContenido();
   if (t === 'msgs' && YO) cargarMensajes(); else if (t === 'msgs') pintarEmojis();
   try { sessionStorage.setItem('adm_tab', t); } catch(e){}
   scrollTo({top:0});
@@ -364,6 +382,58 @@ async function guardarPrecios(){
   const d = {}; Object.entries(PCAMPOS).forEach(([id, k]) => d[k] = $(id).value.trim());
   d.cbu = d.cbu.replace(/\D/g, '');
   try { const r = await api('admin_precios', d); PREC = r.precios; toast('Precios guardados'); dashboard(); } catch(e){ toast(e.message); }
+}
+/* ---------- Contenido de Coaching / Intimidad: lo agregado y lo oculto se guarda en el servidor ---------- */
+// por sección: de dónde sale lo original, si tiene niveles, y cómo se identifica cada ítem para ocultarlo (id o texto)
+const CSECS = {
+  'coach.cartas':  {nom:'Coaching · Cartas', niv: () => (window.COACH||{}).niveles||[], base: n => ((window.COACH||{}).cartas||[]).filter(c => c.n === n).map(c => ({k:c.id, t:c.t})), ph:'Ej: ¿Qué te gustaría que hagamos este mes?'},
+  'coach.citas':   {nom:'Coaching · Citas', niv: () => [], base: () => ((window.COACH||{}).citas||[]).map(c => ({k:c.id, t:c.t, e:c.e, x:(c.l==='casa'?'🏠':'🌳')+' '+(c.c==='gratis'?'gratis':'con plata')})), ph:'Ej: Picnic en el parque', cita:true},
+  'int.acciones':  {nom:'Intimidad · Acciones de dados', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).acciones||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Un beso de 20 segundos'},
+  'int.verdades':  {nom:'Intimidad · Verdades', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).verdades||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: ¿Qué es lo que más te gusta de mí?'},
+  'int.retos':     {nom:'Intimidad · Retos', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).retos||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Bailar una canción lenta'},
+  'int.semanales': {nom:'Intimidad · Retos semanales', niv: () => [], base: () => ((window.INTIM||{}).semanales||[]).map(t => ({k:t, t})), ph:'Ej: Una noche sin celulares'},
+  'int.deseos':    {nom:'Intimidad · Deseos', niv: () => [], base: () => ((window.INTIM||{}).deseos||[]).map(d => ({k:d.id, t:d.t})), ph:'Ej: Una noche de hotel'},
+  'int.cupones':   {nom:'Intimidad · Cupones', niv: () => [], base: () => ((window.INTIM||{}).cupones||[]).map(c => ({k:c.t, t:c.t, e:c.e})), ph:'Ej: Vale por un día de mimos', emoji:true}
+};
+let CONT = null, CSEC = 'coach.cartas', CNIV = '';
+async function verContenido(){
+  if (!CONT) { try { const r = await api('contenido'); CONT = {agregados: r.agregados || {}, ocultos: r.ocultos || {}}; } catch(e){ $('cLista').innerHTML = `<div class="err">${esc(e.message)}</div>`; return; } }
+  const S = CSECS[CSEC], nv = S.niv(); if (nv.length && !nv.some(n => n.id === CNIV)) CNIV = nv[0].id; if (!nv.length) CNIV = '';
+  $('cSec').innerHTML = Object.entries(CSECS).map(([k, x]) => `<button class="chip ${k === CSEC ? 'on' : ''}" onclick="CSEC='${k}';verContenido()">${x.nom}</button>`).join('');
+  $('cNiv').innerHTML = nv.map(n => `<button class="chip ${n.id === CNIV ? 'on' : ''}" onclick="CNIV='${n.id}';verContenido()">${n.emoji || ''} ${esc(n.nombre)}</button>`).join('');
+  $('cNiv').hidden = !nv.length;
+  $('cForm').innerHTML = `<label class="campo">Agregar nuevo${CNIV ? ' (' + esc((nv.find(n => n.id === CNIV) || {}).nombre || '') + ')' : ''}<textarea id="cTxt" maxlength="200" style="min-height:70px" placeholder="${esc(S.ph)}"></textarea></label>
+    ${S.cita ? `<div class="dos-c"><label class="campo">Dónde<select id="cL" class="campo-s"><option value="casa">🏠 En casa</option><option value="afuera">🌳 Afuera</option></select></label>
+      <label class="campo">Costo<select id="cC" class="campo-s"><option value="gratis">🆓 Gratis</option><option value="plata">💸 Con plata</option></select></label></div>` : ''}
+    ${S.cita || S.emoji ? `<label class="campo">Emoji<input id="cE" maxlength="4" placeholder="💞" style="width:90px"></label>` : ''}
+    <button class="btn rosa" onclick="agregarCont()">+ Agregar</button>`;
+  const oc = new Set(CONT.ocultos[CSEC] || []);
+  const add = (CONT.agregados[CSEC] || []).filter(x => !CNIV || x.n === CNIV);
+  const base = S.base(CNIV);
+  const vis = base.filter(b => !oc.has(b.k)).length + add.filter(a => !oc.has(a.id)).length;
+  $('cCuenta').textContent = `${vis} visibles · ${base.length} originales · ${add.length} agregados${oc.size ? ' · ' + [...oc].filter(k => base.some(b => b.k === k) || add.some(a => a.id === k)).length + ' ocultos' : ''}`;
+  const fila = (t, e, x, tag, btn) => `<div class="msg"><div class="e">${esc(e || '•')}</div><div class="tx"><b style="font-weight:700">${esc(t)}</b><small>${tag}${x ? ' · ' + esc(x) : ''}</small></div>${btn}</div>`;
+  $('cLista').innerHTML = (add.map(a => fila(a.t, a.e || '✨', a.l ? (a.l === 'casa' ? '🏠' : '🌳') + ' ' + (a.c === 'gratis' ? 'gratis' : 'con plata') : '', oc.has(a.id) ? '🙈 agregado, oculto' : '✨ agregado',
+      `<div style="display:flex;flex-direction:column;gap:4px"><button class="mini" onclick="ocultarCont('${a.id}')">${oc.has(a.id) ? 'Mostrar' : 'Ocultar'}</button><button class="mini" style="color:#b91c1c" onclick="borrarCont('${a.id}')">Borrar</button></div>`)).join('')
+    + base.map((b, i) => fila(b.t, b.e || (oc.has(b.k) ? '🙈' : '•'), b.x || '', oc.has(b.k) ? '🙈 original, oculto' : 'original',
+      `<button class="mini" onclick="ocultarCont(${JSON.stringify(b.k).replace(/"/g, '&quot;')})">${oc.has(b.k) ? 'Mostrar' : 'Ocultar'}</button>`)).join(''))
+    || '<div class="vacio">No hay contenido</div>';
+}
+async function guardarCont(msg){ try { await api('admin_contenido', {data: CONT}); if (msg) toast(msg); } catch(e){ toast(e.message); } verContenido(); }
+function agregarCont(){
+  const t = $('cTxt').value.trim(); if (!t) { $('cTxt').focus(); return; }
+  const S = CSECS[CSEC], it = {id: 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), t};
+  if (CNIV) it.n = CNIV;
+  if (S.cita) { it.l = $('cL').value; it.c = $('cC').value; it.e = $('cE').value.trim() || '💞'; }
+  if (S.emoji) it.e = $('cE').value.trim() || '🎟️';
+  (CONT.agregados[CSEC] = CONT.agregados[CSEC] || []).unshift(it);
+  guardarCont('Agregado ✨');
+}
+function ocultarCont(k){ const l = new Set(CONT.ocultos[CSEC] || []); l.has(k) ? l.delete(k) : l.add(k); CONT.ocultos[CSEC] = [...l]; guardarCont(l.has(k) ? 'Oculto 🙈' : 'Visible de nuevo'); }
+function borrarCont(id){
+  $('dTxt').innerHTML = '¿Borrar este contenido agregado?'; $('dOk').className = 'btn sec';
+  $('dOk').onclick = () => { dlg.close(); CONT.agregados[CSEC] = (CONT.agregados[CSEC] || []).filter(x => x.id !== id); CONT.ocultos[CSEC] = (CONT.ocultos[CSEC] || []).filter(x => x !== id); guardarCont('Borrado'); };
+  dlg.showModal();
 }
 const SUBT = {}, EMOC = {};
 function subTab(id, k){

@@ -138,7 +138,7 @@
 
 <script>
 /* ===== Intimidad (+18): dados de a dos (cada uno en su celu), verdad o reto, retos, lista de deseos con coincidencias privadas y cupones ===== */
-const D=window.INTIM;
+const BASE=JSON.parse(JSON.stringify(window.INTIM));let D=JSON.parse(JSON.stringify(BASE));
 const rd=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}};
 const wr=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -154,6 +154,17 @@ const azar=a=>a[Math.floor(Math.random()*a.length)];
 const DEL=()=>firebase.firestore.FieldValue.delete();
 function semana(d=new Date()){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);
   const y=t.getUTCFullYear(),w=Math.ceil(((t-Date.UTC(y,0,1))/864e5+1)/7);return y+'-'+p2(w);}
+// Bolsa: no repite nada hasta haber mostrado todo (se guarda en este celu); al terminar vuelve a empezar sin repetir el último
+function bolsa(key,ids){if(!ids.length)return null;let u=rd('bag_'+key,[]).filter(x=>ids.includes(x)),libres=ids.filter(x=>!u.includes(x));
+  if(!libres.length){const ult=u[u.length-1];u=ult!=null?[ult]:[];libres=ids.filter(x=>x!==ult);if(!libres.length)libres=ids;}
+  const id=azar(libres);u.push(id);wr('bag_'+key,u);return id;}
+// Suma lo agregado desde el panel y saca lo oculto (en las listas de texto se oculta por el texto)
+function aplicarContenido(C){const A=(C&&C.agregados)||{},O=(C&&C.ocultos)||{},fuera=k=>new Set(O[k]||[]);
+  ['acciones','verdades','retos'].forEach(k=>{const o=fuera('int.'+k),add=A['int.'+k]||[];
+    D[k]={};D.niveles.forEach(n=>{D[k][n.id]=(BASE[k][n.id]||[]).filter(t=>!o.has(t)).concat(add.filter(x=>x&&x.n===n.id&&x.t&&!o.has(x.id)).map(x=>x.t));});});
+  const os=fuera('int.semanales');D.semanales=BASE.semanales.filter(t=>!os.has(t)).concat((A['int.semanales']||[]).filter(x=>x&&x.t&&!os.has(x.id)).map(x=>x.t));
+  const od=fuera('int.deseos');D.deseos=BASE.deseos.filter(x=>!od.has(x.id)).concat((A['int.deseos']||[]).filter(x=>x&&x.t&&!od.has(x.id)));
+  const ou=fuera('int.cupones');D.cupones=BASE.cupones.filter(x=>!ou.has(x.t)).concat((A['int.cupones']||[]).filter(x=>x&&x.t&&!ou.has(x.id)).map(x=>({e:x.e||'🎟️',t:x.t})));}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2400);}
 function cerrar(id){$(id).classList.remove('show');}
 
@@ -197,7 +208,10 @@ const chipsNivel=()=>`<div class="chips">${D.niveles.map(n=>`<button class="${n.
 const PUNTOS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
 const caraDado=(v,cl='')=>v?`<div class="dado ${cl}">${Array.from({length:9},(_,i)=>`<i class="${PUNTOS[v].includes(i)?'p':''}"></i>`).join('')}</div>`:`<div class="dado vacio ${cl}">?</div>`;
 const val=s=>DADO[s]&&DADO[s].r===DADO.ronda?DADO[s].v:0;
-function accionDe(r,n){const l=D.acciones[n]||D.acciones.suave;return l[((r*7919)%l.length+l.length)%l.length];}
+function accionDe(r,n){if(DADO.acc&&DADO.ronda===r)return DADO.acc;const l=D.acciones[n]||D.acciones.suave;return l[((r*7919)%l.length+l.length)%l.length];}
+function elegirAccion(n){const l=D.acciones[n]||[],us=((DADO.usadas||{})[n]||[]).filter(t=>l.includes(t));let libres=l.filter(t=>!us.includes(t)),nuevas=us.slice();
+  if(!libres.length){const ult=us[us.length-1];nuevas=ult?[ult]:[];libres=l.filter(t=>t!==ult);if(!libres.length)libres=l;}
+  const t=azar(libres);nuevas.push(t);return {acc:t,usadas:Object.assign({},DADO.usadas||{},{[n]:nuevas})};}
 function rDados(){
   const yS=yo(),oS=otro(),mv=val(yS),ov=val(oS),ambos=mv&&ov,n=D.niveles.find(x=>x.id===(DADO.nivel||nivel))||D.niveles[0];
   const gana=ambos&&mv!==ov?(mv>ov?yS:oS):null;
@@ -222,6 +236,7 @@ function tirar(){
   const t=setInterval(()=>{els.forEach(e=>e.innerHTML=caraDado(1+Math.floor(Math.random()*6),'rueda'));if(++k>8){clearInterval(t);fin();}},80);
   function fin(){
     const r=nueva?(DADO.ronda||0)+1:DADO.ronda,ahora=Date.now(),d={ronda:r,nivel:nueva?nivel:(DADO.nivel||nivel)};
+    if(nueva)Object.assign(d,elegirAccion(d.nivel));
     d[yS]={v:v1,t:ahora,r};
     if(unCelu)d[oS]={v:v2,t:ahora,r};else if(nueva)d[oS]=null;
     DADO=Object.assign({},DADO,d);wr('int_dado_v1',DADO);
@@ -241,16 +256,16 @@ function rVR(){
       <button class="btn ghost" onclick="sacarVR(vr.k)"><i class="ti ti-refresh"></i> Otra ${vr.k==='v'?'verdad':'reto'}</button>`
     :'<div class="card vacio">Elijan verdad o reto 😏</div>'}`;
 }
-function sacarVR(k){const l=(k==='v'?D.verdades:D.retos)[nivel].filter(t=>!vr||t!==vr.t);vr={k,t:azar(l)};snd('tap');render();}
+function sacarVR(k){vr={k,t:bolsa((k==='v'?'ver_':'ret_')+nivel,(k==='v'?D.verdades:D.retos)[nivel])};snd('tap');render();}
 
 /* ---------- Retos ---------- */
 function rRetos(){
-  const sem=semana(),w=parseInt(sem.slice(5)),rs=D.semanales[(w+parseInt(sem))%D.semanales.length],hecho=RETOS[sem];
+  const sem=semana(),w=parseInt(sem.slice(5)),rs=D.semanales[(w-1)%D.semanales.length]||'',hecho=RETOS[sem];
   $('sec').innerHTML=`<div class="card" style="text-align:center"><h2 style="justify-content:center"><i class="ti ti-calendar-week"></i> Reto de la semana</h2>
       <p style="font-size:1.25rem;font-weight:900;margin:8px 0 12px">${esc(rs)}</p>
       <button class="btn ${hecho?'ghost':''}" onclick="retoHecho()">${hecho?'✅ ¡Cumplido! (tocá para desmarcar)':'Marcar como cumplido'}</button>
       <p class="nota" style="margin-top:8px">Es el mismo para los dos y cambia cada lunes.</p></div>`
-    +chipsNivel()+`<button class="btn" onclick="retoAzar=azar(D.retos[nivel].filter(t=>t!==retoAzar));snd('tap');render()"><i class="ti ti-flame"></i> Reto al azar</button>
+    +chipsNivel()+`<button class="btn" onclick="retoAzar=bolsa('ret_'+nivel,D.retos[nivel]);snd('tap');render()"><i class="ti ti-flame"></i> Reto al azar</button>
     ${retoAzar?`<div class="vr"><small>⚡ Reto · ${D.niveles.find(x=>x.id===nivel).nombre}</small><p>${esc(retoAzar)}</p></div>`:''}`;
 }
 function retoHecho(){const sem=semana(),v=!RETOS[sem];if(v)RETOS[sem]=true;else delete RETOS[sem];wr('int_retos_v1',RETOS);
@@ -333,6 +348,7 @@ const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))TAB=h;
 window.addEventListener('juntos',()=>{if(!ocupado())render();});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&TAB==='deseos'){DES=null;render();}});
 window.addEventListener('pagehide',()=>{window.jxSyncCada&&jxSyncCada();});
+window.jxContenido&&jxContenido(C=>{aplicarContenido(C);if(!ocupado())render();});
 render();initFb();
 </script>
 </body>
