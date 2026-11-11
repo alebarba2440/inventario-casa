@@ -26,11 +26,11 @@
   .ib{width:40px;height:40px;border:1.5px solid var(--borde);background:#fff;border-radius:5px 15px 5px 15px;display:grid;place-items:center;cursor:pointer;color:var(--tinta)}
   .ib svg{width:20px;height:20px}
   .ib.gira svg{animation:gira .8s linear infinite}@keyframes gira{to{transform:rotate(360deg)}}
-  .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:#fff;border:1.5px solid var(--borde);border-radius:8px 20px 8px 20px;padding:4px}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:#fff;border:1.5px solid var(--borde);border-radius:8px 20px 8px 20px;padding:4px}
   .tabs button{font:inherit;font-weight:800;font-size:.92rem;border:0;background:none;padding:10px 6px;border-radius:6px 16px 6px 16px;cursor:pointer;color:var(--gris);display:flex;align-items:center;justify-content:center;gap:6px}
   .tabs button.on{background:#111;color:#fff}
   .tabs svg{width:17px;height:17px}
-  @media (max-width:420px){.tabs button{font-size:.84rem;gap:4px;padding:10px 2px}.tabs svg{width:15px;height:15px}}
+  @media (max-width:560px){.tabs button{font-size:.8rem;gap:4px;padding:9px 2px;flex-direction:column}.tabs svg{width:17px;height:17px}}
   @media (max-width:480px){.persona{flex-wrap:wrap}.persona>.fila{width:100%;padding-left:48px}}
   h2{font-size:.8rem;margin:6px 2px 0;color:var(--gris);text-transform:uppercase;letter-spacing:.08em;font-weight:900}
   .card{background:#fff;border-radius:8px 22px 8px 22px;padding:16px;box-shadow:0 4px 16px rgba(0,0,0,.05)}
@@ -119,6 +119,19 @@
   dialog::backdrop{background:rgba(0,0,0,.4)}
   dialog p{margin:0 0 16px}
   dialog .fila .btn{flex:1}
+  /* Mensajes */
+  .campo{display:flex;flex-direction:column;gap:5px;font-size:.8rem;font-weight:800;color:var(--gris)}
+  .campo input,.campo textarea{font:inherit;font-size:1rem;font-weight:600;color:var(--tinta);padding:11px 12px;border:1.5px solid var(--borde);border-radius:5px 15px 5px 15px;outline:none;background:#fff;width:100%}
+  .campo textarea{min-height:120px;resize:vertical;line-height:1.45}
+  .campo input:focus,.campo textarea:focus{border-color:var(--rosa)}
+  .emojis{display:flex;gap:6px;flex-wrap:wrap}
+  .emojis button{font-size:1.3rem;width:42px;height:42px;border:1.5px solid var(--borde);background:#fff;border-radius:5px 14px 5px 14px;cursor:pointer}
+  .emojis button.on{border-color:var(--rosa);background:var(--rosaL)}
+  .msg{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--borde)}
+  .msg:first-child{border-top:0;padding-top:0}
+  .msg .e{width:40px;height:40px;flex-shrink:0;border-radius:5px 14px 5px 14px;background:var(--rosaL);display:grid;place-items:center;font-size:1.3rem}
+  .msg .tx p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#3f3f3a;font-size:.92rem}
+  .msg .tx b{white-space:normal}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:14px;font-weight:800;z-index:99;font-size:.92rem}
 </style>
 </head>
@@ -132,6 +145,7 @@
     <nav class="tabs" id="tabs" hidden>
       <button data-t="dash" class="on" onclick="pestana('dash')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Dashboard</button>
       <button data-t="ctas" onclick="pestana('ctas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.5"/><path d="M16.5 14.6c2.6.1 4.4 1.8 5 4.4"/></svg>Cuentas</button>
+      <button data-t="msgs" onclick="pestana('msgs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7l8.2 6 8.2-6"/></svg>Mensajes</button>
       <button data-t="conf" onclick="pestana('conf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Configuración</button>
     </nav>
   </header>
@@ -161,6 +175,19 @@
       <div class="info" id="cuenta"></div>
       <div class="acc" id="lista"></div>
       <div class="pag" id="pag"></div>
+    </section>
+    <!-- MENSAJES -->
+    <section id="p-msgs" hidden style="display:flex;flex-direction:column;gap:12px">
+      <h2>Nuevo mensaje para todos</h2>
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
+        <p style="margin:0;color:var(--gris);font-size:.9rem">Le llega a <b>todos los usuarios</b>: les aparece apenas abren la app y queda guardado en el ícono ✉️ del inicio, a la izquierda de Ajustes.</p>
+        <div class="campo">Ícono<div class="emojis" id="mEmojis"></div></div>
+        <label class="campo">Título<input id="mTit" maxlength="120" placeholder="Ej: ¡Novedades en JuntOS!"></label>
+        <label class="campo">Mensaje<textarea id="mTxt" maxlength="2000" placeholder="Escribí el mensaje…"></textarea></label>
+        <button class="btn rosa" onclick="mandarMensaje()">📣 Mandar a todos</button>
+      </div>
+      <h2>Mensajes enviados</h2>
+      <div class="card" id="mLista"><div class="vacio">Cargando…</div></div>
     </section>
     <!-- CONFIGURACIÓN -->
     <section id="p-conf" hidden style="display:flex;flex-direction:column;gap:12px">
@@ -218,6 +245,7 @@ async function inicio(){
     if (!yo.usuario.admin) { $('saMail').textContent = yo.usuario.email; ver('vSinAcceso'); return; }
     YO = yo.usuario; $('yoMail').textContent = YO.email;
     await cargar();
+    if (!$('p-msgs').hidden) cargarMensajes();
   } catch(e){ $('err').textContent = e.message; }
 }
 async function cargar(aviso){
@@ -234,7 +262,8 @@ async function cargar(aviso){
 }
 function pestana(t){
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
-  ['dash','ctas','conf'].forEach(x => $('p-' + x).hidden = x !== t);
+  ['dash','ctas','msgs','conf'].forEach(x => $('p-' + x).hidden = x !== t);
+  if (t === 'msgs' && YO) cargarMensajes(); else if (t === 'msgs') pintarEmojis();
   try { sessionStorage.setItem('adm_tab', t); } catch(e){}
   scrollTo({top:0});
 }
@@ -376,6 +405,37 @@ function borrarUsuario(email){
     async () => { await api('admin_usuario_borrar', {email}); toast('Usuario borrado'); });
 }
 function copiar(t){ navigator.clipboard?.writeText(t).then(() => toast('Mail copiado'), () => {}); }
+/* ---------- Mensajes globales ---------- */
+const EMOJIS = ['📣','🎉','✨','💞','🛠️','⚠️','🎁','💡'];
+let EMO = EMOJIS[0];
+function pintarEmojis(){ $('mEmojis').innerHTML = EMOJIS.map(e => `<button type="button" class="${e === EMO ? 'on' : ''}" onclick="EMO='${e}';pintarEmojis()">${e}</button>`).join(''); }
+async function cargarMensajes(){
+  pintarEmojis();
+  try {
+    const r = await api('admin_mensajes');
+    $('mLista').innerHTML = r.mensajes.length ? r.mensajes.map(m => `<div class="msg"><div class="e">${esc(m.emoji || '📣')}</div>
+      <div class="tx"><b>${esc(m.titulo)}</b><small>${fecha(m.creado, true)}</small><p>${esc(m.texto)}</p></div>
+      <button class="mini" style="color:#b91c1c" onclick="borrarMensaje(${m.id}, this)">Borrar</button></div>`).join('')
+      : '<div class="vacio">Todavía no mandaste mensajes</div>';
+  } catch(e){ $('mLista').innerHTML = `<div class="err">${esc(e.message)}</div>`; }
+}
+function mandarMensaje(){
+  const titulo = $('mTit').value.trim(), texto = $('mTxt').value.trim();
+  if (!titulo) { toast('Poné un título'); $('mTit').focus(); return; }
+  if (!texto) { toast('Escribí el mensaje'); $('mTxt').focus(); return; }
+  $('dTxt').innerHTML = `¿Mandar este mensaje a <b>todos los usuarios</b>?<br><br>${esc(EMO)} <b>${esc(titulo)}</b><br><small style="white-space:pre-wrap">${esc(texto.length > 160 ? texto.slice(0, 160) + '…' : texto)}</small>`;
+  $('dOk').className = 'btn rosa';
+  $('dOk').onclick = async () => { dlg.close();
+    try { await api('admin_mensaje', {titulo, texto, emoji: EMO}); $('mTit').value = $('mTxt').value = ''; toast('Mensaje enviado 📣'); cargarMensajes(); }
+    catch(e){ toast(e.message); } };
+  dlg.showModal();
+}
+function borrarMensaje(id){
+  $('dTxt').innerHTML = '¿Borrar este mensaje?<br><small>Deja de aparecerle a todos.</small>';
+  $('dOk').className = 'btn sec';
+  $('dOk').onclick = async () => { dlg.close(); try { await api('admin_mensaje_borrar', {id}); toast('Mensaje borrado'); cargarMensajes(); } catch(e){ toast(e.message); } };
+  dlg.showModal();
+}
 function confirmar(html, clase, fn){ $('dTxt').innerHTML = html; $('dOk').className = 'btn' + (clase ? ' ' + clase : ''); $('dOk').onclick = async () => { dlg.close(); try { await fn(); await cargar(); } catch(e){ $('err').textContent = e.message; } }; dlg.showModal(); }
 function dias(id, n){
   const p = D.parejas.find(x => x.id === id);

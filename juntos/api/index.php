@@ -129,6 +129,11 @@ function docsDesde(int $pid, int $desde): array {
   return [$out, $max];
 }
 
+// Mensajes globales (los más nuevos primero)
+function mensajes(int $max = 30): array {
+  $q = db()->query('SELECT id, titulo, texto, emoji, creado FROM mensajes ORDER BY id DESC LIMIT ' . max(1, min(200, $max)));
+  return array_map(fn($m) => ['id' => (int)$m['id'], 'titulo' => $m['titulo'], 'texto' => $m['texto'], 'emoji' => $m['emoji'], 'creado' => iso($m['creado'])], $q->fetchAll());
+}
 function codigoNuevo(): string {
   $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   do {
@@ -209,7 +214,36 @@ try {
       $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$u['id']]);
       $e['pareja_id'] = (int)$u['pareja_id']; $e['usuario_id'] = (int)$u['id'];
       $e['docs'] = $docs; $e['ver'] = $ver; $e['personal'] = json_decode($q->fetchColumn() ?: '{}', true) ?: new stdClass;
+      $e['mensajes'] = mensajes(); $e['msg_visto'] = (int)($u['msg_visto'] ?? 0);
       responder($e);
+
+    case 'GET mensajes':
+      $u = requerirUsuario();
+      responder(['mensajes' => mensajes(), 'msg_visto' => (int)($u['msg_visto'] ?? 0)]);
+
+    case 'POST mensaje_visto':
+      $u = requerirUsuario();
+      db()->prepare('UPDATE usuarios SET msg_visto = GREATEST(msg_visto, ?) WHERE id = ?')->execute([max(0, (int)(entrada()['id'] ?? 0)), $u['id']]);
+      responder(['ok' => true]);
+
+    case 'GET admin_mensajes':
+      requerirAdmin();
+      responder(['mensajes' => mensajes(100)]);
+
+    case 'POST admin_mensaje':
+      requerirAdmin();
+      $in = entrada();
+      $titulo = trim((string)($in['titulo'] ?? '')); $texto = trim(str_replace("\r", '', (string)($in['texto'] ?? ''))); $emoji = trim((string)($in['emoji'] ?? ''));
+      if ($titulo === '' || mb_strlen($titulo) > 120) error_('Poné un título (hasta 120 letras)');
+      if ($texto === '' || mb_strlen($texto) > 2000) error_('Escribí el mensaje (hasta 2000 letras)');
+      if (mb_strlen($emoji) > 8) $emoji = mb_substr($emoji, 0, 8);
+      db()->prepare('INSERT INTO mensajes (titulo, texto, emoji, creado) VALUES (?,?,?,?)')->execute([$titulo, $texto, $emoji, ahora()]);
+      responder(['ok' => true, 'id' => (int)db()->lastInsertId()]);
+
+    case 'POST admin_mensaje_borrar':
+      requerirAdmin();
+      db()->prepare('DELETE FROM mensajes WHERE id = ?')->execute([(int)(entrada()['id'] ?? 0)]);
+      responder(['ok' => true]);
 
     case 'GET cambios':
       $u = requerirUsuario(); $p = parejaActiva($u);

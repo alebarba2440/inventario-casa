@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 4;
+const VERSION_ESQUEMA = 5;
 
 function config(): array {
   static $c = null;
@@ -109,6 +109,18 @@ function esquema(PDO $db): void {
       INDEX (pareja_id),
       FOREIGN KEY (pareja_id) REFERENCES parejas(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 5) {
+    // Mensajes globales del panel: le llegan a todos al abrir la app. Cada usuario guarda hasta cuál ya vio.
+    $db->exec("CREATE TABLE IF NOT EXISTS mensajes (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      titulo VARCHAR(120) NOT NULL,
+      texto TEXT NOT NULL,
+      emoji VARCHAR(16) NOT NULL DEFAULT '',
+      creado DATETIME NOT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $c = $db->query("SHOW COLUMNS FROM usuarios LIKE 'msg_visto'")->fetch();
+    if (!$c) $db->exec("ALTER TABLE usuarios ADD COLUMN msg_visto INT NOT NULL DEFAULT 0");
   }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
 }

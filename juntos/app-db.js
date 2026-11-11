@@ -226,6 +226,7 @@
       publicarYo(yo); bandaSoloLectura();
       var recargar = personalDesdeServidor(b.personal || {}) || otraCuenta;
       if (recargar && puedeRecargar()) { location.reload(); return; }
+      recibirMensajes(b.mensajes, b.msg_visto);
       avisoPorVencer();
       marcarSincronizado(); miColor(); enviar();
     }).catch(function () { marcarSincronizado(); });   // sin conexión: sigo con lo guardado
@@ -469,8 +470,112 @@
     var d = +p.dias_restantes; if (!(d >= 1 && d <= 7)) return;
     try { if (sessionStorage.getItem('jx_aviso_prueba')) return; } catch (e) {}
     var intro = document.getElementById('intro');   // si está la animación de entrada, espero a que termine
-    var esperar = function () { if (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden') return setTimeout(esperar, 400); try { sessionStorage.setItem('jx_aviso_prueba', '1'); } catch (e) {} modalSuscripcion(d); };
+    var esperar = function () { if (document.getElementById('jxMsg') || mostrando || (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden')) return setTimeout(esperar, 400); try { sessionStorage.setItem('jx_aviso_prueba', '1'); } catch (e) {} modalSuscripcion(d); };
     setTimeout(esperar, 600);
+  }
+
+  /* ---------- Mensajes globales (se mandan desde el panel de admin) ----------
+     Al abrir la app sale el/los mensajes nuevos; en el inicio queda un ícono (a la izquierda de Ajustes) para volver a verlos. */
+  var K_MSG = 'juntos_msgs';
+  var MSG = rd(K_MSG, null) || { lista: [], visto: 0 };
+  function escH(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function msgsSinVer() { return (MSG.lista || []).filter(function (m) { return m.id > (MSG.visto || 0); }); }
+  function recibirMensajes(lista, vistoSrv) {
+    MSG = { lista: Array.isArray(lista) ? lista : [], visto: Math.max(+MSG.visto || 0, +vistoSrv || 0) };
+    wr(K_MSG, MSG); botonMensajes(); mostrarMensajesNuevos();
+  }
+  function marcarVistos() {
+    var max = 0; (MSG.lista || []).forEach(function (m) { if (m.id > max) max = m.id; });
+    if (max <= (MSG.visto || 0)) return;
+    MSG.visto = max; wr(K_MSG, MSG); botonMensajes();
+    pedir('mensaje_visto', { id: max }).catch(function () {});
+  }
+  function cssMensajes() {
+    if (document.getElementById('jxMsgCss')) return;
+    var st = document.createElement('style'); st.id = 'jxMsgCss';
+    st.textContent =
+      '#jxMsg{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
+      '#jxMsg.on{opacity:1}' +
+      '#jxMsg .c{position:relative;box-sizing:border-box;background:#fff;color:#1a1a1a;width:100%;max-width:400px;max-height:100%;display:flex;flex-direction:column;border-radius:10px 30px 10px 30px;padding:22px 0 14px;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
+      '#jxMsg.on .c{transform:none}' +
+      '#jxMsg .cab{padding:0 56px 10px 20px;font:900 .78rem Nunito,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#DB2777}' +
+      '#jxMsg .lst{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 20px;flex:1;min-height:0}' +
+      '#jxMsg .m{padding:14px 0;border-top:1px solid #eee}#jxMsg .m:first-child{border-top:0;padding-top:4px}' +
+      '#jxMsg .m .t{display:flex;align-items:flex-start;gap:10px}' +
+      '#jxMsg .m .e{flex-shrink:0;width:44px;height:44px;border-radius:6px 16px 6px 16px;background:#FCE7F3;display:grid;place-items:center;font-size:1.5rem}' +
+      '#jxMsg .m h3{margin:0;font-size:1.12rem;font-weight:900;line-height:1.25}' +
+      '#jxMsg .m small{display:block;color:#9a9a92;font-weight:700;font-size:.78rem;margin-top:2px}' +
+      '#jxMsg .m .nuevo{display:inline-block;background:#DB2777;color:#fff;font-size:.66rem;font-weight:900;padding:2px 7px;border-radius:3px 9px 3px 9px;margin-left:6px;vertical-align:middle;letter-spacing:.04em}' +
+      '#jxMsg .m p{margin:10px 0 0;color:#3f3f3a;font-size:.98rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}' +
+      '#jxMsg .ok{display:block;box-sizing:border-box;width:calc(100% - 40px);margin:12px 20px 0;border:0;border-radius:6px 20px 6px 20px;background:#DB2777;color:#fff;font:900 1rem Nunito,system-ui,sans-serif;padding:13px;cursor:pointer}' +
+      '#jxMsg .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;background:rgba(0,0,0,.06);color:#5f5f58;font:700 1.25rem/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;padding:0}' +
+      '#jxMsg .x:active,#jxMsg .ok:active{transform:scale(.95)}' +
+      '#jxMsg .vacio{color:#9a9a92;text-align:center;padding:20px 0;font-weight:700}' +
+      '#jxMsgBtn{width:44px;height:44px;border:none;background:none;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;padding:0;transition:transform .12s ease}' +
+      '#jxMsgBtn svg{width:28px;height:28px;display:block}#jxMsgBtn:active{transform:scale(.88)}' +
+      '#jxMsgBtn .n{position:absolute;top:3px;right:2px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#DB2777;color:#fff;font:900 11px/18px Nunito,system-ui,sans-serif;text-align:center;border:2px solid var(--surface,#fff)}' +
+      '@media (prefers-color-scheme:dark){#jxMsg .c{background:#1c1c1e;color:#f5f5f5}#jxMsg .m p{color:#d0d0d0}#jxMsg .m{border-color:#333}#jxMsg .m .e{background:rgba(219,39,119,.2)}#jxMsg .x{background:rgba(255,255,255,.1);color:#ccc}}';
+    document.head.appendChild(st);
+  }
+  function fechaMsg(iso) { try { return new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } }
+  function modalMensajes(lista, titulo) {
+    if (document.getElementById('jxMsg') || !document.body) return;
+    cssMensajes();
+    var visto = MSG.visto || 0;
+    var m = document.createElement('div'); m.id = 'jxMsg'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    var items = lista.length ? lista.map(function (x) {
+      return '<div class="m"><div class="t"><div class="e">' + escH(x.emoji || '📣') + '</div><div><h3>' + escH(x.titulo) +
+        (x.id > visto ? '<span class="nuevo">NUEVO</span>' : '') + '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div></div><p>' + escH(x.texto) + '</p></div>';
+    }).join('') : '<div class="vacio">Todavía no hay mensajes</div>';
+    m.innerHTML = '<div class="c"><button type="button" class="x" aria-label="Cerrar" style="border-radius:50% !important">✕</button>' +
+      '<div class="cab">' + escH(titulo) + '</div><div class="lst">' + items + '</div><button type="button" class="ok">Entendido</button></div>';
+    function cerrar() { m.classList.remove('on'); setTimeout(function () { m.remove(); }, 200); }
+    m.addEventListener('click', function (e) { if (e.target === m || e.target.closest('.x') || e.target.closest('.ok')) cerrar(); });
+    document.body.appendChild(m);
+    requestAnimationFrame(function () { m.classList.add('on'); });
+    marcarVistos();
+  }
+  window.jxMensajes = function () { modalMensajes(MSG.lista || [], 'Mensajes de JuntOS'); };
+  var mostrando = false;
+  function mostrarMensajesNuevos() {
+    if (mostrando || !msgsSinVer().length || /personajes|sonidos/i.test(paginaActual())) return;
+    mostrando = true;
+    var esperar = function () {
+      var intro = document.getElementById('intro');
+      var ocupado = !document.body || document.getElementById('jxSus') ||
+        (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden');
+      if (ocupado) return setTimeout(esperar, 400);
+      mostrando = false;
+      var nuevos = msgsSinVer(); if (!nuevos.length) return;
+      modalMensajes(nuevos, nuevos.length > 1 ? 'Mensajes nuevos' : 'Mensaje nuevo');
+    };
+    setTimeout(esperar, 500);
+  }
+  // Ícono en el inicio, a la izquierda de Ajustes (solo si hay mensajes)
+  function botonMensajes() {
+    if (!document.body) return;
+    var gear = document.querySelector('.botones .gear'); if (!gear) return;
+    var b = document.getElementById('jxMsgBtn'), hay = (MSG.lista || []).length > 0;
+    if (!hay) { if (b) b.remove(); return; }
+    cssMensajes();
+    if (!b) {
+      b = document.createElement('button'); b.id = 'jxMsgBtn'; b.type = 'button'; b.setAttribute('aria-label', 'Mensajes');
+      b.style.setProperty('border-radius', '10px', 'important');
+      b.onclick = window.jxMensajes;
+      gear.parentNode.insertBefore(b, gear);
+    }
+    var n = msgsSinVer().length;
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7l8.2 6 8.2-6"/></svg>' +
+      (n ? '<span class="n">' + (n > 9 ? '9+' : n) + '</span>' : '');
+  }
+  document.addEventListener('DOMContentLoaded', botonMensajes);
+  // Si la app vuelve del segundo plano, me fijo si llegó algún mensaje nuevo
+  var ultMsgCheck = Date.now();
+  function revisarMensajes() {
+    if (!servidorOk || Date.now() - ultMsgCheck < 60000) return;
+    ultMsgCheck = Date.now();
+    pedir('mensajes').then(function (r) { if (r && r.mensajes) recibirMensajes(r.mensajes, r.msg_visto); }).catch(function () {});
   }
 
   function bandaSoloLectura() {
@@ -490,6 +595,6 @@
   /* ---------- Arranque y actualización periódica ---------- */
   boot();
   setInterval(cambios, 5000);
-  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { cambios(); enviar(); } });
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { cambios(); enviar(); revisarMensajes(); } });
   window.addEventListener('online', function () { cambios(); enviar(); subirPersonal(); });
 })();
