@@ -39,6 +39,10 @@
 
   .nada{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:38px 18px}
   .nada .big{font-size:4.2rem;line-height:1}
+  .nada .trio{display:flex;justify-content:center;margin-bottom:4px}
+  .nada .trio img{width:78px;height:78px;border-radius:50%;object-fit:cover;background:var(--accent-light,#eee);border:3px solid var(--surface,#fff);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+  .nada .trio img+img{margin-left:-18px}
+  .nada .trio img:nth-child(2){width:92px;height:92px;position:relative;z-index:1;margin-top:-6px}
   .nada b{font-size:1.2rem;font-weight:900}
   .nada p{color:var(--text2);font-weight:600;max-width:320px}
   .nada .btn{max-width:280px;margin-top:6px}
@@ -230,10 +234,10 @@ const SECS=[
   ['fechas','📅','Fechas importantes','Cumpleaños, controles, turnos y colegio']];
 const BEBES=Array.from({length:28},(_,i)=>'bebe'+String(i+1).padStart(2,'0'));
 const avURL=a=>'img/avatares/'+a+'.webp?v=3';
-function avatar(c){return c.avatar?`<img src="${avURL(c.avatar)}" alt="">`:c.foto?`<img src="${URLA(c.foto)}" alt="">`:esc(c.emoji||'🧒');}
+function avatar(c){return c.avatar?`<img src="${avURL(c.avatar)}" alt="">`:c.foto?`<img src="${URLA(c.foto)}" alt="">`:`<img src="${avURL(BEBES[0])}" alt="">`;}
 function render(){
   const hs=Object.values(D.hijos).sort((a,b)=>(a.creado||0)-(b.creado||0));
-  if(!hs.length){$('main').innerHTML=`<section class="card nada"><div class="big">🧒</div><b>Todavía no hay hijos cargados</b>
+  if(!hs.length){$('main').innerHTML=`<section class="card nada"><div class="trio" aria-hidden="true"><img src="${avURL('bebe04')}" alt=""><img src="${avURL('bebe02')}" alt=""><img src="${avURL('bebe06')}" alt=""></div><b>Todavía no hay hijos cargados</b>
     <p>Guardá en un solo lugar sus datos, salud, vacunas, crecimiento, documentos y fechas importantes. Te avisamos de las próximas vacunas y controles.</p>
     <button class="btn" onclick="formPersonal()"><i class="ti ti-plus"></i> Agregar hijo/a</button></section>`;return;}
   if(abierto&&!D.hijos[abierto])abierto=null;
@@ -320,7 +324,7 @@ function campo([k,l,t,x],v){const val=v[k]??'',id='f_'+k;
   if(t==='area')return `<label class="lbl">${l}<textarea class="in" id="${id}" maxlength="800">${esc(val)}</textarea></label>`;
   if(t==='sel')return `<label class="lbl">${l}<select class="in" id="${id}">${x.map(o=>{const[a,b]=Array.isArray(o)?o:[o,o];return `<option value="${esc(a)}"${a===val?' selected':''}>${esc(b)}</option>`}).join('')}</select></label>`;
   if(t==='foto'||t==='archivo'){FORM.archivos[k]=val||'';const esPdf=v[k+'Mime']==='application/pdf';
-    return `<div class="lbl">${l}<div class="foto-in"><span class="av" id="${id}_pv">${val?(esPdf?'📄':`<img src="${URLA(val)}" alt="">`):(t==='foto'?esc(v.emoji||'🧒'):'📎')}</span>
+    return `<div class="lbl">${l}<div class="foto-in"><span class="av" id="${id}_pv">${val?(esPdf?'📄':`<img src="${URLA(val)}" alt="">`):(t==='foto'?`<img src="${avURL(v.avatar||BEBES[0])}" alt="">`:'📎')}</span>
       <span class="tx" id="${id}_tx">${val?'Archivo cargado':'Sacale una foto o elegila de la galería'}</span>
       <button type="button" class="mini" onclick="elegirArchivo('${k}','${t}')">${val?'Cambiar':'Subir'}</button>${val?`<button type="button" class="mini gris" onclick="quitarArchivo('${k}','${t}')">Quitar</button>`:''}</div></div>`;}
   const tp={date:'date',time:'time',tel:'tel',num:'text'}[t]||'text',im=t==='num'?' inputmode="decimal"':t==='tel'?' inputmode="tel"':'';
@@ -344,7 +348,7 @@ $('fileIn').addEventListener('change',async e=>{const f=e.target.files&&e.target
     $('f_'+k+'_pv').innerHTML=r.tipo==='application/pdf'?'📄':`<img src="${URLA(r.id)}" alt="">`;tx.textContent='¡Listo! Archivo cargado';snd('agregar');}
   catch(err){tx.textContent='No se pudo subir: '+(err.message||err);}
   FORM&&(FORM.subiendo=false);});
-function quitarArchivo(k,t){if(!FORM)return;FORM.archivos[k]='';FORM.archivos[k+'Mime']='';$('f_'+k+'_pv').innerHTML=t==='foto'?'🧒':'📎';$('f_'+k+'_tx').textContent='Se borra al tocar Guardar';}
+function quitarArchivo(k,t){if(!FORM)return;FORM.archivos[k]='';FORM.archivos[k+'Mime']='';$('f_'+k+'_pv').innerHTML=t==='foto'?`<img src="${avURL(BEBES[0])}" alt="">`:'📎';$('f_'+k+'_tx').textContent='Se borra al tocar Guardar';}
 /* Fotos lo más livianas posible pero legibles: lado mayor 1280px, WebP (o JPEG si el celu no puede). Quedan en ~80-200 KB. */
 async function subir(file){
   let blob=await achicar(file,1280);

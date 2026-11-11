@@ -61,6 +61,7 @@
   .buscar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--gris2)}
   .buscar input{width:100%;font:inherit;font-size:1rem;padding:12px 14px 12px 42px;border:1.5px solid var(--borde);border-radius:6px 18px 6px 18px;outline:none;background:#fff}
   .buscar input:focus{border-color:var(--rosa)}
+  .buscar input::placeholder{color:#b8b8b0;opacity:1;font-weight:500}
   .filtros{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
   .filtros::-webkit-scrollbar{display:none}
   .chip{font:inherit;font-size:.84rem;font-weight:800;border:1.5px solid var(--borde);background:#fff;border-radius:4px 14px 4px 14px;padding:6px 12px;cursor:pointer;white-space:nowrap;color:var(--gris)}
@@ -169,7 +170,7 @@
     <section id="p-ctas" hidden style="display:flex;flex-direction:column;gap:10px">
       <div class="barra-b">
         <label class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-          <input id="q" type="search" placeholder="Buscar por mail o nombre" autocomplete="off" oninput="PAG=1;listar()"></label>
+          <input id="q" type="search" placeholder="Buscar" autocomplete="off" oninput="PAG=1;listar()"></label>
         <div class="filtros" id="filtros"></div>
       </div>
       <div class="info" id="cuenta"></div>
