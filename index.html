@@ -198,8 +198,9 @@
   .col.rota span.on{opacity:1}
   @media (prefers-reduced-motion:reduce){.col.rota span{transition:none}}
   /* Hijos y Mascotas: los avatares tienen aire alrededor; se agrandan para que la tarjeta no se vea vacía */
-  .col.n1 img,.col.rota img{transform:scale(1.28);transform-origin:50% 88%}
-  .col.n2 img,.col.n3 img,.col.n4 img{transform:scale(1.14);transform-origin:50% 80%}
+  .col img{object-position:50% 50% !important}
+  .col.n1 img,.col.rota img{transform:scale(1.28);transform-origin:50% 50%}
+  .col.n2 img,.col.n3 img,.col.n4 img{transform:scale(1.14);transform-origin:50% 50%}
   .col.n1,.col.rota{padding:2px 6px}.col.rota span{inset:2px 6px}
   .col span{overflow:visible}.col{overflow:hidden}
   .col b{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.45);border-radius:4px 12px 4px 12px;color:#fff;font:900 1.3rem 'Nunito',sans-serif}
