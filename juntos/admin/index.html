@@ -208,7 +208,7 @@
     </section>
     <!-- CONTENIDO (Coaching / Intimidad) -->
     <section id="p-cont" hidden style="display:flex;flex-direction:column;gap:12px">
-      <h2>Contenido de Coaching e Intimidad</h2>
+      <h2>Contenido de Nuestro vínculo y Modo travieso</h2>
       <div class="card" style="display:flex;flex-direction:column;gap:10px">
         <p style="margin:0;color:var(--gris);font-size:.9rem">Sumá cartas, retos o ideas nuevas, u ocultá las que no te gusten. Les llega a todos la próxima vez que abren la sección.</p>
         <div class="filtros" id="cSec"></div>
@@ -261,7 +261,7 @@ let D = null, YO = null, FILTRO = 'todas', PAG = 1, ABIERTOS = new Set();
 const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas', vence:'Por vencer', solos:'Esperando pareja', suelto:'Sin espacio'};
 const EST = {prueba:'Prueba', pago:'Paga', vencida:'Vencida', suelto:'Sin espacio'};
 const SECC = {juntos:'Ajustes', inv:'Inventario', categorias:'Inventario', 'ahorros/data':'Ahorros', 'ahorros/compartidos':'Gastos compartidos', 'ahorros/copito':'Vehículos', vacaciones:'Vacaciones', calendario:'Calendario',
-  mascotas:'Mascotas', mascota_reg:'Mascotas', hijos:'Hijos', hijo_vac:'Hijos', hijo_med:'Hijos', hijo_doc:'Hijos', hijo_fecha:'Hijos', coach:'Coaching', coach_gracias:'Coaching', int:'Intimidad', int_cupones:'Intimidad'};
+  mascotas:'Mascotas', mascota_reg:'Mascotas', hijos:'Hijos', hijo_vac:'Hijos', hijo_med:'Hijos', hijo_doc:'Hijos', hijo_fecha:'Hijos', coach:'Nuestro vínculo', coach_gracias:'Nuestro vínculo', int:'Modo travieso', int_cupones:'Modo travieso'};
 
 function ver(v){ ['vCargando','vIngresar','vSinAcceso','vPanel'].forEach(x => $(x).hidden = x !== v); $('bAct').hidden = $('tabs').hidden = v !== 'vPanel'; }
 function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -387,14 +387,14 @@ async function guardarPrecios(){
 /* ---------- Contenido de Coaching / Intimidad: lo agregado y lo oculto se guarda en el servidor ---------- */
 // por sección: de dónde sale lo original, si tiene niveles, y cómo se identifica cada ítem para ocultarlo (id o texto)
 const CSECS = {
-  'coach.cartas':  {nom:'Coaching · Cartas', niv: () => (window.COACH||{}).niveles||[], base: n => ((window.COACH||{}).cartas||[]).filter(c => c.n === n).map(c => ({k:c.id, t:c.t})), ph:'Ej: ¿Qué te gustaría que hagamos este mes?'},
-  'coach.citas':   {nom:'Coaching · Citas', niv: () => [], base: () => ((window.COACH||{}).citas||[]).map(c => ({k:c.id, t:c.t, e:c.e, x:(c.l==='casa'?'🏠':'🌳')+' '+(c.c==='gratis'?'gratis':'con plata')})), ph:'Ej: Picnic en el parque', cita:true},
-  'int.acciones':  {nom:'Intimidad · Acciones de dados', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).acciones||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Un beso de 20 segundos'},
-  'int.verdades':  {nom:'Intimidad · Verdades', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).verdades||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: ¿Qué es lo que más te gusta de mí?'},
-  'int.retos':     {nom:'Intimidad · Retos', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).retos||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Bailar una canción lenta'},
-  'int.semanales': {nom:'Intimidad · Retos semanales', niv: () => [], base: () => ((window.INTIM||{}).semanales||[]).map(t => ({k:t, t})), ph:'Ej: Una noche sin celulares'},
-  'int.deseos':    {nom:'Intimidad · Deseos', niv: () => [], base: () => ((window.INTIM||{}).deseos||[]).map(d => ({k:d.id, t:d.t})), ph:'Ej: Una noche de hotel'},
-  'int.cupones':   {nom:'Intimidad · Cupones', niv: () => [], base: () => ((window.INTIM||{}).cupones||[]).map(c => ({k:c.t, t:c.t, e:c.e})), ph:'Ej: Vale por un día de mimos', emoji:true}
+  'coach.cartas':  {nom:'Nuestro vínculo · Cartas', niv: () => (window.COACH||{}).niveles||[], base: n => ((window.COACH||{}).cartas||[]).filter(c => c.n === n).map(c => ({k:c.id, t:c.t})), ph:'Ej: ¿Qué te gustaría que hagamos este mes?'},
+  'coach.citas':   {nom:'Nuestro vínculo · Citas', niv: () => [], base: () => ((window.COACH||{}).citas||[]).map(c => ({k:c.id, t:c.t, e:c.e, x:(c.l==='casa'?'🏠':'🌳')+' '+(c.c==='gratis'?'gratis':'con plata')})), ph:'Ej: Picnic en el parque', cita:true},
+  'int.acciones':  {nom:'Modo travieso · Acciones de dados', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).acciones||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Un beso de 20 segundos'},
+  'int.verdades':  {nom:'Modo travieso · Verdades', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).verdades||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: ¿Qué es lo que más te gusta de mí?'},
+  'int.retos':     {nom:'Modo travieso · Retos', niv: () => (window.INTIM||{}).niveles||[], base: n => (((window.INTIM||{}).retos||{})[n]||[]).map(t => ({k:t, t})), ph:'Ej: Bailar una canción lenta'},
+  'int.semanales': {nom:'Modo travieso · Retos semanales', niv: () => [], base: () => ((window.INTIM||{}).semanales||[]).map(t => ({k:t, t})), ph:'Ej: Una noche sin celulares'},
+  'int.deseos':    {nom:'Modo travieso · Deseos', niv: () => [], base: () => ((window.INTIM||{}).deseos||[]).map(d => ({k:d.id, t:d.t})), ph:'Ej: Una noche de hotel'},
+  'int.cupones':   {nom:'Modo travieso · Cupones', niv: () => [], base: () => ((window.INTIM||{}).cupones||[]).map(c => ({k:c.t, t:c.t, e:c.e})), ph:'Ej: Vale por un día de mimos', emoji:true}
 };
 let CONT = null, CSEC = 'coach.cartas', CNIV = '';
 async function verContenido(){
