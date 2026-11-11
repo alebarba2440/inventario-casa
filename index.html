@@ -467,7 +467,7 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
 <script>
 const LS='cfg_v2';
 let cfg={};try{cfg=JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){}
-function saveCfg(){try{localStorage.setItem(LS,JSON.stringify(cfg))}catch(e){}}
+function saveCfg(){try{localStorage.setItem(LS,JSON.stringify(cfg))}catch(e){}if(window.barraDeColor)barraDeColor();}
 const R=document.documentElement;
 
 /* colores: [principal, oscuro, claro] — los mismos que tenía el Inventario */

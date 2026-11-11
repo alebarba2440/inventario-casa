@@ -11,7 +11,21 @@
     r.setAttribute('data-theme', c.theme === 'dark' ? 'dark' : 'light'); // sin modo automático
     if (c.fontSize) r.style.fontSize = (parseFloat(c.fontSize) * 100) + '%';
   } catch (e) {}
+  barraDeColor();
 })();
+
+/* Color de la barra de arriba (la ventana de la app instalada en la compu y la barra del celu):
+   el color principal elegido en la app; en modo oscuro, negro. Se llama de nuevo al cambiar color o modo. */
+function barraDeColor() {
+  try {
+    const c = JSON.parse(localStorage.getItem('cfg_v2') || '{}');
+    const col = c.theme === 'dark' ? '#111111' : (c.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#1D9E75');
+    let m = document.querySelector('meta[name="theme-color"]');
+    if (!m) { m = document.createElement('meta'); m.name = 'theme-color'; document.head.appendChild(m); }
+    m.content = col;
+  } catch (e) {}
+}
+window.barraDeColor = barraDeColor;
 
 /* Interruptores deslizantes: cualquier contenedor con la clase "desliz" recibe una pastilla de color
    que se desliza hasta el botón activo (clase on, active, sel-add o sel-rem). */
