@@ -17,7 +17,7 @@
   ],
   "icons": [
     {
-      "src": "app/img/icono-grande.png?v=10",
+      "src": "app/img/icono-grande.png?v=11",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
@@ -29,7 +29,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "app/img/icono.png?v=10",
+      "src": "app/img/icono.png?v=11",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
