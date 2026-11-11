@@ -663,11 +663,13 @@ function llenarPantalla(){
   h=Math.max(130,Math.min(h,ancho*(vis.length===1?1.1:1.9)));
   g.style.setProperty('--picH',Math.floor(h)+'px');
 }
+// Imagen de la lista de Accesos directos: Hijos y Mascotas usan un avatar en lugar del dibujo de la tarjeta
+const ICONO_ACC={hijos:'img/avatares/bebe02.webp?v=3',mascotas:'img/avatares/mascota01.webp?v=3'};
 function dibujarAccesos(){
   const A=accCfg();
   document.getElementById('accList').innerHTML=cards().map(a=>{const k=a.dataset.k,c=A[k]||{},on=c.on!==false,nom=c.nombre||defNombre(a);
     return `<div class="ad${on?'':' off'}" data-k="${k}">
-      <img src="${a.querySelector('img').getAttribute('src')}" alt="">
+      <img src="${ICONO_ACC[k]||a.querySelector('img').getAttribute('src')}" alt="">
       <span class="nm">${nom.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>
       <button class="lap" onclick="editarNombre('${k}')" aria-label="Cambiar nombre de ${defNombre(a)}"><i class="ti ti-pencil"></i></button>
       <button class="sw2" role="switch" aria-checked="${on}" aria-label="Mostrar ${defNombre(a)} en el inicio" onclick="toggleAcceso('${k}')"></button>
