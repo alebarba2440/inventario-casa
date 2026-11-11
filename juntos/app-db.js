@@ -52,6 +52,10 @@
     if (ca === cj) ca = (cj === DEF_COL.a) ? DEF_COL.j : DEF_COL.a;   // si eligieron el mismo color, el segundo usa otro que contraste
     el.style.setProperty('--juli', cj); el.style.setProperty('--juli-l', mezcla(cj, .16));
     el.style.setProperty('--ale', ca); el.style.setProperty('--ale-l', mezcla(ca, .16));
+    // Colores de "ella" y "él" (según lo que eligió cada uno al entrar): los usa el corazón de Coaching
+    var gn = perfil().generos || {}, gj = ms[0] && gn[ms[0].email], ga = ms[1] && gn[ms[1].email];
+    var ellaEsA = ga === 'f' && gj !== 'f' || (gj === 'm' && ga !== 'm');
+    el.style.setProperty('--ella', ellaEsA ? ca : cj); el.style.setProperty('--el', ellaEsA ? cj : ca);
     window.JUNTOS && (window.JUNTOS.colores = { j: cj, a: ca });
   }
   var servidorOk = false;

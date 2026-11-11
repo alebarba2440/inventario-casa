@@ -81,3 +81,14 @@ input[type="search"]::placeholder,#searchInput::placeholder{color:#b8b8b0;opacit
   .btn:hover:not(:disabled),a.btn:hover,.submit-btn:hover:not(:disabled),.add-btn:hover,a.add:hover,a.cta-b:hover{transform:translateY(-3px);box-shadow:0 10px 18px -6px rgba(0,0,0,.25)}
   .btn:active:not(:disabled),.submit-btn:active{transform:scale(.97)}
 }
+
+/* Corazón de Coaching (rompecabezas): las piezas rosas toman el color que eligió ella y las rojas el de él */
+.corazon{position:relative;display:block;width:100%;aspect-ratio:420/354}
+.corazon i{position:absolute;inset:0}
+.corazon .c-el{background:var(--el,#DC2626);-webkit-mask:url(img/corazon/el.png?v=1) center/contain no-repeat;mask:url(img/corazon/el.png?v=1) center/contain no-repeat}
+.corazon .c-ella{background:var(--ella,#F0A6CA);-webkit-mask:url(img/corazon/ella.png?v=1) center/contain no-repeat;mask:url(img/corazon/ella.png?v=1) center/contain no-repeat}
+.corazon .c-sombra{background:url(img/corazon/sombra.png?v=1) center/contain no-repeat}
+.corazon .c-brillo{background:url(img/corazon/brillo.png?v=1) center/contain no-repeat}
+.pic-cor{align-items:center !important;justify-content:center}
+.pic-cor .corazon{width:80%;filter:drop-shadow(0 6px 8px rgba(0,0,0,.18))}
+.ad-cor{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--surface2);display:grid;place-items:center;padding:3px;box-sizing:border-box}
