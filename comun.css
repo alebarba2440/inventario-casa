@@ -4,7 +4,10 @@
 .home-link{width:40px;height:40px;flex-shrink:0;color:var(--accent);background:none;border:none;
   display:flex;align-items:center;justify-content:center;text-decoration:none;border-radius:10px;
   transition:transform .12s ease,opacity .12s ease}
-.home-link svg{width:28px;height:28px;display:block}
+.home-link svg{display:none !important}
+/* la casita con corazón (img/casa.png) se pinta con el color elegido por el usuario */
+.home-link::before{content:"";display:block;width:30px;height:30px;background:currentColor;
+  -webkit-mask:url(img/casa.png?v=1) center/contain no-repeat;mask:url(img/casa.png?v=1) center/contain no-repeat}
 .home-link:active{transform:scale(.88);opacity:.8}
 .home-link:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .home-link.fixed{position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:8px;z-index:50}
@@ -36,10 +39,11 @@
 .desliz>button.on i,.desliz>button.sel-add i,.desliz>button.sel-rem i{color:#fff !important}
 
 /* Íconos de toda la app con un "latido" suave: se agrandan y se achican apenas */
-i.ti, .home-link svg, .gear svg { display:inline-block; animation: iconoLatido 2.4s ease-in-out infinite; }
+i.ti, .home-link::before, .gear svg { animation: iconoLatido 2.4s ease-in-out infinite; }
+i.ti, .gear svg { display:inline-block; }
 @keyframes iconoLatido { 0%,100% { scale:1; } 50% { scale:1.1; } }
 .camera-fab i.ti { animation:none; } /* el botón de cámara ya late entero */
-@media (prefers-reduced-motion: reduce) { i.ti, .home-link svg, .gear svg { animation:none; } }
+@media (prefers-reduced-motion: reduce) { i.ti, .home-link::before, .gear svg { animation:none; } }
 
 /* Celular: que no haga zoom al tocar un campo ni se pueda correr la pantalla para los costados */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation}
