@@ -295,7 +295,7 @@ function abrirForm(id){
   setHora(e?(e.hora||''):'');
   document.getElementById('fRep').value=e?(e.rep||'no'):'no';
   document.getElementById('fNotas').value=e?(e.notas||''):'';
-  F={};setOp('tipo',e?e.tipo||'evento':'evento');setOp('quien',e?e.quien||'ambos':(yo()||rd('cal_quien','ambos')));
+  F={};setOp('tipo',e?e.tipo||'evento':'evento');setOp('quien',e?e.quien||'ambos':'ambos');   // nuevos: para los dos (si es algo personal, se cambia a mano)
   setTodo(e?!e.hora:false);
   document.getElementById('fDel').hidden=!e;
   document.getElementById('fm').classList.add('show');
