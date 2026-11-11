@@ -35,6 +35,13 @@
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
   nav .marca{font-size:2.3rem;text-decoration:none;display:flex}
   .logo.enh1{height:1.25em;width:calc(1.25em * 2.866);vertical-align:-.28em}
+  /* aura rosada detrás del logo del título (late suave) */
+  .logo.enh1{isolation:isolate}
+  .logo.enh1::before{content:"";position:absolute;inset:-38% -14%;z-index:-1;border-radius:50%;pointer-events:none;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--rosa) 42%,transparent),color-mix(in srgb,var(--rosa) 16%,transparent) 55%,transparent);
+    filter:blur(10px);animation:aura 3.2s ease-in-out infinite}
+  @keyframes aura{0%,100%{opacity:.75;transform:scale(.96)}50%{opacity:1;transform:scale(1.06)}}
+  @media (prefers-reduced-motion:reduce){.logo.enh1::before{animation:none}}
   footer .marca{display:flex}
   nav .links{display:flex;gap:22px;margin-left:auto;font-weight:700;font-size:.95rem}
   nav .links a{text-decoration:none;color:var(--gris)}
