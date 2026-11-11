@@ -924,6 +924,11 @@
   .fb-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:12px 0 4px}
   .home-btn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:50;width:36px;height:36px;border-radius:50%;background:var(--surface);border:0.5px solid var(--border2);color:var(--accent);display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.12)}
 
+  /* ===== El encabezado y la barra de abajo ocupan todo el ancho, como en las demás secciones
+     (en iPhone grandes, con la app angosta, arriba quedaba una franja gris que el iPhone mostraba borrosa) ===== */
+  .app{max-width:none !important}
+  @media (max-width:899px){ .content>.panel{width:100%;max-width:600px;margin-left:auto;margin-right:auto} }
+
   /* ===== PC: más ancho, la lista de productos en varias columnas ===== */
   @media (min-width:900px){
     .app{max-width:1100px}
