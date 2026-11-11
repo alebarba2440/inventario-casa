@@ -322,6 +322,24 @@ try {
         'altas_semana' => count(array_filter($us, fn($x) => strtotime($x['creado'] . ' UTC') > $t - 7 * 86400))];
       $esp = db()->query('SELECT pareja_id, COUNT(*) n, SUM(bytes) b FROM archivos GROUP BY pareja_id')->fetchAll(PDO::FETCH_UNIQUE);
       $res['fotos_mb'] = round(array_sum(array_column($esp, 'b')) / 1048576, 1);
+      $res['fotos'] = (int)array_sum(array_column($esp, 'n'));
+      // Más datos para el Dashboard
+      $res['sin_pareja'] = count($sueltos);
+      $res['altas_mes'] = count(array_filter($us, fn($x) => strtotime($x['creado'] . ' UTC') > $t - 30 * 86400));
+      $res['activos_7'] = count(array_filter($us, fn($x) => $x['ultimo_ingreso'] && strtotime($x['ultimo_ingreso'] . ' UTC') > $t - 7 * 86400));
+      $res['activos_hoy'] = count(array_filter($us, fn($x) => $x['ultimo_ingreso'] && strtotime($x['ultimo_ingreso'] . ' UTC') > $t - 86400));
+      $res['por_vencer'] = 0; $res['completas'] = 0;
+      $res['con_avisos'] = (int)db()->query('SELECT COUNT(DISTINCT usuario_id) FROM push_subs')->fetchColumn();
+      $porCol = db()->query("SELECT IF(col = 'ahorros', CONCAT('ahorros/', id), col) k, COUNT(*) n FROM docs WHERE data IS NOT NULL GROUP BY k ORDER BY n DESC")->fetchAll(PDO::FETCH_KEY_PAIR);   // en 'ahorros' cada documento es una sección distinta
+      $res['registros'] = (int)array_sum($porCol);
+      $res['por_seccion'] = array_map('intval', $porCol);
+      $regPar = db()->query('SELECT pareja_id, COUNT(*) n FROM docs WHERE data IS NOT NULL GROUP BY pareja_id')->fetchAll(PDO::FETCH_KEY_PAIR);
+      $avisosPar = db()->query('SELECT u.pareja_id, COUNT(*) n FROM push_subs s JOIN usuarios u ON u.id = s.usuario_id WHERE u.pareja_id IS NOT NULL GROUP BY u.pareja_id')->fetchAll(PDO::FETCH_KEY_PAIR);
+      // altas por día (últimos 30 días, hora de Argentina)
+      $tzA = new DateTimeZone('America/Argentina/Buenos_Aires'); $dias = [];
+      for ($i = 29; $i >= 0; $i--) $dias[(new DateTime("-$i days", $tzA))->format('Y-m-d')] = 0;
+      foreach ($us as $x) { $d = (new DateTime($x['creado'] . ' UTC'))->setTimezone($tzA)->format('Y-m-d'); if (isset($dias[$d])) $dias[$d]++; }
+      $res['altas_dias'] = $dias;
       $lista = [];
       foreach ($ps as $p) {
         $pago = $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0;
@@ -329,16 +347,19 @@ try {
         $hasta = max($pago, $prueba);
         $estado = $pago > $t ? 'pago' : ($prueba > $t ? 'prueba' : 'vencida');
         $res[$estado === 'vencida' ? 'vencidas' : $estado]++;
+        if ($estado !== 'vencida' && $hasta - $t <= 7 * 86400) $res['por_vencer']++;
         $ms = $porPareja[$p['id']] ?? [];
+        if (count($ms) >= 2) $res['completas']++;
         $lista[] = ['id' => (int)$p['id'], 'nombre' => $p['nombre'], 'codigo' => $p['codigo'], 'creado' => iso($p['creado']),
           'estado' => $estado, 'activo_hasta' => gmdate('c', $hasta), 'dias' => (int)ceil(($hasta - $t) / 86400),
-          'pago_hasta' => iso($p['pago_hasta']),
+          'pago_hasta' => iso($p['pago_hasta']), 'prueba_hasta' => iso($p['prueba_hasta']),
+          'registros' => (int)($regPar[$p['id']] ?? 0), 'avisos' => (int)($avisosPar[$p['id']] ?? 0),
           'fotos' => (int)($esp[$p['id']]['n'] ?? 0), 'fotos_mb' => round(($esp[$p['id']]['b'] ?? 0) / 1048576, 1),
           'ultimo_ingreso' => $ms ? iso(max(array_column($ms, 'ultimo_ingreso'))) : null,
-          'miembros' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto']], $ms)];
+          'miembros' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto'], 'creado' => iso($m['creado']), 'ultimo_ingreso' => iso($m['ultimo_ingreso'])], $ms)];
       }
       responder(['resumen' => $res, 'parejas' => $lista,
-        'sin_pareja' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto'], 'creado' => iso($m['creado'])], $sueltos)]);
+        'sin_pareja' => array_map(fn($m) => ['nombre' => $m['nombre'], 'email' => $m['email'], 'foto' => $m['foto'], 'creado' => iso($m['creado']), 'ultimo_ingreso' => iso($m['ultimo_ingreso'])], $sueltos)]);
 
     case 'POST admin_pago':
       requerirAdmin();
@@ -351,6 +372,12 @@ try {
         $nuevo = (new DateTime('@' . $base))->modify('+1 month')->format('Y-m-d H:i:s');
       } elseif ($op === 'anular') {
         $nuevo = null;
+      } elseif ($op === 'dias') {
+        // Sumar o restar días de prueba. Si la prueba ya venció y se suman, se cuentan desde hoy.
+        $n = (int)($in['dias'] ?? 0); if (!$n || abs($n) > 3650) error_('Cantidad de días inválida');
+        $base = strtotime($p['prueba_hasta'] . ' UTC'); if ($n > 0) $base = max($base, time());
+        db()->prepare('UPDATE parejas SET prueba_hasta = ? WHERE id = ?')->execute([gmdate('Y-m-d H:i:s', $base + $n * 86400), $pid]);
+        responder(['ok' => true]);
       } elseif ($op === 'intercambiar') {
         // Arreglo puntual: invierte qué integrante ocupa cada lugar (j/a) en los datos de la pareja.
         $db = db(); $db->beginTransaction();
