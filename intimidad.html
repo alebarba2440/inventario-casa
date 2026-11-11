@@ -64,7 +64,7 @@
   .jug small{font-size:.78rem;font-weight:800;color:var(--text2)}
   .resultado{text-align:center;padding:18px 14px;border-radius:10px 30px 10px 30px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;display:flex;flex-direction:column;gap:6px;animation:aparece .35s ease-out}
   .resultado small{font-weight:900;letter-spacing:.06em;text-transform:uppercase;opacity:.9;font-size:.75rem}
-  .resultado>b{font-size:1.3rem;font-weight:900;line-height:1.3}
+  .resultado>b{font-size:1.25rem;font-weight:900;line-height:1.3;text-transform:uppercase;letter-spacing:.01em}
   .resultado .quien{font-size:1.05rem;font-weight:700}.resultado .quien b{font-weight:900}
   .resultado .regla{font-size:.78rem;font-weight:700;opacity:.85}
   @keyframes aparece{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
@@ -225,9 +225,7 @@ function rDados(){
   const gana=ambos&&mv!==ov?(mv>ov?yS:oS):null;
   let estado='';
   if(ambos&&gana){const pierde=gana===yS?oS:yS,[quien,txt]=textoAccion(accionDe(DADO.ronda,DADO.nivel||nivel),nom(gana),nom(pierde));
-    estado=`<div class="resultado"><small>${n.emoji} Ganó ${esc(nom(gana))} · ${Math.max(mv,ov)} a ${Math.min(mv,ov)}</small>
-      ${quien?`<span class="quien">👉 Le toca a <b>${esc(nom(gana))}</b>${gana===yS?' (vos)':''}</span>`:''}<b>${esc(txt)}</b>
-      <span class="regla">${quien?'Lo hace el que gana, con '+esc(nom(pierde))+'.':'Sigan la consigna.'}</span></div>`;}
+    estado=`<div class="resultado">${quien?`<span class="quien">👉 Le toca a <b>${esc(nom(gana))}</b>${gana===yS?' (vos)':''}</span>`:''}<b>${esc(txt)}</b></div>`;}
   else if(ambos)estado=`<div class="resultado"><small>¡Empate!</small><b>Sacaron los dos ${mv}. Tiren de nuevo 🎲</b></div>`;
   else if(mv&&!unCelu)estado=`<div class="card puerta" style="padding:16px"><b>Esperando a ${esc(nom(oS))}…</b><p class="nota">Cuando tire en su celu, acá aparece el resultado.</p>
     <button class="btn ghost" onclick="avisarTirar()"><i class="ti ti-bell"></i> Avisarle que tire</button></div>`;
