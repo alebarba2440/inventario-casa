@@ -105,6 +105,8 @@
   .btn{font:inherit;font-weight:800;font-size:.9rem;padding:10px 14px;border:0;border-radius:5px 16px 5px 16px;cursor:pointer;background:#15803d;color:#fff}
   .btn.sec{background:#fff;color:#b91c1c;border:1.5px solid #f3c4c4}
   .btn.rosa{background:var(--rosa)}.btn.negro{background:#111}.btn.azul{background:#0284C7}
+  .btn.borrar{background:#fff;color:#b91c1c;border:1.5px solid #f3c4c4;margin-top:10px;width:100%}
+  .nota{margin:6px 2px 0;font-size:.78rem;color:var(--gris2);font-weight:700}
   .pag{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
   .pag button{font:inherit;font-weight:800;min-width:38px;height:38px;border:1.5px solid var(--borde);background:#fff;border-radius:4px 12px 4px 12px;cursor:pointer}
   .pag button.on{background:#111;color:#fff;border-color:#111}
@@ -309,7 +311,16 @@ function item(c){
         </div>
         <div class="fila" style="margin-top:12px"><button class="btn" onclick="pago(${c.id},'sumar_mes')">+1 mes pago</button>
           ${c.pago_hasta ? `<button class="btn sec" onclick="pago(${c.id},'anular')">Anular pago</button>` : ''}</div>
+      </div>
+      <div class="blq"><h3>Datos de la cuenta</h3>
+        <div class="fila"><button class="btn azul" onclick="backupCuenta(${c.id})">⬇️ Descargar backup</button>
+          <button class="btn sec" style="color:var(--tinta);border-color:var(--borde)" onclick="elegirRestCuenta(${c.id})">⬆️ Restaurar backup</button></div>
+        ${esAdminCta(c) ? '<p class="nota">🔒 Es una cuenta de administrador: no se puede borrar desde acá.</p>'
+          : `<button class="btn borrar" onclick="borrarCuenta(${c.id})">🗑️ Borrar cuenta</button><p class="nota">Borra de la base los datos, fotos, avisos y usuarios de esta cuenta. Antes se descarga sola un backup.</p>`}
       </div>`;
+  } else {
+    cuerpo += `<div class="blq"><h3>Acciones</h3>${esAdminCta(c) ? '<p class="nota">🔒 Es un administrador.</p>'
+      : `<button class="btn borrar" onclick="borrarUsuario('${esc(ms[0].email)}')">🗑️ Borrar usuario</button><p class="nota">Entró con Google pero nunca creó ni se unió a un espacio.</p>`}</div>`;
   }
   const est = c.estado;
   return `<details class="cta" data-id="${c.id}" ${ABIERTOS.has(String(c.id)) ? 'open' : ''}>
@@ -317,6 +328,52 @@ function item(c){
       <div class="tx"><b>${esc(c.nombre)}</b><small>${sub}</small></div>
       <span class="est ${est}">${c.vence ? '⏳ ' : ''}${EST[est]}</span>${FLECHA}</summary>
     <div class="cuerpo">${cuerpo}</div></details>`;
+}
+const FIJOS = ['alejandrobarba021@gmail.com','gionejulieta@gmail.com'];
+function esAdminCta(c){ return c.miembros.some(m => FIJOS.includes(String(m.email||'').toLowerCase()) || (YO && String(m.email||'').toLowerCase() === String(YO.email||'').toLowerCase())); }
+async function bajarCuenta(id, sufijo){
+  const r = await fetch('../api/?a=admin_cuenta_backup&pareja_id=' + id, {credentials:'same-origin', cache:'no-store'});
+  if (!r.ok) throw new Error('No se pudo descargar el backup de la cuenta');
+  const p = D.parejas.find(x => x.id === id) || {}, nom = String(p.nombre || 'cuenta').toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const blob = await r.blob(), n = new Date(), d2 = x => String(x).padStart(2,'0');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `juntos-cuenta-${id}-${nom}-${n.getFullYear()}-${d2(n.getMonth()+1)}-${d2(n.getDate())}_${d2(n.getHours())}-${d2(n.getMinutes())}${sufijo||''}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+async function backupCuenta(id){ try { await bajarCuenta(id); toast('Backup descargado'); } catch(e){ $('err').textContent = e.message; } }
+function elegirRestCuenta(id){
+  const f = document.createElement('input'); f.type = 'file'; f.accept = '.json,application/json';
+  f.onchange = () => { const file = f.files[0]; if (!file) return; const lr = new FileReader();
+    lr.onload = () => {
+      let b; try { b = JSON.parse(lr.result); if (b.formato !== 'juntos-cuenta-1') throw 0; } catch(e){ $('err').textContent = 'Ese archivo no es un backup de una cuenta'; return; }
+      const p = D.parejas.find(x => x.id === id);
+      if (!b.pareja || +b.pareja.id !== id) { $('err').textContent = `Ese backup es de otra cuenta ("${b.pareja && b.pareja.nombre}"), no de "${p.nombre}"`; return; }
+      confirmar(`<b>¿Restaurar los datos de ${esc(p.nombre)} al ${esc(fecha(b.fecha, true))}?</b><br><small>${b.docs.length} registros. Lo que cargaron después de esa fecha <b>se pierde</b>. La suscripción no cambia. Antes se descarga una copia de cómo está ahora.</small>`, 'rosa', async () => {
+        await bajarCuenta(id, '-antes-de-restaurar');
+        const r = await fetch('../api/?a=admin_cuenta_restaurar&pareja_id=' + id, {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Juntos':'1'}, body: lr.result});
+        const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || 'No se pudo restaurar');
+        toast(`✅ Restaurados ${j.docs} registros`);
+      });
+    }; lr.readAsText(file); };
+  f.click();
+}
+function borrarCuenta(id){
+  const p = D.parejas.find(x => x.id === id);
+  $('dTxt').innerHTML = `<b>¿Borrar para siempre la cuenta "${esc(p.nombre)}"?</b><br><small>Se borran de la base todos sus datos, fotos, avisos y los usuarios ${p.miembros.map(m => esc(m.email)).join(' y ')}. <b>No se puede deshacer</b>; antes se descarga un backup.</small>
+    <input id="dConf" placeholder="Escribí: ${esc(p.nombre)}" autocomplete="off" style="margin-top:12px;width:100%;font:inherit;padding:10px;border:1.5px solid var(--borde);border-radius:10px;text-align:center">`;
+  $('dOk').className = 'btn rosa'; $('dOk').textContent = 'Borrar';
+  $('dOk').onclick = async () => {
+    const v = ($('dConf').value || '').trim(); if (v !== p.nombre.trim()) { $('dConf').focus(); $('dConf').style.borderColor = '#b91c1c'; return; }
+    dlg.close(); $('dOk').textContent = 'Confirmar';
+    try { await bajarCuenta(id, '-antes-de-borrar'); await api('admin_cuenta_borrar', {pareja_id: id, confirmar: v}); ABIERTOS.delete(String(id)); await cargar(); toast('Cuenta borrada'); }
+    catch(e){ $('err').textContent = e.message; }
+  };
+  dlg.addEventListener('close', () => { $('dOk').textContent = 'Confirmar'; }, {once:true});
+  dlg.showModal();
+}
+function borrarUsuario(email){
+  confirmar(`¿Borrar para siempre al usuario <b>${esc(email)}</b>?<br><small>Nunca creó ni se unió a un espacio. Si vuelve a entrar con Google, arranca de cero.</small>`, 'rosa',
+    async () => { await api('admin_usuario_borrar', {email}); toast('Usuario borrado'); });
 }
 function copiar(t){ navigator.clipboard?.writeText(t).then(() => toast('Mail copiado'), () => {}); }
 function confirmar(html, clase, fn){ $('dTxt').innerHTML = html; $('dOk').className = 'btn' + (clase ? ' ' + clase : ''); $('dOk').onclick = async () => { dlg.close(); try { await fn(); await cargar(); } catch(e){ $('err').textContent = e.message; } }; dlg.showModal(); }

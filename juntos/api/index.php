@@ -414,6 +414,76 @@ try {
       header('Content-Disposition: attachment; filename="juntos-backup-' . gmdate('Y-m-d') . '.json"');
       responder($out);
 
+    // ---------- Una cuenta (pareja): backup, restaurar y borrar ----------
+    case 'GET admin_cuenta_backup':
+      requerirAdmin();
+      $pid = (int)($_GET['pareja_id'] ?? 0);
+      $q = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $q->execute([$pid]); $p = $q->fetch();
+      if (!$p) error_('No existe esa cuenta', 404);
+      $q = db()->prepare('SELECT * FROM usuarios WHERE pareja_id = ? ORDER BY id'); $q->execute([$pid]); $us = $q->fetchAll();
+      $q = db()->prepare('SELECT col, id, data FROM docs WHERE pareja_id = ? AND data IS NOT NULL ORDER BY col, id'); $q->execute([$pid]); $docs = $q->fetchAll();
+      $per = [];
+      foreach ($us as $x) { $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$x['id']]); if (($d = $q->fetchColumn()) !== false) $per[] = ['email' => $x['email'], 'data' => $d]; }
+      $q = db()->prepare('SELECT id, nombre, tipo, bytes, creado FROM archivos WHERE pareja_id = ?'); $q->execute([$pid]);
+      header('Content-Disposition: attachment; filename="juntos-cuenta-' . $pid . '-' . gmdate('Y-m-d') . '.json"');
+      responder(['formato' => 'juntos-cuenta-1', 'fecha' => gmdate('c'), 'pareja' => $p,
+        'usuarios' => array_map(fn($x) => ['nombre' => $x['nombre'], 'email' => $x['email'], 'creado' => $x['creado'], 'ultimo_ingreso' => $x['ultimo_ingreso']], $us),
+        'docs' => $docs, 'personal' => $per, 'archivos' => $q->fetchAll()]);
+
+    case 'POST admin_cuenta_restaurar':
+      // Vuelve los datos de UNA cuenta a como estaban en su backup (no toca la suscripción ni las otras cuentas).
+      requerirAdmin();
+      $b = json_decode(file_get_contents('php://input') ?: '', true);
+      if (!is_array($b) || ($b['formato'] ?? '') !== 'juntos-cuenta-1' || !is_array($b['docs'] ?? null)) error_('No es un backup de una cuenta de Juntos');
+      $pid = (int)($_GET['pareja_id'] ?? 0);
+      if ($pid !== (int)($b['pareja']['id'] ?? -1)) error_('Ese backup es de otra cuenta');
+      $q = db()->prepare('SELECT id FROM parejas WHERE id = ?'); $q->execute([$pid]); if (!$q->fetch()) error_('No existe esa cuenta', 404);
+      $db = db(); $db->beginTransaction();
+      try {
+        $v = nuevaVersion();
+        $db->prepare('UPDATE docs SET data = NULL, ver = ? WHERE pareja_id = ?')->execute([$v, $pid]);   // así los celus abiertos se enteran
+        $qd = $db->prepare('INSERT INTO docs (pareja_id, col, id, data, ver) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE data = VALUES(data), ver = VALUES(ver)');
+        foreach ($b['docs'] as $d) $qd->execute([$pid, (string)$d['col'], (string)$d['id'], (string)$d['data'], $v]);
+        $n = 0;
+        foreach (($b['personal'] ?? []) as $x) {
+          $q = $db->prepare('SELECT id FROM usuarios WHERE pareja_id = ? AND LOWER(email) = LOWER(?)'); $q->execute([$pid, (string)($x['email'] ?? '')]);
+          if ($uid = $q->fetchColumn()) { $db->prepare('REPLACE INTO personal (usuario_id, data) VALUES (?, ?)')->execute([$uid, (string)$x['data']]); $n++; }
+        }
+        $db->commit();
+      } catch (Throwable $e) { $db->rollBack(); throw $e; }
+      responder(['ok' => true, 'docs' => count($b['docs']), 'personal' => $n]);
+
+    case 'POST admin_cuenta_borrar':
+      // Borra de verdad la cuenta: datos, fotos, avisos, sesiones y los usuarios. Hay que confirmar con el nombre exacto.
+      $yo = requerirAdmin();
+      $in = entrada(); $pid = (int)($in['pareja_id'] ?? 0);
+      $q = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $q->execute([$pid]); $p = $q->fetch();
+      if (!$p) error_('No existe esa cuenta', 404);
+      if (trim((string)($in['confirmar'] ?? '')) !== trim($p['nombre'])) error_('El nombre no coincide');
+      $q = db()->prepare('SELECT * FROM usuarios WHERE pareja_id = ?'); $q->execute([$pid]); $us = $q->fetchAll();
+      foreach ($us as $x) if (esAdmin($x) || in_array(strtolower($x['email']), ['alejandrobarba021@gmail.com', 'gionejulieta@gmail.com'], true)) error_('Esa cuenta es de un administrador: no se puede borrar desde el panel', 403);
+      $q = db()->prepare('SELECT id, tipo FROM archivos WHERE pareja_id = ?'); $q->execute([$pid]);
+      foreach ($q->fetchAll() as $a) @unlink(rutaArchivo($pid, $a['id'], $a['tipo']));
+      @rmdir(carpetaArchivos() . '/' . $pid);
+      $db = db(); $db->beginTransaction();
+      // usuarios → se van sus sesiones, avisos y datos personales (cascada); pareja → sus datos y fotos (cascada)
+      $db->prepare('DELETE FROM usuarios WHERE pareja_id = ?')->execute([$pid]);
+      $db->prepare('DELETE FROM parejas WHERE id = ?')->execute([$pid]);
+      $db->commit();
+      error_log('JuntOS: ' . $yo['email'] . ' borró la cuenta ' . $pid . ' (' . $p['nombre'] . ')');
+      responder(['ok' => true, 'usuarios' => count($us)]);
+
+    case 'POST admin_usuario_borrar':
+      // Usuario que entró pero nunca creó ni se unió a un espacio.
+      $yo = requerirAdmin();
+      $mail = strtolower(trim((string)(entrada()['email'] ?? '')));
+      $q = db()->prepare('SELECT * FROM usuarios WHERE LOWER(email) = ? AND pareja_id IS NULL'); $q->execute([$mail]); $x = $q->fetch();
+      if (!$x) error_('No existe ese usuario sin espacio', 404);
+      if (esAdmin($x)) error_('Es un administrador: no se puede borrar desde el panel', 403);
+      db()->prepare('DELETE FROM usuarios WHERE id = ?')->execute([$x['id']]);
+      error_log('JuntOS: ' . $yo['email'] . ' borró el usuario ' . $mail);
+      responder(['ok' => true]);
+
     case 'POST admin_restaurar':
       // Vuelve la base al estado del backup. Lo que no está en el backup se borra.
       requerirAdmin();
