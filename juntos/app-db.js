@@ -413,38 +413,42 @@
     if (!document.getElementById('jxSusCss')) {
       var st = document.createElement('style'); st.id = 'jxSusCss';
       st.textContent =
-        '#jxSus{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
+        '#jxSus{position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
         '#jxSus.on{opacity:1}' +
-        '#jxSus .c{background:#fff;color:#1a1a1a;width:100%;max-width:380px;border-radius:10px 30px 10px 30px;padding:26px 22px 18px;text-align:center;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
+        '#jxSus .c{position:relative;box-sizing:border-box;background:#fff;color:#1a1a1a;width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-radius:10px 30px 10px 30px;padding:26px 22px 18px;text-align:center;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
         '#jxSus.on .c{transform:none}' +
         '#jxSus .ic{width:64px;height:64px;margin:0 auto 12px;border-radius:8px 22px 8px 22px;background:#FCE7F3;display:grid;place-items:center;font-size:2rem}' +
         '#jxSus h3{margin:0 0 6px;font-size:1.3rem;font-weight:900}' +
         '#jxSus p{margin:0 0 16px;color:#5f5f58;font-size:.95rem;line-height:1.45}' +
         '#jxSus .precio{display:inline-block;background:#FFF7E6;border-radius:6px 18px 6px 18px;padding:8px 14px;margin-bottom:16px;font-weight:900}' +
         '#jxSus .precio small{display:block;font-weight:700;color:#5f5f58;font-size:.78rem}' +
-        '#jxSus .si{display:block;width:100%;border:0;border-radius:6px 20px 6px 20px;background:#DB2777;color:#fff;font:900 1.02rem Nunito,system-ui,sans-serif;padding:14px;cursor:pointer;text-decoration:none;box-shadow:0 8px 20px rgba(219,39,119,.3)}' +
+        '#jxSus .si{display:block;box-sizing:border-box;width:100%;border:0;border-radius:6px 20px 6px 20px;background:#DB2777;color:#fff;font:900 1.02rem Nunito,system-ui,sans-serif;padding:14px;cursor:pointer;text-decoration:none;box-shadow:0 8px 20px rgba(219,39,119,.3)}' +
         '#jxSus .si:active{transform:scale(.97)}' +
         '#jxSus .fila{display:flex;justify-content:space-between;margin-top:12px}' +
         '#jxSus .cuenta{display:flex;justify-content:center;gap:5px;margin:0 0 14px}' +
         '#jxSus .cuenta i{width:26px;height:8px;border-radius:999px;background:#F3D3E3}#jxSus .cuenta i.on{background:#DB2777}' +
         '#jxSus .dias{display:inline-block;font-size:2.4rem;font-weight:900;color:#DB2777;line-height:1}' +
         '#jxSus .fila.uno{justify-content:center}' +
+        '#jxSus .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;border-radius:50% !important;background:rgba(0,0,0,.06);color:#5f5f58;font:700 1.25rem/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;padding:0}' +
+        '#jxSus .x:active{transform:scale(.92)}' +
+        '@media (max-height:640px){#jxSus .c{padding:20px 18px 12px}#jxSus .ic{width:50px;height:50px;font-size:1.6rem;margin-bottom:8px}#jxSus p{margin-bottom:12px}#jxSus .precio{margin-bottom:12px}#jxSus .si{padding:12px}#jxSus .dias{font-size:2rem}}' +
         '#jxSus .fila a,#jxSus .fila button{background:none;border:0;color:#5f5f58;font:700 .9rem Nunito,system-ui,sans-serif;cursor:pointer;text-decoration:none;padding:6px}' +
-        '@media (prefers-color-scheme:dark){#jxSus .c{background:#1c1c1e;color:#f5f5f5}#jxSus p,#jxSus .fila a,#jxSus .fila button,#jxSus .precio small{color:#aaa}#jxSus .precio{background:#2c2c2e}#jxSus .ic{background:rgba(219,39,119,.2)}}';
+        '@media (prefers-color-scheme:dark){#jxSus .c{background:#1c1c1e;color:#f5f5f5}#jxSus p,#jxSus .fila a,#jxSus .fila button,#jxSus .precio small{color:#aaa}#jxSus .precio{background:#2c2c2e}#jxSus .ic{background:rgba(219,39,119,.2)}#jxSus .x{background:rgba(255,255,255,.1);color:#ccc}}';
       document.head.appendChild(st);
     }
     var m = document.createElement('div'); m.id = 'jxSus'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     var boton = '<a class="si" href="' + (URL_SUSCRIPCION || '#') + '"' + (URL_SUSCRIPCION ? ' target="_blank" rel="noopener"' : '') + '>Suscribirme</a>';
+    var X = '<button type="button" class="x no" aria-label="Cerrar" style="border-radius:50% !important">✕</button>';
     var precio = '<div class="precio">$5.000 / mes<small>Una sola suscripción para los dos</small></div>';
     if (porVencer) {
       var barras = ''; for (var k = 7; k >= 1; k--) barras += '<i class="' + (k <= dias ? 'on' : '') + '"></i>';
-      m.innerHTML = '<div class="c"><div class="ic">⏳</div>' +
+      m.innerHTML = '<div class="c">' + X + '<div class="ic">⏳</div>' +
         '<h3>' + (dias <= 1 ? '¡Hoy es tu último día de prueba!' : 'Te quedan <span class="dias">' + dias + '</span> días de prueba') + '</h3>' +
         '<div class="cuenta" aria-hidden="true">' + barras + '</div>' +
         '<p>Todavía no te suscribiste. Activá la suscripción ahora y seguí usando JuntOS <b>sin cortes</b>: todo lo que cargaron queda igual.</p>' +
         precio + boton + '<div class="fila uno"><button type="button" class="no">Más tarde</button></div></div>';
     } else {
-      m.innerHTML = '<div class="c"><div class="ic">' + (pago ? '⏰' : '💞') + '</div>' +
+      m.innerHTML = '<div class="c">' + X + '<div class="ic">' + (pago ? '⏰' : '💞') + '</div>' +
         '<h3>' + (pago ? 'Tu suscripción venció' : 'Terminó tu prueba gratis') + '</h3>' +
         '<p>Para seguir usando JuntOS, activá la suscripción. <b>Todo lo que cargaron está guardado</b> y vuelve a estar disponible apenas la actives.</p>' +
         precio + boton + '<div class="fila"><a href="../entrar.html?cuenta=1">Ver mi cuenta</a><button type="button" class="no">Ahora no</button></div></div>';
