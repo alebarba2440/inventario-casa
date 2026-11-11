@@ -173,10 +173,11 @@
   /* ===== Estilo POLAROID: fotos con marco blanco, un poco giradas, nombre en cursiva ===== */
   .grid{display:grid !important;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 16px;padding:6px 6px 10px}
   a.card{flex-direction:column !important;align-items:stretch;gap:0;background:#fff !important;border:none;border-radius:2px;
-         padding:9px 9px 4px !important;box-shadow:0 6px 16px rgba(0,0,0,.13);transform:rotate(var(--rot,0deg));
-         transition:transform .18s ease, box-shadow .18s ease}
+         padding:9px 9px 4px !important;box-shadow:0 2px 4px rgba(0,0,0,.06),0 14px 18px -8px rgba(0,0,0,.30);transform:rotate(var(--rot,0deg));
+         transition:transform .22s ease, box-shadow .22s ease}
   a.card::after{display:none !important}
-  a.card:hover{box-shadow:0 10px 22px rgba(0,0,0,.18)}
+  /* con mouse: al pasar por arriba, la tarjeta se levanta */
+  @media (hover:hover){a.card:hover{transform:rotate(var(--rot,0deg)) translateY(-8px) scale(1.02);box-shadow:0 4px 8px rgba(0,0,0,.06),0 26px 30px -10px rgba(0,0,0,.34)}}
   a.card:active{transform:rotate(0deg) scale(.97)}
   .pic{width:100% !important;height:var(--picH,150px) !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
   .pic img{max-height:94%;padding-top:0}

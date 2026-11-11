@@ -104,8 +104,9 @@
 
   /* secciones de la app */
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  .sec{background:#fff;border:1px solid var(--borde);border-radius:24px;padding:20px 20px 22px;display:flex;flex-direction:column;gap:6px;transition:transform .2s,box-shadow .2s}
-  .sec:hover{transform:translateY(-4px);box-shadow:0 16px 34px rgba(0,0,0,.07)}
+  .sec{background:#fff;border:1px solid var(--borde);border-radius:24px;padding:20px 20px 22px;display:flex;flex-direction:column;gap:6px;transition:transform .25s ease,box-shadow .25s ease;
+       box-shadow:0 2px 4px rgba(0,0,0,.04),0 16px 22px -12px rgba(0,0,0,.22)}
+  @media (hover:hover){.sec:hover{transform:translateY(-10px);box-shadow:0 4px 8px rgba(0,0,0,.05),0 30px 36px -14px rgba(0,0,0,.28)}}
   .sec .pic{height:150px;border-radius:16px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:10px;background:var(--c,#f3f1ea);overflow:hidden}
   .sec .pic img{max-height:140px;width:auto}
   .sec h3{margin:0;font-size:1.2rem;font-weight:900}
