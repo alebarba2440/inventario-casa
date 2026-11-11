@@ -13,7 +13,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Instalar lftp
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+        # Si el espejo de Ubuntu de GitHub (azure) no responde, se prueba con el oficial; hasta 3 intentos.
+        run: |
+          for i in 1 2 3; do
+            if sudo apt-get install -y -qq lftp || (sudo apt-get update -qq && sudo apt-get install -y -qq lftp); then exit 0; fi
+            echo "Intento $i falló, pruebo con el espejo oficial de Ubuntu"
+            sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu/#http://archive.ubuntu.com/ubuntu/#g' /etc/apt/apt-mirrors.txt 2>/dev/null || true
+            sudo find /etc/apt -name '*.list' -o -name '*.sources' | xargs -r sudo sed -i 's#azure.archive.ubuntu.com#archive.ubuntu.com#g'
+            sleep 20
+          done
+          exit 1
       - name: Armar la configuración de la base (con los secretos DB_*, nunca queda en el código)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
