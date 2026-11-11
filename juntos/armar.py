@@ -26,7 +26,7 @@ def main():
     if SALIDA.exists():
         shutil.rmtree(SALIDA)
     # 1) Lo propio de JuntOS
-    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'htaccess_raiz.py', 'app-db.js', 'sw.js', 'extra', '.*'))
+    shutil.copytree(JUNTOS, SALIDA, ignore=shutil.ignore_patterns('armar.py', 'htaccess_raiz.py', 'subir_ftp.py', 'app-db.js', 'sw.js', 'extra', '.*'))
 
     # 2) Las secciones
     app = SALIDA / 'app'

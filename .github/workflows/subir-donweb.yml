@@ -12,17 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Instalar lftp
-        # Si el espejo de Ubuntu de GitHub (azure) no responde, se prueba con el oficial; hasta 3 intentos.
-        run: |
-          for i in 1 2 3; do
-            if sudo apt-get install -y -qq lftp || (sudo apt-get update -qq && sudo apt-get install -y -qq lftp); then exit 0; fi
-            echo "Intento $i falló, pruebo con el espejo oficial de Ubuntu"
-            sudo sed -i 's#http://azure.archive.ubuntu.com/ubuntu/#http://archive.ubuntu.com/ubuntu/#g' /etc/apt/apt-mirrors.txt 2>/dev/null || true
-            sudo find /etc/apt -name '*.list' -o -name '*.sources' | xargs -r sudo sed -i 's#azure.archive.ubuntu.com#archive.ubuntu.com#g'
-            sleep 20
-          done
-          exit 1
       - name: Armar la configuración de la base (con los secretos DB_*, nunca queda en el código)
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
@@ -44,44 +33,37 @@ jobs:
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
           [ -n "$FTP_SERVER" ] && [ -n "$FTP_USERNAME" ] && [ -n "$FTP_PASSWORD" ] || { echo "::error::Faltan secretos FTP_* (FTP_SERVER / FTP_USERNAME / FTP_PASSWORD)"; exit 1; }
-          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "
-            set ftp:ssl-force true;
-            set ftp:ssl-protect-data true;
-            set ssl:verify-certificate no;
-            set ftp:passive-mode true;
-            set net:max-retries 2;
-            set net:timeout 30;
-            mkdir -p public_html/juntos;
-            mirror -R --verbose --exclude-glob .git* /tmp/deploy/ public_html/juntos/;
-            put /tmp/cfg/juntos-config.php -o juntos-config.php;
-            rm -f public_html/juntos/api/prueba.php;
-            rm -f public_html/juntos/app/importar.html;
-            bye"
+          # Con Python (subir_ftp.py), sin instalar nada: no depende de los servidores de Ubuntu
+          F="python3 $GITHUB_WORKSPACE/juntos/subir_ftp.py"
+          $F mirror /tmp/deploy public_html/juntos
+          $F put /tmp/cfg/juntos-config.php juntos-config.php
+          $F rm public_html/juntos/api/prueba.php
+          $F rm public_html/juntos/app/importar.html
       - name: Regla en public_html/.htaccess para que juntosapp.com.ar abra JuntOS en la raíz
         env:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
-          L="set ftp:ssl-force true; set ftp:ssl-protect-data true; set ssl:verify-certificate no; set ftp:passive-mode true; set net:max-retries 2; set net:timeout 30;"
+          F="python3 $GITHUB_WORKSPACE/juntos/subir_ftp.py"
           mkdir -p /tmp/ht && cd /tmp/ht
           # Si ya hay un .htaccess lo bajo y lo conservo; si la descarga falla, no toco nada.
-          if lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L cls -1a public_html/; bye" | grep -qx '.htaccess'; then
-            lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L get public_html/.htaccess -o actual; bye" || { echo "::error::No pude bajar public_html/.htaccess"; exit 1; }
+          if $F existe public_html/.htaccess; then
+            $F get public_html/.htaccess actual || { echo "::error::No pude bajar public_html/.htaccess"; exit 1; }
           else
             : > actual
           fi
           python3 "$GITHUB_WORKSPACE/juntos/htaccess_raiz.py" actual nuevo
           if cmp -s actual nuevo; then echo "public_html/.htaccess sin cambios"; exit 0; fi
           cp actual "respaldo-$(date +%Y%m%d%H%M%S)"
-          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o htaccess-respaldo-raiz; put nuevo -o public_html/.htaccess; bye"
+          $F put actual htaccess-respaldo-raiz && $F put nuevo public_html/.htaccess
           echo "public_html/.htaccess actualizado (copia del anterior: htaccess-respaldo-raiz, fuera de public_html)"
           # Si el servidor no acepta alguna regla (error 500), vuelvo al .htaccess anterior
           sleep 3
           for u in https://barbamanager.website/ https://barbamanager.website/app/ https://juntosapp.com.ar/entrar.html https://juntosapp.com.ar/app/img/logo-texto.png https://barbamanager.website/juntos/entrar.html; do
             c=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$u"); echo "$c $u"
             if [ "$c" = "500" ]; then
-              lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "$FTP_SERVER" -e "$L put actual -o public_html/.htaccess; bye"
+              $F put actual public_html/.htaccess
               echo "::error::Error 500 con el .htaccess nuevo: restauré el anterior"; exit 1
             fi
           done
