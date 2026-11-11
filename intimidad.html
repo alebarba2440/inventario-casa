@@ -318,11 +318,11 @@ function regalar(){const t=$('cupT').value.trim();if(!t){$('cupT').focus();retur
   CUP[c.id]=c;wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(c.id).set(c).catch(()=>{});
   window.jxAvisarPareja&&jxAvisarPareja({titulo:'🎁 Tenés un regalo nuevo',texto:'Entrá a JuntOS para verlo.',emoji:'🎁',url:'intimidad.html#cupones'}).catch(()=>{});
   cupSel=null;snd('agregar');toast('¡Cupón regalado! 🎁');render();}
-function canjear(id){const c=CUP[id];if(!c||!confirm('¿Canjear "'+c.t+'" ahora?'))return;
+async function canjear(id){const c=CUP[id];if(!c||!(await confirmar('¿Canjear el cupón?','"'+c.t+'"',{boton:'Canjear ahora',icono:c.e||'🎟️'})))return;
   c.estado='canjeado';c.canjeado=Date.now();wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(id).set({estado:'canjeado',canjeado:c.canjeado},{merge:true}).catch(()=>{});
   window.jxAvisarPareja&&jxAvisarPareja({titulo:'😉 Usaron tu regalo',texto:'Entrá a JuntOS para verlo.',emoji:'😉',url:'intimidad.html#cupones'}).catch(()=>{});
   snd('agregar');render();}
-function borrarCup(id){if(!confirm('¿Borrar este cupón?'))return;delete CUP[id];wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(id).delete().catch(()=>{});snd('borrar');render();}
+async function borrarCup(id){if(!(await confirmar('¿Borrar este cupón?','',{boton:'Sí, borrar',peligro:true})))return;delete CUP[id];wr('int_cup_v1',CUP);if(db)db.collection('int_cupones').doc(id).delete().catch(()=>{});snd('borrar');render();}
 
 /* ---------- Ajustes: palabra de seguridad, límites y PIN ---------- */
 function abrirAjustes(){$('aPal').value=ACU.palabra||'';$('aLim').value=ACU.limites||'';$('aPin').value=rd('int_pin','');$('fmA').classList.add('show');}

@@ -309,8 +309,8 @@ function guardarPet(){
   cerrar('fmP');snd(prev?'aceptar':'agregar');
   if(!prev){abierta=id;wr('masc_abierta',id);toast('¡Listo! Ahora cargá su primer registro');}render();
 }
-function borrarPet(){
-  const p=PETS[editP];if(!p||!confirm('¿Eliminar a '+p.nombre+' y todos sus registros?'))return;
+async function borrarPet(){
+  const p=PETS[editP];if(!p||!(await confirmar('¿Eliminar a '+p.nombre+'?','Se borran también todos sus registros.',{boton:'Sí, eliminar',peligro:true})))return;
   regsDe(p.id).forEach(r=>{delete REGS[r.id];if(db)db.collection(COLR).doc(r.id).delete().catch(()=>{});});
   delete PETS[p.id];wr(LSP,PETS);wr(LSR,REGS);if(db)db.collection(COLP).doc(p.id).delete().catch(()=>{});
   cerrar('fmP');snd('borrar');render();
@@ -346,8 +346,8 @@ function guardarReg(){
   cerrar('fmR');snd(prev?'aceptar':'agregar');render();
   if(prox&&prox>=hoyS())toast('Te avisamos el '+fFecha(prox));
 }
-function borrarReg(){
-  if(!editR||!confirm('¿Eliminar este registro?'))return;
+async function borrarReg(){
+  if(!editR||!(await confirmar('¿Eliminar este registro?','',{boton:'Sí, eliminar',peligro:true})))return;
   const id=editR;delete REGS[id];wr(LSR,REGS);if(db)db.collection(COLR).doc(id).delete().catch(()=>{});
   cerrar('fmR');snd('borrar');render();
 }

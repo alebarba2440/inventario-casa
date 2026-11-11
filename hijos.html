@@ -340,7 +340,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cerrarForm();cerrar
 
 /* ---------- archivos: fotos (se achican antes de subir) y PDF ---------- */
 let elegido=null;
-function elegirArchivo(k,t){if(!enJuntos()){alert('Las fotos y documentos se guardan en tu cuenta de JuntOS. Abrí la app desde JuntOS para subirlos.');return}
+function elegirArchivo(k,t){if(!enJuntos()){avisar('Solo en JuntOS','Las fotos y documentos se guardan en tu cuenta de JuntOS. Abrí la app desde JuntOS para subirlos.',{icono:'📷'});return}
   elegido={k,t};const fi=$('fileIn');fi.accept='image/*';fi.value='';fi.click();}
 $('fileIn').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f||!FORM||!elegido)return;const {k,t}=elegido;
   const tx=$('f_'+k+'_tx');tx.textContent='Subiendo…';FORM.subiendo=true;
@@ -375,7 +375,7 @@ function formPersonal(id){const c=id?D.hijos[id]:null;
       ['x','','dos',[['lugar','LUGAR DE NACIMIENTO','text'],['nac2','NACIONALIDAD','text',{ph:'Ej: Argentina'}]]]],
     guardar:o=>{const n=Object.assign({},c||{id:nid('h'),creado:Date.now()},o);cambioArchivo(c&&c.foto,n.foto);guardar('hijos',n);
       if(!c){abierto=n.id;wr('hijo_abierto',n.id);secAbierta='';toast('¡Listo! Ahora podés completar su salud, vacunas y más');}snd(c?'aceptar':'agregar');},
-    borrar:c?()=>{if(!confirm('¿Eliminar a '+c.nombre+' con todos sus datos, vacunas, mediciones, documentos y fechas?'))return;
+    borrar:c?async()=>{if(!(await confirmar('¿Eliminar a '+c.nombre+'?','Se borran todos sus datos, vacunas, mediciones, documentos y fechas.',{boton:'Sí, eliminar',peligro:true})))return;
       ['vac','med','doc','fecha'].forEach(k=>de(k,c.id).forEach(x=>{borrarArchivo(x.cert||x.archivo);borrar(k,x.id);}));borrarArchivo(c.foto);borrar('hijos',c.id);cerrarForm();render();snd('borrar');}:null,
     textoBorrar:'Eliminar hijo/a'});}
 function formSalud(id){const c=D.hijos[id];
@@ -390,14 +390,14 @@ function formVac(hijo,id){const v=id?D.vac[id]:null;
       ['prox','PRÓXIMA DOSIS (TE AVISAMOS)','date'],['lugar','LUGAR DONDE SE APLICÓ','text'],['obs','OBSERVACIONES','area']],
     guardar:o=>{const n=Object.assign({},v||{id:nid('v'),hijo,creado:Date.now()},o);cambioArchivo(v&&v.cert,n.cert);guardar('vac',n);snd(v?'aceptar':'agregar');
       if(n.prox&&dias(n.prox)>=0)toast('Te avisamos el '+fCorta(n.prox));},
-    borrar:v?()=>{if(!confirm('¿Eliminar esta vacuna?'))return;borrarArchivo(v.cert);borrar('vac',v.id);cerrarForm();render();snd('borrar');}:null});
+    borrar:v?async()=>{if(!(await confirmar('¿Eliminar esta vacuna?','',{boton:'Sí, eliminar',peligro:true})))return;borrarArchivo(v.cert);borrar('vac',v.id);cerrarForm();render();snd('borrar');}:null});
 }
 function formMed(hijo,id){const m=id?D.med[id]:null;
   abrirForm({titulo:m?'Medición':'Nueva medición',valores:m?Object.assign({},m,{peso:m.peso?coma(m.peso):'',altura:m.altura?coma(m.altura):''}):{fecha:hoyS()},
     campos:[['fecha','FECHA DE MEDICIÓN','date'],['x','','dos',[['peso','PESO (KG)','num',{ph:'Ej: 18,5'}],['altura','ALTURA (CM)','num',{ph:'Ej: 108'}]]],['obs','OBSERVACIONES','area']],
     guardar:o=>{if(!o.fecha||(!o.peso&&!o.altura)){toast('Poné la fecha y el peso o la altura');return false}
       const n=Object.assign({},m||{id:nid('m'),hijo,creado:Date.now()},o);guardar('med',n);snd(m?'aceptar':'agregar');},
-    borrar:m?()=>{if(!confirm('¿Eliminar esta medición?'))return;borrar('med',m.id);cerrarForm();render();snd('borrar');}:null});}
+    borrar:m?async()=>{if(!(await confirmar('¿Eliminar esta medición?','',{boton:'Sí, eliminar',peligro:true})))return;borrar('med',m.id);cerrarForm();render();snd('borrar');}:null});}
 const TD={dni_f:'DNI (frente)',dni_d:'DNI (dorso)',partida:'Partida de nacimiento',carnet:'Carnet de vacunas',cert_nac:'Certificado de nacimiento',obra:'Obra social',cert_med:'Certificado médico',otro:'Otro documento'};
 function formDoc(hijo,id){const d=id?D.doc[id]:null;
   abrirForm({titulo:d?'Documento':'Nuevo documento',valores:d?Object.assign({},d,{archivoMime:d.mime}):null,
@@ -405,12 +405,12 @@ function formDoc(hijo,id){const d=id?D.doc[id]:null;
     guardar:o=>{if(!o.archivo){toast('Sacale una foto al documento');return false}
       const n=Object.assign({},d||{id:nid('d'),hijo,creado:Date.now()},{tipo:o.tipo,nombre:o.nombre,archivo:o.archivo,mime:o.archivoMime||(d&&d.mime)||'image/jpeg'});
       cambioArchivo(d&&d.archivo,n.archivo);guardar('doc',n);snd(d?'aceptar':'agregar');},
-    borrar:d?()=>{if(!confirm('¿Eliminar este documento?'))return;borrarArchivo(d.archivo);borrar('doc',d.id);cerrarForm();cerrarVisor();render();snd('borrar');}:null});}
+    borrar:d?async()=>{if(!(await confirmar('¿Eliminar este documento?','Se borra también la foto guardada.',{boton:'Sí, eliminar',peligro:true})))return;borrarArchivo(d.archivo);borrar('doc',d.id);cerrarForm();cerrarVisor();render();snd('borrar');}:null});}
 function verDoc(id){const d=D.doc[id];if(!d)return;const pdf=d.mime==='application/pdf';
   $('visorImg').hidden=pdf;$('visorPdf').hidden=!pdf;$('visorNom').textContent=d.nombre||TD[d.tipo]||'Documento';
   if(!pdf)$('visorImg').src=URLA(d.archivo);$('visorAbrir').href=URLA(d.archivo);
   $('visor').dataset.id=id;$('visor').classList.add('show');}
-function eliminarVisor(){const d=D.doc[$('visor').dataset.id];if(!d||!confirm('¿Eliminar "'+(d.nombre||TD[d.tipo]||'documento')+'"? Se borra del servidor.'))return;
+async function eliminarVisor(){const d=D.doc[$('visor').dataset.id];if(!d||!(await confirmar('¿Eliminar "'+(d.nombre||TD[d.tipo]||'documento')+'"?','Se borra del servidor.',{boton:'Sí, eliminar',peligro:true})))return;
   borrarArchivo(d.archivo);borrar('doc',d.id);cerrarVisor();render();snd('borrar');toast('Documento eliminado');}
 function editarVisor(){const d=D.doc[$('visor').dataset.id];cerrarVisor();if(d)formDoc(d.hijo,d.id);}
 function cerrarVisor(){$('visor').classList.remove('show');}
@@ -420,7 +420,7 @@ function formFecha(hijo,id,tipo){const f=id?D.fecha[id]:null;
       ['x','','dos',[['fecha','FECHA','date'],['hora','HORA (OPCIONAL)','time']]],['notas','NOTAS','area']],
     guardar:o=>{if(!o.fecha){toast('Poné la fecha');return false}const n=Object.assign({},f||{id:nid('f'),hijo,creado:Date.now()},o);guardar('fecha',n);snd(f?'aceptar':'agregar');
       if(dias(n.fecha)>=0)toast('Te avisamos el día anterior y ese día');},
-    borrar:f?()=>{if(!confirm('¿Eliminar esta fecha?'))return;borrar('fecha',f.id);cerrarForm();render();snd('borrar');}:null});}
+    borrar:f?async()=>{if(!(await confirmar('¿Eliminar esta fecha?','',{boton:'Sí, eliminar',peligro:true})))return;borrar('fecha',f.id);cerrarForm();render();snd('borrar');}:null});}
 function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2600);}
 
 /* ---------- sincronización ---------- */

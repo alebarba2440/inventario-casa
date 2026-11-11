@@ -587,8 +587,8 @@ function openCuenta(){const J=window.JUNTOS||{},u=J.usuario||{},p=J.pareja;
 function closeCuenta(){document.getElementById('cuentaOverlay').classList.remove('open');}
 async function compartirCodigo(){const p=(window.JUNTOS||{}).pareja;if(!p)return;
   const t=`Sumate a nuestro espacio en Juntos 💞\nEntrá a ${location.origin}${location.pathname.replace(/app\/.*$/,'')}entrar.html y usá el código: ${p.codigo}`;
-  if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else{try{await navigator.clipboard.writeText(t);alert('Invitación copiada')}catch(e){}}}
-async function salirCuenta(){if(!confirm('¿Cerrar sesión en este celu?'))return;
+  if(navigator.share){try{await navigator.share({text:t})}catch(e){}}else{try{await navigator.clipboard.writeText(t);avisar('Invitación copiada','Pegala en WhatsApp o donde quieras para mandársela a tu pareja.',{icono:'📋'})}catch(e){}}}
+async function salirCuenta(){if(!(await confirmar('¿Cerrar sesión?','Se cierra tu cuenta en este celu. Tus datos quedan guardados.',{boton:'Cerrar sesión',icono:'👋'})))return;
   try{await fetch('../api/?a=salir',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Juntos':'1'},body:'{}'})}catch(e){}
   location.href='../entrar.html';}
 /* tarjeta de Gastos personales con mi personaje */

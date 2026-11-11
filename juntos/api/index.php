@@ -143,6 +143,10 @@ function bandeja(array $u): array {
     // Los avisos de prueba/vencimiento solo se ven si siguen valiendo (si se sumaron días o se pagó, desaparecen)
     foreach ($q->fetchAll() as $n) if (!in_array($n['tipo'], ['prueba', 'vence'], true) || $n['ref'] === $hasta) $items[] = ['k' => 'n' . $n['id'], 'tipo' => $n['tipo'] === 'directo' ? 'directo' : 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
   }
+  // lo que esta persona borró de su casilla no se muestra
+  $q = db()->prepare('SELECT clave FROM notif_borradas WHERE usuario_id = ?'); $q->execute([$u['id']]);
+  $borr = array_flip($q->fetchAll(PDO::FETCH_COLUMN));
+  $items = array_values(array_filter($items, fn($i) => !isset($borr[$i['k']])));
   usort($items, fn($a, $b) => strcmp($b['creado'], $a['creado']));
   $items = array_slice($items, 0, 40);
   $q = db()->prepare('SELECT clave FROM leidos WHERE usuario_id = ?'); $q->execute([$u['id']]);
@@ -247,6 +251,15 @@ try {
     case 'GET bandeja':
       $u = requerirUsuario();
       responder(['bandeja' => bandeja($u), 'msg_visto' => (int)($u['msg_visto'] ?? 0)]);
+
+    case 'POST borrar_notif':
+      // Borra de MI casilla: una lista de claves o "todo" (lo que hay hoy)
+      $u = requerirUsuario(); $k = entrada()['k'] ?? [];
+      $ks = $k === 'todo' ? array_column(bandeja($u), 'k') : (array) $k;
+      $ins = db()->prepare('INSERT IGNORE INTO notif_borradas (usuario_id, clave) VALUES (?, ?)');
+      $lei = db()->prepare('INSERT IGNORE INTO leidos (usuario_id, clave) VALUES (?, ?)');
+      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^[mn]\d{1,10}$/', $x)) { $ins->execute([$u['id'], $x]); $lei->execute([$u['id'], $x]); }
+      responder(['ok' => true]);
 
     case 'POST leido':
       // Marca como leídos: una lista de claves ("m12" = mensaje, "n7" = aviso) o "todo" (lo que hay hoy en la casilla)

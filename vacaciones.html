@@ -716,7 +716,7 @@ async function exportarPDF(){
       try{await navigator.share({files:[file],title:'Nuestras vacaciones - Escapadas'});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
     }else doc.save(nombre);
   }catch(e){
-    alert('No se pudo crear el PDF. Revisá la conexión a internet y probá de nuevo.');
+    avisar('No se pudo crear el PDF','Revisá la conexión a internet y probá de nuevo.',{icono:'⚠️'});
   }finally{b.disabled=false;b.classList.remove('cargando');b.querySelector('i').className='ti ti-file-type-pdf';}
 }
 /* color CSS -> [r,g,b] */

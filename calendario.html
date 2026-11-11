@@ -315,8 +315,8 @@ function guardar(){
   if(db)db.collection(COL).doc(id).set(e).catch(()=>{});
   cerrarForm();snd(prev?'aceptar':'agregar');elegir(fecha);
 }
-function borrar(){
-  if(!editando||!confirm('¿Eliminar "'+EV[editando].titulo+'"?'))return;
+async function borrar(){
+  if(!editando||!(await confirmar('¿Eliminar este evento?','"'+EV[editando].titulo+'"',{boton:'Sí, eliminar',peligro:true})))return;
   const id=editando;delete EV[id];wr(LS,EV);if(db)db.collection(COL).doc(id).delete().catch(()=>{});
   cerrarForm();snd('borrar');render();
 }
@@ -339,16 +339,16 @@ async function avEstado(){
 function avCargando(){avB.innerHTML='<span class="spin" aria-hidden="true"></span>';avB.setAttribute('aria-busy','true');avB.setAttribute('aria-label','Cargando…');}
 async function avToggle(){
   const s=avB.dataset.s;
-  if(s==='no'){alert(avIOS?'En iPhone los avisos funcionan con JuntOS instalado:\n1. Abrí JuntOS en Safari\n2. Tocá Compartir ⬆️ › "Agregar a inicio"\n3. Abrí JuntOS desde el ícono y activá los avisos acá.':'Este navegador no permite notificaciones. Probá con Chrome.');return}
+  if(s==='no'){avisar('Avisos al celu',avIOS?'En iPhone los avisos funcionan con JuntOS instalado:\n1. Abrí JuntOS en Safari\n2. Tocá Compartir ⬆️ › "Agregar a inicio"\n3. Abrí JuntOS desde el ícono y activá los avisos acá.':'Este navegador no permite notificaciones. Probá con Chrome.',{icono:'🔔'});return}
   try{
     if(s==='on'){
-      if(!confirm('¿Desactivar los avisos en este celu?'))return;
+      if(!(await confirmar('¿Desactivar los avisos?','Este celu deja de recibir las notificaciones de JuntOS.',{boton:'Desactivar',icono:'🔕'})))return;
       avCargando();
       const sub=await avSub();if(sub){await avApi('push_baja',{endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe();}
       snd('aceptar');return avEstado();
     }
     const perm=await Notification.requestPermission();
-    if(perm!=='granted'){alert('No se dio permiso para las notificaciones.\nPodés habilitarlo en los ajustes del navegador, en los permisos de este sitio.');return}
+    if(perm!=='granted'){avisar('Sin permiso para avisar','No se dio permiso para las notificaciones.\nPodés habilitarlo en los ajustes del navegador, en los permisos de este sitio.',{icono:'🔔'});return}
     avCargando();
     const reg=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;
     const r=await fetch('../api/?a=push_clave',{credentials:'same-origin'});const {clave}=await r.json();
@@ -357,8 +357,8 @@ async function avToggle(){
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:u8});
     const res=await avApi('push_alta',sub.toJSON());
     snd('agregar');
-    if(!(res.prueba>=200&&res.prueba<300))alert('Los avisos quedaron activados, pero la notificación de prueba no salió (código '+res.prueba+').');
-  }catch(e){alert('No se pudieron activar los avisos: '+(e&&e.message||e));}
+    if(!(res.prueba>=200&&res.prueba<300))avisar('Avisos activados','Pero la notificación de prueba no salió (código '+res.prueba+').',{icono:'⚠️'});
+  }catch(e){avisar('No se pudieron activar los avisos',String(e&&e.message||e),{icono:'⚠️'});}
   avEstado();
 }
 avEstado();

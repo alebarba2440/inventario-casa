@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 9;
+const VERSION_ESQUEMA = 10;
 
 function config(): array {
   static $c = null;
@@ -169,6 +169,15 @@ function esquema(PDO $db): void {
       actualizado DATETIME NOT NULL,
       PRIMARY KEY (usuario_id, clave),
       INDEX (pareja_id, clave),
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 10) {
+    // Notificaciones que cada uno borró de su casilla (no se borran para la pareja ni para los demás)
+    $db->exec("CREATE TABLE IF NOT EXISTS notif_borradas (
+      usuario_id INT NOT NULL,
+      clave VARCHAR(24) NOT NULL,
+      PRIMARY KEY (usuario_id, clave),
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }

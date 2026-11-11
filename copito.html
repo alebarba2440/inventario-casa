@@ -533,7 +533,7 @@ async function exportarPDF(){
     if(matchMedia('(pointer:coarse)').matches&&navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],title:nombre.replace(/\.pdf$/,'')});}catch(e){if(e.name!=='AbortError')doc.save(nombre);}
     }else doc.save(nombre);
-  }catch(e){console.warn(e);alert('No se pudo crear el PDF. Revisá la conexión a internet y probá de nuevo.');}
+  }catch(e){console.warn(e);avisar('No se pudo crear el PDF','Revisá la conexión a internet y probá de nuevo.',{icono:'⚠️'});}
   finally{b.disabled=false;b.classList.remove('cargando');b.querySelector('i').className='ti ti-file-type-pdf';}
 }
 function colorRGB(c){const x=document.createElement('canvas').getContext('2d');x.fillStyle='#1D9E75';x.fillStyle=c;const h=x.fillStyle;

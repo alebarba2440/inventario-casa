@@ -408,7 +408,7 @@ function render(){
     guardarCats();drag=null;document.body.classList.remove('ordenando');render();setTimeout(()=>{sinClick=false;},400);}
 })();
 function toggleGrupo(c){if(colapsados[c])delete colapsados[c];else colapsados[c]=true;wr('grupos-colapsados',colapsados);render();}
-function editarCat(e,c){e.stopPropagation();const n=prompt('Nuevo nombre para la categoría:',nombreCat(c));const k=catDe(c);if(k&&n&&n.trim()){k.label=n.trim();guardarCats();render();}}
+async function editarCat(e,c){e.stopPropagation();const n=await pedirTexto('Cambiar nombre','Nuevo nombre para la categoría:',{valor:nombreCat(c)});const k=catDe(c);if(k&&n&&n.trim()){k.label=n.trim();guardarCats();render();}}
 let ultCat=rd('ultima-categoria','varios');
 function opcionesCat(sel){return CATS.map(k=>`<option value="${k.id}"${k.id===sel?' selected':''}>${k.icon} ${esc(k.label)}</option>`).join('');}
 function toggleNuevo(abrirlo){const f=document.getElementById('nuevo'),b=document.getElementById('bNuevo');

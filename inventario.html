@@ -1255,8 +1255,8 @@
     container.innerHTML = [...categories].sort((a,b) => a.localeCompare(b,'es'))
       .map(cat => `<div class="category-item"><span class="category-name">${escapeHtml(cat)}</span><div class="category-actions"><button class="cat-edit" onclick="promptEditCategory('${escapeHtml(cat)}')"><i class="ti ti-edit"></i></button><button class="cat-delete" onclick="deleteCategory('${escapeHtml(cat)}')"><i class="ti ti-trash"></i></button></div></div>`).join('');
   }
-  function promptEditCategory(oldName) {
-    const newName = prompt('Editar categoría:', oldName);
+  async function promptEditCategory(oldName) {
+    const newName = await pedirTexto('Editar categoría', '', { valor: oldName });
     if (newName && newName.trim() && newName.trim() !== oldName) editCategory(oldName, newName.trim());
   }
   function updateCategorySelects() {

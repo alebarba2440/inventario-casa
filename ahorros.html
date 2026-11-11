@@ -424,8 +424,8 @@ function confirmarAddEst(){
 
 /* ---------- meses ---------- */
 /* borra todo (para ambos, porque se sincroniza) y antes baja una copia de respaldo */
-function borrarTodo(){
-  const t=prompt('Esto borra TODOS los movimientos y estimados de Ahorros, para los dos.\nAntes se descarga una copia de respaldo.\n\nEscribí BORRAR para confirmar:');
+async function borrarTodo(){
+  const t=await pedirTexto('¿Borrar todo Ahorros?','Esto borra TODOS los movimientos y estimados de Ahorros, para los dos. Antes se descarga una copia de respaldo.\n\nEscribí BORRAR para confirmar:',{boton:'Borrar todo',peligro:true,placeholder:'BORRAR'});
   if(!t||t.trim().toUpperCase()!=='BORRAR')return;
   try{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');
     a.href=URL.createObjectURL(blob);a.download='ahorros-respaldo-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();}catch(e){}
@@ -442,7 +442,7 @@ function borrarMes(id){
 }
 /* nombre que se muestra: el apodo elegido en JuntOS manda; si no, el de la columna */
 function NM(p){const A=(window.JUNTOS&&JUNTOS.apodos)||{};return A[p]||(state.names&&state.names[p])||(p==='j'?'Juli':'Ale');}
-function renameP(p){const n=prompt('Nombre',NM(p));if(!(n&&n.trim()))return;
+async function renameP(p){const n=await pedirTexto('Cambiar nombre','',{valor:NM(p),placeholder:'Nombre o apodo'});if(!(n&&n.trim()))return;
   if(window.ponerApodo&&window.ponerApodo(p,n.trim())){render();return;}
   state.names[p]=n.trim();save();render();}
 window.addEventListener('juntos',()=>{try{render()}catch(e){}});

@@ -644,7 +644,7 @@ function elegirBackup(file){
         const r = await fetch('../api/?a=admin_restaurar', {method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json','X-Juntos':'1'}, body: lr.result});
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j.error || 'No se pudo restaurar');
-        alert(`✅ Listo: se restauraron ${j.parejas} parejas, ${j.usuarios} usuarios y ${j.docs} registros.`);
+        $('dTxt').innerHTML = `✅ <b>Listo</b>: se restauraron ${j.parejas} parejas, ${j.usuarios} usuarios y ${j.docs} registros.`; $('dOk').className = 'btn'; $('dOk').textContent = 'Entendido'; $('dOk').onclick = () => { dlg.close(); $('dOk').textContent = 'Confirmar'; }; dlg.showModal();
         inicio();
       } catch(e){ $('err').textContent = e.message; }
     };
