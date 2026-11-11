@@ -3,7 +3,8 @@
    Los deseos tienen un id fijo (no lo cambies: las respuestas de cada uno se guardan con ese id). */
 window.INTIM = {
   niveles: [{"id": "suave", "nombre": "Suave", "emoji": "🌸"}, {"id": "medio", "nombre": "Medio", "emoji": "🌶️"}, {"id": "picante", "nombre": "Picante", "emoji": "🔥"}],
-  // Lo que le toca hacer al que gana en los dados
+  // Dados: lo hace EL QUE GANA (sobre o para el otro). "el otro" se reemplaza por el nombre de quien perdió;
+  // si empieza con "El ganador" / "El que perdió" / "Vuelvan", se muestra tal cual con los nombres.
   acciones: {
     suave: [
       "Dar un abrazo largo de 30 segundos",
@@ -11,7 +12,7 @@ window.INTIM = {
       "Decir tres cosas que te gustan del otro",
       "Un beso en la frente y otro en la mano",
       "Bailar lento una canción",
-      "Elegir la próxima película y preparar el mate o los snacks",
+      "Preparar el mate o los snacks para los dos",
       "Hacerle cosquillas suaves en la espalda",
       "Un beso de 10 segundos",
       "Masaje en las manos con crema",
@@ -45,7 +46,7 @@ window.INTIM = {
       "Leerle un mensaje lindo que le escribiste en el momento",
       "Contar qué es lo que más extrañás cuando no está",
       "Dar un beso de buenas noches aunque sea de día",
-      "Elegir la próxima tirada sin tirar el dado"
+      "El ganador elige la acción de la próxima ronda"
     ],
     medio: [
       "Masaje con crema donde el otro elija",
@@ -72,8 +73,8 @@ window.INTIM = {
       "Acariciar con una pluma o una tela suave",
       "Darle un beso con hielo en la boca",
       "Contar en detalle la mejor noche que tuvieron",
-      "Dejarse acariciar sin moverse durante 2 minutos",
-      "Elegir cómo y dónde sentarse el otro (en tu falda vale)",
+      "Acariciar al otro 2 minutos mientras se queda quieto/a",
+      "Sentar al otro en tu falda durante una ronda",
       "Un beso apasionado contra la pared",
       "Hacer un masaje con las manos tibias en la cintura",
       "Sacarle una prenda solo con los dientes",
@@ -82,12 +83,12 @@ window.INTIM = {
       "Decir una fantasía suave en voz baja",
       "Elegir la luz y la música para lo que sigue",
       "Masaje de pies a cabeza de 5 minutos",
-      "Hacer que el otro adivine dónde lo vas a besar",
+      "Hacer que el otro adivine dónde lo/la vas a besar",
       "Besar los dedos de la mano uno por uno",
       "Un beso que dure toda una canción",
       "Dibujar un corazón con besos en la espalda",
       "Acariciar sin usar las manos (con la cara, el pelo, los labios)",
-      "Elegir el próximo reto de la sección Retos"
+      "Cumplir un reto de la sección Retos que elija el otro"
     ],
     picante: [
       "El ganador decide el próximo juego",
@@ -105,31 +106,31 @@ window.INTIM = {
       "El ganador elige el ritmo de esta noche",
       "Un juego de besos con los ojos vendados para los dos",
       "Probar algo nuevo de la lista de deseos",
-      "Masaje con aceite donde el ganador elija",
+      "El que perdió le hace al ganador un masaje con aceite donde el ganador elija",
       "Elegir un lugar distinto de la casa para lo que sigue",
       "Contar al oído, con detalle, lo que vas a hacer",
       "Usar hielo o algo tibio para sorprender al otro",
       "El ganador elige una fantasía para actuar",
-      "Cinco minutos donde solo el ganador puede tocar",
-      "Un baile privado para el ganador",
+      "El ganador puede tocar durante 5 minutos y el que perdió no",
+      "El que perdió le hace un baile privado al ganador",
       "Usar un juguete o accesorio que tengan",
       "Diez minutos sin usar las manos para nada",
-      "Bañarse juntos y que el ganador elija todo",
+      "El ganador elige todo: se bañan juntos",
       "El que perdió cumple un \"sí\" (dentro de los límites)",
       "Elegir la posición o el lugar de lo que sigue",
-      "Un juego de rol de 10 minutos que elige el ganador",
+      "El ganador elige un juego de rol de 10 minutos",
       "Ponerle crema o aceite al otro en todo el cuerpo",
       "Darse besos solo en lugares nuevos",
-      "Desafío: provocar al otro sin tocarlo durante 2 minutos",
+      "Desafío: provocar al otro sin tocarlo/a durante 2 minutos",
       "El ganador elige si se apagan las luces",
       "Recorrer con besos desde el cuello hasta los pies",
       "El ganador decide qué prenda se queda puesta",
-      "Un striptease corto con la canción que elija el ganador",
-      "Dejarse guiar por el otro con los ojos vendados",
+      "El que perdió hace un striptease corto con la canción que elija el ganador",
+      "Guiar al otro con los ojos vendados",
       "Proponer un juego nuevo y hacerlo ahora",
-      "Una noche entera donde el ganador manda (con la palabra de seguridad)",
+      "El ganador manda toda la noche (con la palabra de seguridad)",
       "Grabar un audio picante para escucharlo juntos",
-      "Volver a tirar: el que gane elige la siguiente acción"
+      "Vuelvan a tirar: el próximo que gane elige la acción"
     ]
   },
   verdades: {

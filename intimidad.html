@@ -63,7 +63,9 @@
   .jug small{font-size:.78rem;font-weight:800;color:var(--text2)}
   .resultado{text-align:center;padding:18px 14px;border-radius:10px 30px 10px 30px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));color:#fff;display:flex;flex-direction:column;gap:6px;animation:aparece .35s ease-out}
   .resultado small{font-weight:900;letter-spacing:.06em;text-transform:uppercase;opacity:.9;font-size:.75rem}
-  .resultado b{font-size:1.25rem;font-weight:900;line-height:1.3}
+  .resultado>b{font-size:1.3rem;font-weight:900;line-height:1.3}
+  .resultado .quien{font-size:1.05rem;font-weight:700}.resultado .quien b{font-weight:900}
+  .resultado .regla{font-size:.78rem;font-weight:700;opacity:.85}
   @keyframes aparece{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
   .tirar{font-size:1.15rem;padding:16px}
   /* cartas verdad o reto */
@@ -209,6 +211,11 @@ const PUNTOS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]}
 const caraDado=(v,cl='')=>v?`<div class="dado ${cl}">${Array.from({length:9},(_,i)=>`<i class="${PUNTOS[v].includes(i)?'p':''}"></i>`).join('')}</div>`:`<div class="dado vacio ${cl}">?</div>`;
 const val=s=>DADO[s]&&DADO[s].r===DADO.ronda?DADO[s].v:0;
 function accionDe(r,n){if(DADO.acc&&DADO.ronda===r)return DADO.acc;const l=D.acciones[n]||D.acciones.suave;return l[((r*7919)%l.length+l.length)%l.length];}
+// Pone los nombres en la acción: "el otro" → quien perdió, "El ganador" → quien ganó. Devuelve [lo hace el ganador?, texto]
+function textoAccion(t,G,P){const regla=/^(El ganador|El que perdió|Vuelvan)/.test(t);
+  t=t.replace(/\bal ganador\b/g,'a '+G).replace(/\bdel ganador\b/g,'de '+G).replace(/[Ee]l ganador/g,G).replace(/[Ee]l que perdió/g,P)
+    .replace(/\bal otro\b/g,'a '+P).replace(/\bdel otro\b/g,'de '+P).replace(/\b[Ee]l otro\b/g,P);
+  return [!regla,t];}
 function elegirAccion(n){const l=D.acciones[n]||[],us=((DADO.usadas||{})[n]||[]).filter(t=>l.includes(t));let libres=l.filter(t=>!us.includes(t)),nuevas=us.slice();
   if(!libres.length){const ult=us[us.length-1];nuevas=ult?[ult]:[];libres=l.filter(t=>t!==ult);if(!libres.length)libres=l;}
   const t=azar(libres);nuevas.push(t);return {acc:t,usadas:Object.assign({},DADO.usadas||{},{[n]:nuevas})};}
@@ -216,7 +223,10 @@ function rDados(){
   const yS=yo(),oS=otro(),mv=val(yS),ov=val(oS),ambos=mv&&ov,n=D.niveles.find(x=>x.id===(DADO.nivel||nivel))||D.niveles[0];
   const gana=ambos&&mv!==ov?(mv>ov?yS:oS):null;
   let estado='';
-  if(ambos&&gana)estado=`<div class="resultado"><small>${n.emoji} Gana ${esc(nom(gana))} con un ${Math.max(mv,ov)}</small><b>${esc(nom(gana))}: ${esc(accionDe(DADO.ronda,DADO.nivel||nivel))}</b></div>`;
+  if(ambos&&gana){const pierde=gana===yS?oS:yS,[quien,txt]=textoAccion(accionDe(DADO.ronda,DADO.nivel||nivel),nom(gana),nom(pierde));
+    estado=`<div class="resultado"><small>${n.emoji} Ganó ${esc(nom(gana))} · ${Math.max(mv,ov)} a ${Math.min(mv,ov)}</small>
+      ${quien?`<span class="quien">👉 Le toca a <b>${esc(nom(gana))}</b>${gana===yS?' (vos)':''}</span>`:''}<b>${esc(txt)}</b>
+      <span class="regla">${quien?'Lo hace el que gana, con '+esc(nom(pierde))+'.':'Sigan la consigna.'}</span></div>`;}
   else if(ambos)estado=`<div class="resultado"><small>¡Empate!</small><b>Sacaron los dos ${mv}. Tiren de nuevo 🎲</b></div>`;
   else if(mv&&!unCelu)estado=`<div class="card puerta" style="padding:16px"><b>Esperando a ${esc(nom(oS))}…</b><p class="nota">Cuando tire en su celu, acá aparece el resultado.</p>
     <button class="btn ghost" onclick="avisarTirar()"><i class="ti ti-bell"></i> Avisarle que tire</button></div>`;
@@ -226,7 +236,7 @@ function rDados(){
     ${estado}
     <button class="btn tirar" id="bTirar" onclick="tirar()" ${!ambos&&mv&&!unCelu?'disabled':''}><i class="ti ti-dice"></i> ${unCelu?'Tirar los dos':ambos||!mv?'Tirar mi dado':'Ya tiraste'}</button>
     <button class="btn ghost" onclick="unCelu=!unCelu;wr('int_uncelu',unCelu);render()">${unCelu?'📱📱 Jugar cada uno en su celu':'📱 Jugar con un solo celu'}</button>
-    <p class="nota" style="text-align:center">Nivel de las acciones: el que elija quien empieza la ronda. Si empatan, se vuelve a tirar.</p>`;
+    <p class="nota" style="text-align:center"><b>Cómo se juega:</b> cada uno tira su dado. <b>El que saca más alto hace la acción</b> con el otro. Si empatan, se vuelve a tirar. El nivel lo elige quien empieza la ronda.</p>`;
 }
 function tirar(){
   if(rodando)return;rodando=true;snd('tap');
