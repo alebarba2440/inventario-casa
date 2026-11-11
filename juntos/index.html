@@ -35,6 +35,9 @@
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
   nav .marca{font-size:2.3rem;text-decoration:none;display:flex}
   .logo.enh1{height:1.25em;width:calc(1.25em * 2.866);vertical-align:-.28em}
+  /* al pasar el mouse (o tocar en el celu) las letras del logo se ponen rosas */
+  .logo i:not(.c){transition:background-color .35s ease}
+  .logo:hover i:not(.c),.logo.rosa i:not(.c){background-color:var(--rosa)}
   /* corazón del logo del título que late suave */
   .logo.enh1 i.c{transform-origin:68% 55%;animation:late 1.3s ease-in-out infinite}
   @keyframes late{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.08)}}
@@ -332,6 +335,9 @@
 // Barra con línea al bajar
 const nav = document.getElementById('nav');
 addEventListener('scroll', () => nav.classList.toggle('sombra', scrollY > 8), {passive: true});
+
+// Logo: en el celu, tocarlo lo pone rosa un ratito (en la compu alcanza con pasar el mouse)
+document.querySelectorAll('.logo').forEach(l => l.addEventListener('touchstart', () => { l.classList.add('rosa'); clearTimeout(l._t); l._t = setTimeout(() => l.classList.remove('rosa'), 1500); }, {passive: true}));
 
 // Menú del celu (☰): abre/cierra; se cierra al elegir una opción, tocar afuera o con Escape
 const menuBtn = document.getElementById('menuBtn');
