@@ -196,11 +196,11 @@ try {
         $dias = (int)ceil(($hasta - time()) / 86400);
         if (in_array($dias, [7, 3, 1], true))
           notificar($pid, null, "prueba|$pid|$dias|{$p['prueba_hasta']}", $dias === 1 ? '¡Hoy es tu último día de prueba!' : "Te quedan $dias días de prueba",
-            'Activá la suscripción y seguí usando JuntOS sin cortes: todo lo que cargaron queda igual.', '⏳', 'index.html');
+            'Activá la suscripción y seguí usando JuntOS sin cortes: todo lo que cargaron queda igual.', '⏳', '#suscribir', 'prueba', hastaPareja($p));
       } elseif ($hasta > time() - 3 * 86400) {   // venció hace poco (no se avisa de vencimientos viejos)
         $f = gmdate('Y-m-d H:i:s', $hasta);
         notificar($pid, null, "vence|$pid|$f", $pg ? 'Tu suscripción venció' : 'Terminó tu prueba gratis',
-          'Todo lo que cargaron está guardado. Activá la suscripción para volver a cargar cosas nuevas.', $pg ? '⏰' : '💞', 'index.html');
+          'Todo lo que cargaron está guardado. Activá la suscripción para volver a cargar cosas nuevas.', $pg ? '⏰' : '💞', '#suscribir', 'vence', hastaPareja($p));
       }
     } catch (Throwable $e) { error_log('JuntOS notif prueba: ' . $e->getMessage()); }
   }

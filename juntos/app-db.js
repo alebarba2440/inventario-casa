@@ -441,10 +441,10 @@
     var X = '<button type="button" class="x no" aria-label="Cerrar" style="border-radius:50% !important">✕</button>';
     var precio = '<div class="precio">$5.000 / mes<small>Una sola suscripción para los dos</small></div>';
     if (porVencer) {
-      var barras = ''; for (var k = 7; k >= 1; k--) barras += '<i class="' + (k <= dias ? 'on' : '') + '"></i>';
+      var barras = ''; if (dias <= 7) for (var k = 7; k >= 1; k--) barras += '<i class="' + (k <= dias ? 'on' : '') + '"></i>';
       m.innerHTML = '<div class="c">' + X + '<div class="ic">⏳</div>' +
         '<h3>' + (dias <= 1 ? '¡Hoy es tu último día de prueba!' : 'Te quedan <span class="dias">' + dias + '</span> días de prueba') + '</h3>' +
-        '<div class="cuenta" aria-hidden="true">' + barras + '</div>' +
+        (barras ? '<div class="cuenta" aria-hidden="true">' + barras + '</div>' : '') +
         '<p>Todavía no te suscribiste. Activá la suscripción ahora y seguí usando JuntOS <b>sin cortes</b>: todo lo que cargaron queda igual.</p>' +
         precio + boton + '<div class="fila uno"><button type="button" class="no">Más tarde</button></div></div>';
     } else {
@@ -518,7 +518,7 @@
       '#jxMsg .m h3{margin:0;font-size:1.05rem;font-weight:800;line-height:1.25}#jxMsg .m.nl h3{font-weight:900}' +
       '#jxMsg .m small{display:block;color:var(--m-tx2);font-weight:700;font-size:.78rem;margin-top:2px}' +
       '#jxMsg .m p{margin:8px 0 0;color:var(--m-tx);opacity:.9;font-size:.96rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}' +
-      '#jxMsg .m .ir{display:inline-block;margin-top:8px;color:var(--m-ac);font-weight:800;font-size:.9rem;text-decoration:none}' +
+      '#jxMsg .m .ir{display:inline-block;margin-top:8px;color:var(--m-ac);font:800 .9rem Nunito,system-ui,sans-serif;text-decoration:underline;text-underline-offset:3px;background:none;border:0;padding:0;cursor:pointer}' +
       '#jxMsg .ok{display:block;box-sizing:border-box;width:calc(100% - 40px);margin:12px 20px 0;border:0;border-radius:6px 20px 6px 20px;background:var(--m-ac);color:#fff;font:900 1rem Nunito,system-ui,sans-serif;padding:13px;cursor:pointer}' +
       '#jxMsg .todo{display:block;margin:10px auto 0;background:none;border:0;color:var(--m-tx2);font:800 .88rem Nunito,system-ui,sans-serif;cursor:pointer;padding:6px}' +
       '#jxMsg .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;background:var(--m-x);color:var(--m-tx2);font:700 1.25rem/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;padding:0}' +
@@ -547,7 +547,7 @@
       var url = x.url && /^[a-z0-9_-]+\.html([#?].*)?$/i.test(x.url) && !/^index\.html$/i.test(x.url) ? x.url : '';
       return '<div class="m' + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="t"><div class="e">' + escH(x.emoji || '🔔') + '</div><div><h3>' + escH(x.titulo) +
         '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div></div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') +
-        (url ? '<a class="ir" href="' + escH(url) + '">Ver →</a>' : '') + '</div>';
+        (x.url === '#suscribir' ? '<button type="button" class="ir sus">Suscribirme →</button>' : url ? '<a class="ir" href="' + escH(url) + '">Ver →</a>' : '') + '</div>';
     }).join('') : '<div class="vacio"><div>📭</div>No tenés notificaciones</div>';
     var haySinLeer = casilla && lista.some(function (x) { return !x.leido; });
     m.innerHTML = '<div class="c"><button type="button" class="x" aria-label="Cerrar" style="border-radius:50% !important">✕</button>' +
@@ -556,6 +556,12 @@
     function cerrar() { m.classList.remove('on'); setTimeout(function () { m.remove(); }, 200); }
     m.addEventListener('click', function (e) {
       if (e.target === m || e.target.closest('.x') || e.target.closest('.ok')) return cerrar();
+      if (e.target.closest('.sus')) {   // aviso de prueba/vencimiento → suscribirse (por ahora abre el cartel de suscripción)
+        var mi = e.target.closest('.m'); if (mi && mi.classList.contains('nl')) { mi.classList.remove('nl'); marcarLeidos([mi.getAttribute('data-k')]); }
+        if (URL_SUSCRIPCION) { window.open(URL_SUSCRIPCION, '_blank', 'noopener'); return; }
+        var pj = (window.JUNTOS && window.JUNTOS.pareja) || {}, dr = +pj.dias_restantes;
+        cerrar(); setTimeout(function () { modalSuscripcion(!vencido() && dr >= 1 ? dr : undefined); }, 220); return;
+      }
       if (e.target.closest('.todo')) { marcarLeidos('todo'); m.querySelectorAll('.m.nl').forEach(function (n) { n.classList.remove('nl'); }); e.target.remove(); return; }
       var it = e.target.closest('.m.nl');   // tocar un aviso no leído lo marca como leído
       if (it) { it.classList.remove('nl'); marcarLeidos([it.getAttribute('data-k')]); if (!m.querySelector('.m.nl')) { var t = m.querySelector('.todo'); if (t) t.remove(); } }

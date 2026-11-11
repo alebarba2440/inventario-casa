@@ -136,9 +136,12 @@ function bandeja(array $u): array {
   $alta = strtotime($u['creado'] . ' UTC');
   foreach (mensajes() as $m) $items[] = ['k' => 'm' . $m['id'], 'tipo' => 'mensaje', 'id' => $m['id'], 'titulo' => $m['titulo'], 'texto' => $m['texto'], 'emoji' => $m['emoji'] ?: '📣', 'url' => '', 'creado' => $m['creado'], 'viejo' => strtotime($m['creado']) < $alta];
   if ($u['pareja_id']) {
-    $q = db()->prepare('SELECT id, titulo, texto, emoji, url, creado FROM notifs WHERE pareja_id = ? AND (usuario_id IS NULL OR usuario_id = ?) ORDER BY id DESC LIMIT 30');
+    $p = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $p->execute([$u['pareja_id']]); $p = $p->fetch();
+    $hasta = $p ? hastaPareja($p) : '';
+    $q = db()->prepare('SELECT id, titulo, texto, emoji, url, tipo, ref, creado FROM notifs WHERE pareja_id = ? AND (usuario_id IS NULL OR usuario_id = ?) ORDER BY id DESC LIMIT 30');
     $q->execute([$u['pareja_id'], $u['id']]);
-    foreach ($q->fetchAll() as $n) $items[] = ['k' => 'n' . $n['id'], 'tipo' => 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
+    // Los avisos de prueba/vencimiento solo se ven si siguen valiendo (si se sumaron días o se pagó, desaparecen)
+    foreach ($q->fetchAll() as $n) if (!in_array($n['tipo'], ['prueba', 'vence'], true) || $n['ref'] === $hasta) $items[] = ['k' => 'n' . $n['id'], 'tipo' => 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
   }
   usort($items, fn($a, $b) => strcmp($b['creado'], $a['creado']));
   $items = array_slice($items, 0, 40);
@@ -224,7 +227,7 @@ try {
       $otro = $db->prepare('SELECT id FROM usuarios WHERE pareja_id = ? AND id <> ?'); $otro->execute([$pid, $u['id']]);
       $nom = trim(explode(' ', (string)$u['nombre'])[0] ?? '') ?: $u['email'];
       foreach ($otro->fetchAll(PDO::FETCH_COLUMN) as $oid)
-        try { notificar((int)$pid, (int)$oid, "unio|$pid|{$u['id']}", "$nom se unió a tu espacio", '¡Ya pueden usar JuntOS de a dos! Todo lo que cargue uno lo ve el otro.', '💞', 'index.html'); } catch (Throwable $e) { error_log('JuntOS notif: ' . $e->getMessage()); }
+        try { notificar((int)$pid, (int)$oid, "unio|$pid|{$u['id']}", "$nom se unió a tu espacio", '¡Ya pueden usar JuntOS de a dos! Todo lo que cargue uno lo ve el otro.', '💞', '', 'unio'); } catch (Throwable $e) { error_log('JuntOS notif: ' . $e->getMessage()); }
       responder(estado(requerirUsuario()));
 
     case 'GET boot':
@@ -463,6 +466,7 @@ try {
         $n = (int)($in['dias'] ?? 0); if (!$n || abs($n) > 3650) error_('Cantidad de días inválida');
         $base = strtotime($p['prueba_hasta'] . ' UTC'); if ($n > 0) $base = max($base, time());
         db()->prepare('UPDATE parejas SET prueba_hasta = ? WHERE id = ?')->execute([gmdate('Y-m-d H:i:s', $base + $n * 86400), $pid]);
+        db()->prepare("DELETE FROM notifs WHERE pareja_id = ? AND tipo IN ('prueba','vence')")->execute([$pid]);
         responder(['ok' => true]);
       } elseif ($op === 'intercambiar') {
         // Arreglo puntual: invierte qué integrante ocupa cada lugar (j/a) en los datos de la pareja.
@@ -476,6 +480,7 @@ try {
         responder(['ok' => true, 'invertido' => $d->invertido]);
       } else error_('Operación inválida');
       db()->prepare('UPDATE parejas SET pago_hasta = ? WHERE id = ?')->execute([$nuevo, $pid]);
+      db()->prepare("DELETE FROM notifs WHERE pareja_id = ? AND tipo IN ('prueba','vence')")->execute([$pid]);
       responder(['ok' => true]);
 
     case 'GET admin_backup':

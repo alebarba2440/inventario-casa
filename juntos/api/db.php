@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 6;
+const VERSION_ESQUEMA = 7;
 
 function config(): array {
   static $c = null;
@@ -144,6 +144,13 @@ function esquema(PDO $db): void {
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
+  if ($v < 7) {
+    // Tipo de aviso y a qué fecha de vencimiento corresponde: los de prueba/vencimiento se ocultan si la fecha cambió
+    // (se sumaron días, se pagó). Los de prueba que había quedaron viejos: se borran y el cron arma los que correspondan.
+    $c = $db->query("SHOW COLUMNS FROM notifs LIKE 'tipo'")->fetch();
+    if (!$c) $db->exec("ALTER TABLE notifs ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT '', ADD COLUMN ref VARCHAR(40) NOT NULL DEFAULT ''");
+    $db->exec("DELETE FROM notifs WHERE titulo LIKE '%de prueba%' OR titulo LIKE 'Terminó tu prueba%' OR titulo LIKE 'Tu suscripción venció%'");
+  }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
 }
 
@@ -181,14 +188,23 @@ function tipoReal(string $ruta): ?string {
 // ---------- Casilla de notificaciones ----------
 // Guarda un aviso para una pareja (o solo para una persona, con $uid) y, si es nuevo, lo manda como push.
 // $clave evita repetidos: el mismo aviso no se guarda ni se manda dos veces. Necesita push.php cargado.
-function notificar(int $pid, ?int $uid, string $clave, string $titulo, string $texto, string $emoji = '', string $url = ''): bool {
-  $q = db()->prepare('INSERT IGNORE INTO notifs (pareja_id, usuario_id, clave, titulo, texto, emoji, url, creado) VALUES (?,?,?,?,?,?,?,?)');
-  $q->execute([$pid, $uid, hash('sha256', $clave), mb_substr($titulo, 0, 160), mb_substr($texto, 0, 500), $emoji, $url, gmdate('Y-m-d H:i:s')]);
+// $tipo 'prueba' / 'vence': avisos de suscripción; el nuevo reemplaza a los anteriores de la pareja y $ref es la fecha de vencimiento a la que se refiere.
+function notificar(int $pid, ?int $uid, string $clave, string $titulo, string $texto, string $emoji = '', string $url = '', string $tipo = '', string $ref = ''): bool {
+  $h = hash('sha256', $clave);
+  $ya = db()->prepare('SELECT 1 FROM notifs WHERE clave = ?'); $ya->execute([$h]);
+  if ($ya->fetchColumn()) return false;   // ya se mandó
+  if ($tipo === 'prueba' || $tipo === 'vence') db()->prepare("DELETE FROM notifs WHERE pareja_id = ? AND tipo IN ('prueba','vence')")->execute([$pid]);
+  $q = db()->prepare('INSERT IGNORE INTO notifs (pareja_id, usuario_id, clave, titulo, texto, emoji, url, tipo, ref, creado) VALUES (?,?,?,?,?,?,?,?,?,?)');
+  $q->execute([$pid, $uid, $h, mb_substr($titulo, 0, 160), mb_substr($texto, 0, 500), $emoji, $url, $tipo, $ref, gmdate('Y-m-d H:i:s')]);
   if ($q->rowCount() === 0) return false;
   if (function_exists('pushUsuario')) {
     if ($uid) $para = [$uid];
     else { $m = db()->prepare('SELECT id FROM usuarios WHERE pareja_id = ?'); $m->execute([$pid]); $para = array_map('intval', $m->fetchAll(PDO::FETCH_COLUMN)); }
-    foreach ($para as $u) pushUsuario($u, ['title' => trim($emoji . ' ' . $titulo), 'body' => $texto, 'url' => $url ?: 'index.html', 'tag' => 'notif-' . substr(hash('sha256', $clave), 0, 12)]);
+    foreach ($para as $u) pushUsuario($u, ['title' => trim($emoji . ' ' . $titulo), 'body' => $texto, 'url' => ($url && $url[0] !== '#') ? $url : 'index.html', 'tag' => 'notif-' . substr(hash('sha256', $clave), 0, 12)]);
   }
   return true;
+}
+// Fecha hasta la que una pareja puede usar la app (prueba o pago), como texto: sirve de "ref" de los avisos de suscripción
+function hastaPareja(array $p): string {
+  return gmdate('Y-m-d H:i:s', max(strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0));
 }
