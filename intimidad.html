@@ -45,6 +45,7 @@
   .seg button.on{background:var(--accent);color:#fff}
   .chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
   .chips::-webkit-scrollbar{display:none}
+  .chips.centro{justify-content:center}
   .chips button{border:2px solid var(--border2);background:var(--surface);border-radius:999px;padding:7px 12px;font-weight:800;font-size:.85rem;cursor:pointer;white-space:nowrap}
   .chips button.on{border-color:var(--accent);background:var(--accent-light);color:var(--accent-dark)}
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -204,7 +205,7 @@ function render(){
   window.jxSyncCada&&jxSyncCada(TAB==='dados'?1500:5000);
 }
 function irTab(k){TAB=k;wr('int_tab',k);snd('tap');render();scrollTo({top:0});}
-const chipsNivel=()=>`<div class="chips">${D.niveles.map(n=>`<button class="${n.id===nivel?'on':''}" onclick="nivel='${n.id}';wr('int_nivel',nivel);vr=null;retoAzar=null;snd('tap');render()">${n.emoji} ${n.nombre}</button>`).join('')}</div>`;
+const chipsNivel=()=>`<div class="chips centro">${D.niveles.map(n=>`<button class="${n.id===nivel?'on':''}" onclick="nivel='${n.id}';wr('int_nivel',nivel);vr=null;retoAzar=null;snd('tap');render()">${n.emoji} ${n.nombre}</button>`).join('')}</div>`;
 
 /* ---------- Dados de a dos: cada uno tira en su celu; el que saca más alto hace la acción ---------- */
 const PUNTOS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
@@ -253,7 +254,6 @@ function tirar(){
     const env=Object.assign({},d);if(env[oS]===null)env[oS]=DEL();
     if(db)db.collection('int').doc('dado').set(env,{merge:true}).catch(()=>{});
     rodando=false;snd('agregar');render();
-    if(!unCelu&&nueva)window.jxAvisarPareja&&jxAvisarPareja({titulo:'🎲 Te toca tirar',texto:'Tu pareja ya tiró el dado.',emoji:'🎲',url:'intimidad.html#dados'}).catch(()=>{});
   }
 }
 function avisarTirar(){window.jxAvisarPareja({titulo:'🎲 Te toca tirar',texto:'Tu pareja te está esperando.',emoji:'🎲',url:'intimidad.html#dados'}).then(()=>toast('Le avisamos 🎲')).catch(e=>toast(e.message||'No se pudo avisar'));}
