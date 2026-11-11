@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-title" content="Copito">
 <link rel="apple-touch-icon" href="img/apple-touch.png?v=10">
 <link rel="icon" type="image/png" href="img/icono.png?v=10">
-<title>Copito</title>
+<title>Vehículos</title>
 <script>window.CALC_OK=true;</script>
 <script src="tema.js"></script>
 <script src="sonidos.js"></script>
@@ -186,7 +186,7 @@
 <body>
 <div class="top">
   <a class="home-link" href="index.html" aria-label="Volver al inicio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.707 2.293l9 9c.63 .63 .184 1.707 -.707 1.707h-1v6a3 3 0 0 1 -3 3h-1v-7a3 3 0 0 0 -2.824 -2.995l-.176 -.005h-2a3 3 0 0 0 -3 3v7h-1a3 3 0 0 1 -3 -3v-6h-1c-.89 0 -1.337 -1.077 -.707 -1.707l9 -9a1 1 0 0 1 1.414 0m.293 11.707a1 1 0 0 1 1 1v7h-4v-7a1 1 0 0 1 .883 -.993l.117 -.007z"/></svg></a>
-  <h1>COPITO</h1>
+  <h1>VEHÍCULOS</h1>
   <button class="pdf-btn" id="bPdf" onclick="exportarPDF()" aria-label="Exportar mantenimiento en PDF" hidden><i class="ti ti-file-type-pdf"></i></button>
 </div>
 
@@ -246,7 +246,14 @@ function migrar(d){
   d.autos.forEach(a=>{if(!Array.isArray(a.mant))a.mant=[];});
   return d;
 }
-let D=rd(LS,null);if(!D||!Array.isArray(D.meses))D=semilla();migrar(D);
+/* Antes esta sección traía de ejemplo el auto de Ale y Juli. Si una cuenta que no es la de ellos lo tiene guardado (en el celu o en la nube), se reemplaza por una vacía. */
+function esEjemplo(d){try{const t=JSON.stringify(d||{});return /CONFORT ABS ABCP 2014|Yul[ií]n - Crespo|Cintar Santa Fe/.test(t);}catch(e){return false}}
+function esDeEllos(){const J=window.JUNTOS;if(!J)return true;   // fuera de JuntOS (la versión propia) no se toca
+  const e=Object.values(J.emails||{}).map(x=>String(x||'').toLowerCase()).filter(Boolean);
+  if(!e.length)return true;   // todavía no se sabe quién es: por las dudas no se borra nada
+  return e.includes('alejandrobarba021@gmail.com')||e.includes('gionejulieta@gmail.com');}
+function limpiarEjemplo(d){return d&&esEjemplo(d)&&!esDeEllos()?null:d;}
+let D=limpiarEjemplo(rd(LS,null));if(!D||!Array.isArray(D.meses))D=semilla();migrar(D);
 let tabAct=rd('copito_tab','g'),openMes;
 
 /* ================= pestañas ================= */
@@ -557,8 +564,10 @@ function guardar(){wr(LS,D);if(!db||!listo)return;clearTimeout(timer);
 function guardarPago(m){wr(LS,D);if(!db)return;
   ref().set({pagos:{[m.id]:m.pagado},ts:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(fallo);}
 function aplicar(doc){
-  if(!doc.exists){listo=true;guardar();return}
-  try{const x=doc.data(),d=JSON.parse(x.json||'null');if(d&&Array.isArray(d.meses)){migrar(d);
+  if(!doc.exists){if(esEjemplo(D)&&!esDeEllos()){D=semilla();migrar(D);renderGastos();renderMant();}listo=true;guardar();return}
+  try{const x=doc.data();let d=JSON.parse(x.json||'null');
+    if(d&&esEjemplo(d)&&!esDeEllos()){D=semilla();migrar(D);listo=true;guardar();renderGastos();renderMant();return}   // tenía el ejemplo guardado: queda vacío
+    if(d&&Array.isArray(d.meses)){migrar(d);
     const pg=x.pagos||{};d.meses.forEach(m=>{if(m.id in pg)m.pagado=!!pg[m.id];});
     D=d;wr(LS,D);listo=true;
     const a=document.activeElement;if(!(a&&a.tagName==='INPUT'&&a.type!=='checkbox')){renderGastos();renderMant();}}}catch(e){}

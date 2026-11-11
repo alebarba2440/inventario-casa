@@ -186,7 +186,7 @@ const POR_PAG = 30, PRECIO = 5000;
 let D = null, YO = null, FILTRO = 'todas', PAG = 1, ABIERTOS = new Set();
 const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas', vence:'Por vencer', suelto:'Sin pareja'};
 const EST = {prueba:'Prueba', pago:'Paga', vencida:'Vencida', suelto:'Sin pareja'};
-const SECC = {juntos:'Ajustes', inv:'Inventario', categorias:'Inventario', 'ahorros/data':'Ahorros', 'ahorros/compartidos':'Gastos compartidos', 'ahorros/copito':'Auto', vacaciones:'Vacaciones', calendario:'Calendario',
+const SECC = {juntos:'Ajustes', inv:'Inventario', categorias:'Inventario', 'ahorros/data':'Ahorros', 'ahorros/compartidos':'Gastos compartidos', 'ahorros/copito':'Vehículos', vacaciones:'Vacaciones', calendario:'Calendario',
   mascotas:'Mascotas', mascota_reg:'Mascotas', hijos:'Hijos', hijo_vac:'Hijos', hijo_med:'Hijos', hijo_doc:'Hijos', hijo_fecha:'Hijos'};
 
 function ver(v){ ['vCargando','vIngresar','vSinAcceso','vPanel'].forEach(x => $(x).hidden = x !== v); $('bAct').hidden = $('tabs').hidden = v !== 'vPanel'; }
