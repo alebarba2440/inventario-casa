@@ -129,6 +129,24 @@ function docsDesde(int $pid, int $desde): array {
   return [$out, $max];
 }
 
+// Casilla de un usuario: mensajes globales + avisos de su pareja (o suyos), los más nuevos primero, con leído/no leído.
+// Los mensajes globales anteriores a que se creara la cuenta se ven como leídos.
+function bandeja(array $u): array {
+  $items = [];
+  $alta = strtotime($u['creado'] . ' UTC');
+  foreach (mensajes() as $m) $items[] = ['k' => 'm' . $m['id'], 'tipo' => 'mensaje', 'id' => $m['id'], 'titulo' => $m['titulo'], 'texto' => $m['texto'], 'emoji' => $m['emoji'] ?: '📣', 'url' => '', 'creado' => $m['creado'], 'viejo' => strtotime($m['creado']) < $alta];
+  if ($u['pareja_id']) {
+    $q = db()->prepare('SELECT id, titulo, texto, emoji, url, creado FROM notifs WHERE pareja_id = ? AND (usuario_id IS NULL OR usuario_id = ?) ORDER BY id DESC LIMIT 30');
+    $q->execute([$u['pareja_id'], $u['id']]);
+    foreach ($q->fetchAll() as $n) $items[] = ['k' => 'n' . $n['id'], 'tipo' => 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
+  }
+  usort($items, fn($a, $b) => strcmp($b['creado'], $a['creado']));
+  $items = array_slice($items, 0, 40);
+  $q = db()->prepare('SELECT clave FROM leidos WHERE usuario_id = ?'); $q->execute([$u['id']]);
+  $leidos = array_flip($q->fetchAll(PDO::FETCH_COLUMN));
+  foreach ($items as &$i) { $i['leido'] = $i['viejo'] || isset($leidos[$i['k']]); unset($i['viejo']); }
+  return $items;
+}
 // Mensajes globales (los más nuevos primero)
 function mensajes(int $max = 30): array {
   $q = db()->query('SELECT id, titulo, texto, emoji, creado FROM mensajes ORDER BY id DESC LIMIT ' . max(1, min(200, $max)));
@@ -158,8 +176,9 @@ try {
         db()->prepare('UPDATE usuarios SET email=?, nombre=?, foto=?, ultimo_ingreso=? WHERE id=?')
           ->execute([$t['email'], $t['name'] ?? '', $t['picture'] ?? '', ahora(), $id]);
       } else {
-        db()->prepare('INSERT INTO usuarios (google_sub, email, nombre, foto, creado, ultimo_ingreso) VALUES (?,?,?,?,?,?)')
-          ->execute([$t['sub'], $t['email'], $t['name'] ?? '', $t['picture'] ?? '', ahora(), ahora()]);
+        $ultMsg = (int)db()->query('SELECT COALESCE(MAX(id), 0) FROM mensajes')->fetchColumn();   // los mensajes viejos no le saltan como nuevos
+        db()->prepare('INSERT INTO usuarios (google_sub, email, nombre, foto, creado, ultimo_ingreso, msg_visto) VALUES (?,?,?,?,?,?,?)')
+          ->execute([$t['sub'], $t['email'], $t['name'] ?? '', $t['picture'] ?? '', ahora(), ahora(), $ultMsg]);
         $id = db()->lastInsertId();
       }
       crearSesion((int)$id);
@@ -201,6 +220,11 @@ try {
       if ((int)$n->fetchColumn() >= 2) { $db->rollBack(); error_('Esa pareja ya está completa'); }
       $db->prepare('UPDATE usuarios SET pareja_id = ? WHERE id = ?')->execute([$pid, $u['id']]);
       $db->commit();
+      // Aviso para quien ya estaba en el espacio
+      $otro = $db->prepare('SELECT id FROM usuarios WHERE pareja_id = ? AND id <> ?'); $otro->execute([$pid, $u['id']]);
+      $nom = trim(explode(' ', (string)$u['nombre'])[0] ?? '') ?: $u['email'];
+      foreach ($otro->fetchAll(PDO::FETCH_COLUMN) as $oid)
+        try { notificar((int)$pid, (int)$oid, "unio|$pid|{$u['id']}", "$nom se unió a tu espacio", '¡Ya pueden usar JuntOS de a dos! Todo lo que cargue uno lo ve el otro.', '💞', 'index.html'); } catch (Throwable $e) { error_log('JuntOS notif: ' . $e->getMessage()); }
       responder(estado(requerirUsuario()));
 
     case 'GET boot':
@@ -214,12 +238,20 @@ try {
       $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$u['id']]);
       $e['pareja_id'] = (int)$u['pareja_id']; $e['usuario_id'] = (int)$u['id'];
       $e['docs'] = $docs; $e['ver'] = $ver; $e['personal'] = json_decode($q->fetchColumn() ?: '{}', true) ?: new stdClass;
-      $e['mensajes'] = mensajes(); $e['msg_visto'] = (int)($u['msg_visto'] ?? 0);
+      $e['bandeja'] = bandeja($u); $e['msg_visto'] = (int)($u['msg_visto'] ?? 0);
       responder($e);
 
-    case 'GET mensajes':
+    case 'GET bandeja':
       $u = requerirUsuario();
-      responder(['mensajes' => mensajes(), 'msg_visto' => (int)($u['msg_visto'] ?? 0)]);
+      responder(['bandeja' => bandeja($u), 'msg_visto' => (int)($u['msg_visto'] ?? 0)]);
+
+    case 'POST leido':
+      // Marca como leídos: una lista de claves ("m12" = mensaje, "n7" = aviso) o "todo" (lo que hay hoy en la casilla)
+      $u = requerirUsuario(); $k = entrada()['k'] ?? [];
+      $ks = $k === 'todo' ? array_column(bandeja($u), 'k') : (array) $k;
+      $ins = db()->prepare('INSERT IGNORE INTO leidos (usuario_id, clave) VALUES (?, ?)');
+      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^[mn]\d{1,10}$/', $x)) $ins->execute([$u['id'], $x]);
+      responder(['ok' => true]);
 
     case 'POST mensaje_visto':
       $u = requerirUsuario();
@@ -238,7 +270,16 @@ try {
       if ($texto === '' || mb_strlen($texto) > 2000) error_('Escribí el mensaje (hasta 2000 letras)');
       if (mb_strlen($emoji) > 8) $emoji = mb_substr($emoji, 0, 8);
       db()->prepare('INSERT INTO mensajes (titulo, texto, emoji, creado) VALUES (?,?,?,?)')->execute([$titulo, $texto, $emoji, ahora()]);
-      responder(['ok' => true, 'id' => (int)db()->lastInsertId()]);
+      $mid = (int)db()->lastInsertId();
+      // También llega como notificación a todos los celus con avisos activados
+      @set_time_limit(300);
+      $cuerpo = mb_strlen($texto) > 140 ? mb_substr($texto, 0, 140) . '…' : $texto;
+      $push = 0;
+      foreach (db()->query('SELECT * FROM push_subs')->fetchAll() as $sub) {
+        try { $c = enviarPush($sub, ['title' => trim(($emoji ?: '📣') . ' ' . $titulo), 'body' => $cuerpo, 'url' => 'index.html', 'tag' => 'msg-' . $mid], 86400); if ($c >= 200 && $c < 300) $push++; }
+        catch (Throwable $e) { error_log('JuntOS push mensaje: ' . $e->getMessage()); }
+      }
+      responder(['ok' => true, 'id' => $mid, 'push' => $push]);
 
     case 'POST admin_mensaje_borrar':
       requerirAdmin();

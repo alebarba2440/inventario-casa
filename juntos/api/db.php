@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 5;
+const VERSION_ESQUEMA = 6;
 
 function config(): array {
   static $c = null;
@@ -122,6 +122,28 @@ function esquema(PDO $db): void {
     $c = $db->query("SHOW COLUMNS FROM usuarios LIKE 'msg_visto'")->fetch();
     if (!$c) $db->exec("ALTER TABLE usuarios ADD COLUMN msg_visto INT NOT NULL DEFAULT 0");
   }
+  if ($v < 6) {
+    // Casilla de notificaciones: avisos automáticos de cada pareja (o de una persona) y qué leyó cada uno.
+    $db->exec("CREATE TABLE IF NOT EXISTS notifs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      pareja_id INT NOT NULL,
+      usuario_id INT NULL,
+      clave CHAR(64) NOT NULL UNIQUE,
+      titulo VARCHAR(160) NOT NULL,
+      texto VARCHAR(500) NOT NULL DEFAULT '',
+      emoji VARCHAR(16) NOT NULL DEFAULT '',
+      url VARCHAR(200) NOT NULL DEFAULT '',
+      creado DATETIME NOT NULL,
+      INDEX (pareja_id, id),
+      FOREIGN KEY (pareja_id) REFERENCES parejas(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $db->exec("CREATE TABLE IF NOT EXISTS leidos (
+      usuario_id INT NOT NULL,
+      clave VARCHAR(24) NOT NULL,
+      PRIMARY KEY (usuario_id, clave),
+      FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
 }
 
@@ -154,4 +176,19 @@ function tipoReal(string $ruta): ?string {
   if (strncmp($h, 'RIFF', 4) === 0 && substr($h, 8, 4) === 'WEBP') return 'image/webp';
   if (strncmp($h, '%PDF', 4) === 0) return 'application/pdf';
   return null;
+}
+
+// ---------- Casilla de notificaciones ----------
+// Guarda un aviso para una pareja (o solo para una persona, con $uid) y, si es nuevo, lo manda como push.
+// $clave evita repetidos: el mismo aviso no se guarda ni se manda dos veces. Necesita push.php cargado.
+function notificar(int $pid, ?int $uid, string $clave, string $titulo, string $texto, string $emoji = '', string $url = ''): bool {
+  $q = db()->prepare('INSERT IGNORE INTO notifs (pareja_id, usuario_id, clave, titulo, texto, emoji, url, creado) VALUES (?,?,?,?,?,?,?,?)');
+  $q->execute([$pid, $uid, hash('sha256', $clave), mb_substr($titulo, 0, 160), mb_substr($texto, 0, 500), $emoji, $url, gmdate('Y-m-d H:i:s')]);
+  if ($q->rowCount() === 0) return false;
+  if (function_exists('pushUsuario')) {
+    if ($uid) $para = [$uid];
+    else { $m = db()->prepare('SELECT id FROM usuarios WHERE pareja_id = ?'); $m->execute([$pid]); $para = array_map('intval', $m->fetchAll(PDO::FETCH_COLUMN)); }
+    foreach ($para as $u) pushUsuario($u, ['title' => trim($emoji . ' ' . $titulo), 'body' => $texto, 'url' => $url ?: 'index.html', 'tag' => 'notif-' . substr(hash('sha256', $clave), 0, 12)]);
+  }
+  return true;
 }

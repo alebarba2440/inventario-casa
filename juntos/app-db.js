@@ -226,7 +226,7 @@
       publicarYo(yo); bandaSoloLectura();
       var recargar = personalDesdeServidor(b.personal || {}) || otraCuenta;
       if (recargar && puedeRecargar()) { location.reload(); return; }
-      recibirMensajes(b.mensajes, b.msg_visto);
+      recibirBandeja(b.bandeja, b.msg_visto);
       avisoPorVencer();
       marcarSincronizado(); miColor(); enviar();
     }).catch(function () { marcarSincronizado(); });   // sin conexión: sigo con lo guardado
@@ -473,71 +473,102 @@
     setTimeout(esperar, 600);
   }
 
-  /* ---------- Mensajes globales (se mandan desde el panel de admin) ----------
-     Al abrir la app sale el/los mensajes nuevos; en el inicio queda un ícono (a la izquierda de Ajustes) para volver a verlos. */
+  /* ---------- Casilla de notificaciones (ícono ✉️ del inicio, a la izquierda de Ajustes) ----------
+     Junta los mensajes globales del panel de admin y los avisos automáticos de la pareja (prueba, vencimiento, etc.).
+     Todo vive en la base: acá no se guarda nada salvo hasta qué mensaje global ya saltó como cartel. */
   var K_MSG = 'juntos_msgs';
-  // Los mensajes viven solo en la base: acá no se guardan (si se borran en el panel, desaparecen). Solo recuerdo hasta cuál vi.
-  var MSG = { lista: [], visto: +(rd(K_MSG, null) || {}).visto || 0 };
+  var MSG = { items: [], visto: +(rd(K_MSG, null) || {}).visto || 0 };
   function escH(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-  function msgsSinVer() { return (MSG.lista || []).filter(function (m) { return m.id > (MSG.visto || 0); }); }
-  function recibirMensajes(lista, vistoSrv) {
-    MSG = { lista: Array.isArray(lista) ? lista : [], visto: Math.max(+MSG.visto || 0, +vistoSrv || 0) };
+  function sinLeer() { return (MSG.items || []).filter(function (m) { return !m.leido; }); }
+  // mensajes globales que todavía no saltaron como cartel al abrir la app
+  function globalesNuevos() { return (MSG.items || []).filter(function (m) { return m.tipo === 'mensaje' && m.id > (MSG.visto || 0) && !m.leido; }); }
+  function recibirBandeja(items, vistoSrv) {
+    MSG = { items: Array.isArray(items) ? items : [], visto: Math.max(+MSG.visto || 0, +vistoSrv || 0) };
     wr(K_MSG, { visto: MSG.visto }); botonMensajes(); mostrarMensajesNuevos();
   }
-  function marcarVistos() {
-    var max = 0; (MSG.lista || []).forEach(function (m) { if (m.id > max) max = m.id; });
+  function marcarLeidos(ks) {
+    if (ks !== 'todo') ks = ks.filter(function (k) { return (MSG.items || []).some(function (m) { return m.k === k && !m.leido; }); });
+    if (ks !== 'todo' && !ks.length) return;
+    (MSG.items || []).forEach(function (m) { if (ks === 'todo' || ks.indexOf(m.k) >= 0) m.leido = true; });
+    botonMensajes();
+    pedir('leido', { k: ks }).catch(function () {});
+  }
+  function marcarCartelVisto() {
+    var max = 0; (MSG.items || []).forEach(function (m) { if (m.tipo === 'mensaje' && m.id > max) max = m.id; });
     if (max <= (MSG.visto || 0)) return;
-    MSG.visto = max; wr(K_MSG, { visto: max }); botonMensajes();
+    MSG.visto = max; wr(K_MSG, { visto: max });
     pedir('mensaje_visto', { id: max }).catch(function () {});
   }
   function cssMensajes() {
     if (document.getElementById('jxMsgCss')) return;
     var st = document.createElement('style'); st.id = 'jxMsgCss';
     st.textContent =
-      '#jxMsg{--m-ac:var(--accent,#DB2777);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-s2:var(--surface2,#f5f5f0);--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-tint2:color-mix(in srgb,var(--m-ac) 30%,var(--m-bg));--m-sh:color-mix(in srgb,var(--m-ac) 30%,transparent);--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
+      '#jxMsg{--m-ac:var(--accent,#DB2777);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-nl:color-mix(in srgb,var(--m-ac) 7%,var(--m-bg));--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);' +
+        'position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
       '#jxMsg.on{opacity:1}' +
       '#jxMsg .c{position:relative;box-sizing:border-box;background:var(--m-bg);color:var(--m-tx);width:100%;max-width:400px;max-height:100%;display:flex;flex-direction:column;border-radius:10px 30px 10px 30px;padding:22px 0 14px;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
       '#jxMsg.on .c{transform:none}' +
       '#jxMsg .cab{padding:0 56px 10px 20px;font:900 .78rem Nunito,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--m-ac)}' +
-      '#jxMsg .lst{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 20px;flex:1;min-height:0}' +
-      '#jxMsg .m{padding:14px 0;border-top:1px solid var(--m-bd)}#jxMsg .m:first-child{border-top:0;padding-top:4px}' +
-      '#jxMsg .m .t{display:flex;align-items:flex-start;gap:10px}' +
+      '#jxMsg .lst{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 12px;flex:1;min-height:0}' +
+      '#jxMsg .m{position:relative;padding:12px 10px;border-top:1px solid var(--m-bd);border-radius:6px 18px 6px 18px}#jxMsg .m:first-child{border-top-color:transparent}' +
+      '#jxMsg .m.nl{background:var(--m-nl);border-top-color:transparent;cursor:pointer}#jxMsg .m.nl+.m{border-top-color:transparent}' +
+      '#jxMsg .m.nl::after{content:"";position:absolute;top:16px;right:12px;width:9px;height:9px;border-radius:50%;background:var(--m-ac)}' +
+      '#jxMsg .m .t{display:flex;align-items:flex-start;gap:10px;padding-right:14px}' +
       '#jxMsg .m .e{flex-shrink:0;width:44px;height:44px;border-radius:6px 16px 6px 16px;background:var(--m-tint);display:grid;place-items:center;font-size:1.5rem}' +
-      '#jxMsg .m h3{margin:0;font-size:1.12rem;font-weight:900;line-height:1.25}' +
+      '#jxMsg .m h3{margin:0;font-size:1.05rem;font-weight:800;line-height:1.25}#jxMsg .m.nl h3{font-weight:900}' +
       '#jxMsg .m small{display:block;color:var(--m-tx2);font-weight:700;font-size:.78rem;margin-top:2px}' +
-      '#jxMsg .m .nuevo{display:inline-block;background:var(--m-ac);color:#fff;font-size:.66rem;font-weight:900;padding:2px 7px;border-radius:3px 9px 3px 9px;margin-left:6px;vertical-align:middle;letter-spacing:.04em}' +
-      '#jxMsg .m p{margin:10px 0 0;color:var(--m-tx);font-size:.98rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}' +
+      '#jxMsg .m p{margin:8px 0 0;color:var(--m-tx);opacity:.9;font-size:.96rem;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}' +
+      '#jxMsg .m .ir{display:inline-block;margin-top:8px;color:var(--m-ac);font-weight:800;font-size:.9rem;text-decoration:none}' +
       '#jxMsg .ok{display:block;box-sizing:border-box;width:calc(100% - 40px);margin:12px 20px 0;border:0;border-radius:6px 20px 6px 20px;background:var(--m-ac);color:#fff;font:900 1rem Nunito,system-ui,sans-serif;padding:13px;cursor:pointer}' +
+      '#jxMsg .todo{display:block;margin:10px auto 0;background:none;border:0;color:var(--m-tx2);font:800 .88rem Nunito,system-ui,sans-serif;cursor:pointer;padding:6px}' +
       '#jxMsg .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;background:var(--m-x);color:var(--m-tx2);font:700 1.25rem/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;padding:0}' +
       '#jxMsg .x:active,#jxMsg .ok:active{transform:scale(.95)}' +
-      '#jxMsg .vacio{color:var(--m-tx2);text-align:center;padding:20px 0;font-weight:700}' +
+      '#jxMsg .vacio{color:var(--m-tx2);text-align:center;padding:26px 10px;font-weight:700}#jxMsg .vacio div{font-size:2.4rem;margin-bottom:6px}' +
       '#jxMsgBtn{width:44px;height:44px;border:none;background:none;color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;position:relative;padding:0;transition:transform .12s ease}' +
       '#jxMsgBtn svg{width:28px;height:28px;display:block}#jxMsgBtn:active{transform:scale(.88)}' +
-      '#jxMsgBtn .n{position:absolute;top:3px;right:2px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--err,#E24B4A);color:#fff;font:900 11px/18px Nunito,system-ui,sans-serif;text-align:center;border:2px solid var(--surface,#fff)}';
+      '#jxMsgBtn .n{position:absolute;top:3px;right:2px;min-width:18px;height:18px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:var(--err,#E24B4A);color:#fff;font:900 11px/14px Nunito,system-ui,sans-serif;text-align:center;border:2px solid var(--surface,#fff)}';
     document.head.appendChild(st);
   }
-  function fechaMsg(iso) { try { return new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } }
-  function modalMensajes(lista, titulo) {
+  function fechaMsg(iso) {
+    try {
+      var d = new Date(iso), h = new Date(), ay = new Date(h.getTime() - 86400000);
+      var hora = d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+      if (d.toDateString() === h.toDateString()) return 'Hoy · ' + hora;
+      if (d.toDateString() === ay.toDateString()) return 'Ayer · ' + hora;
+      return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: d.getFullYear() === h.getFullYear() ? undefined : 'numeric' });
+    } catch (e) { return ''; }
+  }
+  // lista: lo que se muestra; casilla: true = la casilla completa (con no leídos), false = cartel de mensajes nuevos al abrir
+  function modalMensajes(lista, titulo, casilla) {
     if (document.getElementById('jxMsg') || !document.body) return;
     cssMensajes();
-    var visto = MSG.visto || 0;
     var m = document.createElement('div'); m.id = 'jxMsg'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     var items = lista.length ? lista.map(function (x) {
-      return '<div class="m"><div class="t"><div class="e">' + escH(x.emoji || '📣') + '</div><div><h3>' + escH(x.titulo) +
-        (x.id > visto ? '<span class="nuevo">NUEVO</span>' : '') + '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div></div><p>' + escH(x.texto) + '</p></div>';
-    }).join('') : '<div class="vacio">Todavía no hay mensajes</div>';
+      var url = x.url && /^[a-z0-9_-]+\.html([#?].*)?$/i.test(x.url) && !/^index\.html$/i.test(x.url) ? x.url : '';
+      return '<div class="m' + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="t"><div class="e">' + escH(x.emoji || '🔔') + '</div><div><h3>' + escH(x.titulo) +
+        '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div></div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') +
+        (url ? '<a class="ir" href="' + escH(url) + '">Ver →</a>' : '') + '</div>';
+    }).join('') : '<div class="vacio"><div>📭</div>No tenés notificaciones</div>';
+    var haySinLeer = casilla && lista.some(function (x) { return !x.leido; });
     m.innerHTML = '<div class="c"><button type="button" class="x" aria-label="Cerrar" style="border-radius:50% !important">✕</button>' +
-      '<div class="cab">' + escH(titulo) + '</div><div class="lst">' + items + '</div><button type="button" class="ok">Entendido</button></div>';
+      '<div class="cab">' + escH(titulo) + '</div><div class="lst">' + items + '</div><button type="button" class="ok">' + (casilla ? 'Cerrar' : 'Entendido') + '</button>' +
+      (haySinLeer ? '<button type="button" class="todo">Marcar todo como leído</button>' : '') + '</div>';
     function cerrar() { m.classList.remove('on'); setTimeout(function () { m.remove(); }, 200); }
-    m.addEventListener('click', function (e) { if (e.target === m || e.target.closest('.x') || e.target.closest('.ok')) cerrar(); });
+    m.addEventListener('click', function (e) {
+      if (e.target === m || e.target.closest('.x') || e.target.closest('.ok')) return cerrar();
+      if (e.target.closest('.todo')) { marcarLeidos('todo'); m.querySelectorAll('.m.nl').forEach(function (n) { n.classList.remove('nl'); }); e.target.remove(); return; }
+      var it = e.target.closest('.m.nl');   // tocar un aviso no leído lo marca como leído
+      if (it) { it.classList.remove('nl'); marcarLeidos([it.getAttribute('data-k')]); if (!m.querySelector('.m.nl')) { var t = m.querySelector('.todo'); if (t) t.remove(); } }
+    });
     document.body.appendChild(m);
     requestAnimationFrame(function () { m.classList.add('on'); });
-    marcarVistos();
+    if (!casilla) { marcarCartelVisto(); marcarLeidos(lista.map(function (x) { return x.k; })); }
   }
-  window.jxMensajes = function () { modalMensajes(MSG.lista || [], 'Mensajes de JuntOS'); };
+  window.jxMensajes = function () { modalMensajes(MSG.items || [], 'Notificaciones', true); };
   var mostrando = false;
+  // Al abrir la app: los mensajes globales nuevos salen como cartel (los avisos automáticos solo quedan en la casilla)
   function mostrarMensajesNuevos() {
-    if (mostrando || !msgsSinVer().length || /personajes|sonidos/i.test(paginaActual())) return;
+    if (mostrando || !globalesNuevos().length || /personajes|sonidos/i.test(paginaActual())) return;
     mostrando = true;
     var esperar = function () {
       var intro = document.getElementById('intro');
@@ -545,36 +576,36 @@
         (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden');
       if (ocupado) return setTimeout(esperar, 400);
       mostrando = false;
-      var nuevos = msgsSinVer(); if (!nuevos.length) return;
-      modalMensajes(nuevos, nuevos.length > 1 ? 'Mensajes nuevos' : 'Mensaje nuevo');
+      var nuevos = globalesNuevos(); if (!nuevos.length) return;
+      modalMensajes(nuevos, nuevos.length > 1 ? 'Mensajes nuevos' : 'Mensaje nuevo', false);
     };
     setTimeout(esperar, 500);
   }
-  // Ícono en el inicio, a la izquierda de Ajustes (solo si hay mensajes)
+  // Ícono en el inicio, a la izquierda de Ajustes, con la cantidad sin leer
   function botonMensajes() {
-    if (!document.body) return;
+    if (!document.body || !YO) return;
     var gear = document.querySelector('.botones .gear'); if (!gear) return;
-    var b = document.getElementById('jxMsgBtn'), hay = (MSG.lista || []).length > 0;
-    if (!hay) { if (b) b.remove(); return; }
     cssMensajes();
+    var b = document.getElementById('jxMsgBtn');
     if (!b) {
-      b = document.createElement('button'); b.id = 'jxMsgBtn'; b.type = 'button'; b.setAttribute('aria-label', 'Mensajes');
+      b = document.createElement('button'); b.id = 'jxMsgBtn'; b.type = 'button';
       b.style.setProperty('border-radius', '10px', 'important');
       b.onclick = window.jxMensajes;
       gear.parentNode.insertBefore(b, gear);
     }
-    var n = msgsSinVer().length;
+    var n = sinLeer().length;
+    b.setAttribute('aria-label', n ? 'Notificaciones (' + n + ' sin leer)' : 'Notificaciones');
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.8 7l8.2 6 8.2-6"/></svg>' +
       (n ? '<span class="n">' + (n > 9 ? '9+' : n) + '</span>' : '');
   }
   document.addEventListener('DOMContentLoaded', botonMensajes);
-  // Si la app vuelve del segundo plano, me fijo si llegó algún mensaje nuevo
+  // Si la app vuelve del segundo plano, me fijo si llegó algo nuevo
   var ultMsgCheck = Date.now();
   function revisarMensajes() {
     if (!servidorOk || Date.now() - ultMsgCheck < 60000) return;
     ultMsgCheck = Date.now();
-    pedir('mensajes').then(function (r) { if (r && r.mensajes) recibirMensajes(r.mensajes, r.msg_visto); }).catch(function () {});
+    pedir('bandeja').then(function (r) { if (r && r.bandeja) recibirBandeja(r.bandeja, r.msg_visto); }).catch(function () {});
   }
 
   function bandaSoloLectura() {

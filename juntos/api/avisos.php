@@ -185,6 +185,27 @@ try {
     }
   }
 
+  // ---------- Casilla: prueba por terminar, prueba terminada, suscripción vencida (para todas las parejas) ----------
+  $ps = $db->query('SELECT id, prueba_hasta, pago_hasta FROM parejas')->fetchAll();
+  foreach ($ps as $p) {
+    try {
+      $pid = (int)$p['id']; $fp = strtotime($p['prueba_hasta'] . ' UTC'); $pg = $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0;
+      $hasta = max($fp, $pg);
+      if ($hasta >= time()) {
+        if ($pg) continue;   // tiene suscripción: no hay aviso de prueba
+        $dias = (int)ceil(($hasta - time()) / 86400);
+        if (in_array($dias, [7, 3, 1], true))
+          notificar($pid, null, "prueba|$pid|$dias|{$p['prueba_hasta']}", $dias === 1 ? '¡Hoy es tu último día de prueba!' : "Te quedan $dias días de prueba",
+            'Activá la suscripción y seguí usando JuntOS sin cortes: todo lo que cargaron queda igual.', '⏳', 'index.html');
+      } elseif ($hasta > time() - 3 * 86400) {   // venció hace poco (no se avisa de vencimientos viejos)
+        $f = gmdate('Y-m-d H:i:s', $hasta);
+        notificar($pid, null, "vence|$pid|$f", $pg ? 'Tu suscripción venció' : 'Terminó tu prueba gratis',
+          'Todo lo que cargaron está guardado. Activá la suscripción para volver a cargar cosas nuevas.', $pg ? '⏰' : '💞', 'index.html');
+      }
+    } catch (Throwable $e) { error_log('JuntOS notif prueba: ' . $e->getMessage()); }
+  }
+  $db->exec("DELETE FROM notifs WHERE creado < UTC_TIMESTAMP() - INTERVAL 90 DAY");
+
   echo json_encode(['ok' => true, 'enviados' => $enviados, 'hora' => $ahora->format('Y-m-d H:i')]);
 } catch (Throwable $e) {
   error_log('JuntOS avisos: ' . $e->getMessage());

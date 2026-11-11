@@ -181,7 +181,7 @@
     <section id="p-msgs" hidden style="display:flex;flex-direction:column;gap:12px">
       <h2>Nuevo mensaje para todos</h2>
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
-        <p style="margin:0;color:var(--gris);font-size:.9rem">Le llega a <b>todos los usuarios</b>: les aparece apenas abren la app y queda guardado en el ícono ✉️ del inicio, a la izquierda de Ajustes.</p>
+        <p style="margin:0;color:var(--gris);font-size:.9rem">Le llega a <b>todos los usuarios</b>: como notificación al celu (a los que activaron los avisos), como cartel apenas abren la app y queda en la casilla ✉️ del inicio.</p>
         <div class="campo">Ícono<div class="emojis" id="mEmojis"></div></div>
         <label class="campo">Título<input id="mTit" maxlength="120" placeholder="Ej: ¡Novedades en JuntOS!"></label>
         <label class="campo">Mensaje<textarea id="mTxt" maxlength="2000" placeholder="Escribí el mensaje…"></textarea></label>
@@ -427,7 +427,7 @@ function mandarMensaje(){
   $('dTxt').innerHTML = `¿Mandar este mensaje a <b>todos los usuarios</b>?<br><br>${esc(EMO)} <b>${esc(titulo)}</b><br><small style="white-space:pre-wrap">${esc(texto.length > 160 ? texto.slice(0, 160) + '…' : texto)}</small>`;
   $('dOk').className = 'btn rosa';
   $('dOk').onclick = async () => { dlg.close();
-    try { await api('admin_mensaje', {titulo, texto, emoji: EMO}); $('mTit').value = $('mTxt').value = ''; toast('Mensaje enviado 📣'); cargarMensajes(); }
+    try { const r = await api('admin_mensaje', {titulo, texto, emoji: EMO}); $('mTit').value = $('mTxt').value = ''; toast('Mensaje enviado 📣' + (r.push ? ' · llegó a ' + r.push + (r.push === 1 ? ' celu' : ' celus') : '')); cargarMensajes(); }
     catch(e){ toast(e.message); } };
   dlg.showModal();
 }
