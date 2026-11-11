@@ -241,7 +241,7 @@ try {
       $q = db()->prepare('SELECT data FROM personal WHERE usuario_id = ?'); $q->execute([$u['id']]);
       $e['pareja_id'] = (int)$u['pareja_id']; $e['usuario_id'] = (int)$u['id'];
       $e['docs'] = $docs; $e['ver'] = $ver; $e['personal'] = json_decode($q->fetchColumn() ?: '{}', true) ?: new stdClass;
-      $e['bandeja'] = bandeja($u); $e['msg_visto'] = (int)($u['msg_visto'] ?? 0);
+      $e['bandeja'] = bandeja($u); $e['msg_visto'] = (int)($u['msg_visto'] ?? 0); $e['precios'] = precios();
       responder($e);
 
     case 'GET bandeja':
@@ -285,6 +285,21 @@ try {
       responder(['ok' => true, 'id' => $mid, 'push' => $push]);
 
     // Mensajes a una sola cuenta (pareja): van a su casilla como aviso, salen como cartel al abrir y llegan por push
+    case 'GET precios':
+      // Público: lo usa la landing para mostrar precios y datos de transferencia
+      header('Cache-Control: public, max-age=300');
+      responder(precios());
+
+    case 'POST admin_precios':
+      requerirAdmin();
+      $in = entrada(); $p = precios();
+      foreach (['mensual', 'anual'] as $k) if (isset($in[$k])) { $n = (int)$in[$k]; if ($n < 0 || $n > 100000000) error_('Precio inválido'); $p[$k] = $n; }
+      foreach (['alias' => 60, 'cbu' => 30, 'titular' => 100, 'banco' => 60, 'contacto' => 120] as $k => $max)
+        if (isset($in[$k])) $p[$k] = mb_substr(trim((string)$in[$k]), 0, $max);
+      if ($p['cbu'] !== '' && !preg_match('/^\d{22}$/', $p['cbu'])) error_('El CBU/CVU tiene 22 números');
+      db()->prepare("REPLACE INTO ajustes (clave, valor) VALUES ('precios', ?)")->execute([json_encode($p, JSON_UNESCAPED_UNICODE)]);
+      responder(['ok' => true, 'precios' => $p]);
+
     case 'GET admin_notifs':
       requerirAdmin();
       $q = db()->prepare("SELECT id, titulo, texto, emoji, creado FROM notifs WHERE pareja_id = ? AND tipo = 'directo' ORDER BY id DESC LIMIT 50");
@@ -463,7 +478,7 @@ try {
         if (count($ms) >= 2) $res['completas']++;
         $lista[] = ['id' => (int)$p['id'], 'nombre' => $p['nombre'], 'codigo' => $p['codigo'], 'creado' => iso($p['creado']),
           'estado' => $estado, 'activo_hasta' => gmdate('c', $hasta), 'dias' => (int)ceil(($hasta - $t) / 86400),
-          'pago_hasta' => iso($p['pago_hasta']), 'prueba_hasta' => iso($p['prueba_hasta']),
+          'pago_hasta' => iso($p['pago_hasta']), 'prueba_hasta' => iso($p['prueba_hasta']), 'plan_pago' => $p['plan_pago'] ?? null,
           'registros' => (int)($regPar[$p['id']] ?? 0), 'avisos' => (int)($avisosPar[$p['id']] ?? 0),
           'fotos' => (int)($esp[$p['id']]['n'] ?? 0), 'fotos_mb' => round(($esp[$p['id']]['b'] ?? 0) / 1048576, 1),
           'ultimo_ingreso' => $ms ? iso(max(array_column($ms, 'ultimo_ingreso'))) : null,
@@ -480,9 +495,12 @@ try {
       if ($op === 'sumar_mes') {
         // El mes pago arranca cuando termina lo que ya tienen (prueba o pago), así no pierden días.
         $base = max(time(), strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0);
-        $nuevo = (new DateTime('@' . $base))->modify('+1 month')->format('Y-m-d H:i:s');
+        $nuevo = (new DateTime('@' . $base))->modify('+1 month')->format('Y-m-d H:i:s'); $plan = 'mensual';
+      } elseif ($op === 'sumar_anio') {
+        $base = max(time(), strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0);
+        $nuevo = (new DateTime('@' . $base))->modify('+1 year')->format('Y-m-d H:i:s'); $plan = 'anual';
       } elseif ($op === 'anular') {
-        $nuevo = null;
+        $nuevo = null; $plan = null;
       } elseif ($op === 'dias') {
         // Sumar o restar días de prueba. Si la prueba ya venció y se suman, se cuentan desde hoy.
         $n = (int)($in['dias'] ?? 0); if (!$n || abs($n) > 3650) error_('Cantidad de días inválida');
@@ -501,7 +519,7 @@ try {
         $db->commit();
         responder(['ok' => true, 'invertido' => $d->invertido]);
       } else error_('Operación inválida');
-      db()->prepare('UPDATE parejas SET pago_hasta = ? WHERE id = ?')->execute([$nuevo, $pid]);
+      db()->prepare('UPDATE parejas SET pago_hasta = ?, plan_pago = ? WHERE id = ?')->execute([$nuevo, $plan, $pid]);
       db()->prepare("DELETE FROM notifs WHERE pareja_id = ? AND tipo IN ('prueba','vence')")->execute([$pid]);
       responder(['ok' => true]);
 

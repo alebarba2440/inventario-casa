@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 7;
+const VERSION_ESQUEMA = 8;
 
 function config(): array {
   static $c = null;
@@ -151,6 +151,13 @@ function esquema(PDO $db): void {
     if (!$c) $db->exec("ALTER TABLE notifs ADD COLUMN tipo VARCHAR(20) NOT NULL DEFAULT '', ADD COLUMN ref VARCHAR(40) NOT NULL DEFAULT ''");
     $db->exec("DELETE FROM notifs WHERE titulo LIKE '%de prueba%' OR titulo LIKE 'Terminó tu prueba%' OR titulo LIKE 'Tu suscripción venció%'");
   }
+  if ($v < 8) {
+    // Qué plan pagó cada pareja la última vez (mensual / anual), para verlo en el panel
+    $c = $db->query("SHOW COLUMNS FROM parejas LIKE 'plan_pago'")->fetch();
+    if (!$c) $db->exec("ALTER TABLE parejas ADD COLUMN plan_pago VARCHAR(10) NULL");
+    // Precios y datos de transferencia: texto largo (la tabla meta guarda hasta 255)
+    $db->exec("CREATE TABLE IF NOT EXISTS ajustes (clave VARCHAR(40) PRIMARY KEY, valor TEXT NOT NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
 }
 
@@ -207,4 +214,13 @@ function notificar(int $pid, ?int $uid, string $clave, string $titulo, string $t
 // Fecha hasta la que una pareja puede usar la app (prueba o pago), como texto: sirve de "ref" de los avisos de suscripción
 function hastaPareja(array $p): string {
   return gmdate('Y-m-d H:i:s', max(strtotime($p['prueba_hasta'] . ' UTC'), $p['pago_hasta'] ? strtotime($p['pago_hasta'] . ' UTC') : 0));
+}
+
+// ---------- Precios y datos para pagar por transferencia (se editan desde el panel) ----------
+const PRECIOS_DEF = ['mensual' => 5000, 'anual' => 50000, 'alias' => '', 'cbu' => '', 'titular' => '', 'banco' => '', 'contacto' => ''];
+function precios(): array {
+  $v = db()->query("SELECT valor FROM ajustes WHERE clave = 'precios'")->fetchColumn();
+  $p = array_merge(PRECIOS_DEF, json_decode($v ?: '{}', true) ?: []);
+  $p['mensual'] = (int)$p['mensual']; $p['anual'] = (int)$p['anual'];
+  return array_intersect_key($p, PRECIOS_DEF);
 }

@@ -121,6 +121,7 @@
   dialog::backdrop{background:rgba(0,0,0,.4)}
   dialog p{margin:0 0 16px}
   dialog .fila .btn{flex:1}
+  .dos-c{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:480px){.dos-c{grid-template-columns:1fr}}
   /* Sub-pestañas de cada cuenta */
   .subt{display:grid;gap:4px;background:var(--fondo);border-radius:6px 18px 6px 18px;padding:4px}
   .subt button{font:inherit;font-weight:800;font-size:.8rem;border:0;background:none;padding:8px 2px;border-radius:5px 14px 5px 14px;cursor:pointer;color:var(--gris);display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}
@@ -200,6 +201,19 @@
     </section>
     <!-- CONFIGURACIÓN -->
     <section id="p-conf" hidden style="display:flex;flex-direction:column;gap:12px">
+      <h2>Precios y transferencia</h2>
+      <div class="card" style="display:flex;flex-direction:column;gap:10px">
+        <p style="margin:0;color:var(--gris);font-size:.92rem">Se muestran en la <b>landing</b> (pestañas Mensual / Anual) y en el <b>cartel de suscripción</b> de la app. Si cargás alias o CBU, aparece la opción de pagar por transferencia.</p>
+        <div class="dos-c"><label class="campo">Precio mensual ($)<input id="pMen" type="number" inputmode="numeric" min="0"></label>
+          <label class="campo">Precio anual ($)<input id="pAn" type="number" inputmode="numeric" min="0"></label></div>
+        <p class="nota" id="pAho" style="margin:-4px 2px 0"></p>
+        <div class="dos-c"><label class="campo">Alias<input id="pAli" maxlength="60" placeholder="ej: juntos.app"></label>
+          <label class="campo">CBU / CVU<input id="pCbu" maxlength="22" inputmode="numeric" placeholder="22 números"></label></div>
+        <div class="dos-c"><label class="campo">Titular<input id="pTit" maxlength="100"></label>
+          <label class="campo">Banco / billetera<input id="pBan" maxlength="60" placeholder="ej: Mercado Pago"></label></div>
+        <label class="campo">Dónde mandan el comprobante<input id="pCon" maxlength="120" placeholder="ej: WhatsApp 342 555-1234 o un mail"></label>
+        <button class="btn rosa" onclick="guardarPrecios()">Guardar precios y datos</button>
+      </div>
       <h2>Copias de seguridad</h2>
       <div class="card" style="display:flex;flex-direction:column;gap:10px">
         <p style="margin:0;color:var(--gris);font-size:.92rem">Descargá una copia de <b>toda la base</b>: parejas, usuarios y todos sus datos. Guardala en tu compu o en Drive.</p>
@@ -220,7 +234,8 @@
 <script>
 const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const $ = id => document.getElementById(id);
-const POR_PAG = 30, PRECIO = 5000;
+const POR_PAG = 30;
+let PREC = {mensual:5000, anual:50000};   // se cargan del servidor (Configuración › Precios)
 let D = null, YO = null, FILTRO = 'todas', PAG = 1, ABIERTOS = new Set();
 const NOM = {todas:'Todas', prueba:'En prueba', pago:'Pagas', vencida:'Vencidas', vence:'Por vencer', solos:'Esperando pareja', suelto:'Sin espacio'};
 const EST = {prueba:'Prueba', pago:'Paga', vencida:'Vencida', suelto:'Sin espacio'};
@@ -253,8 +268,10 @@ async function inicio(){
     if (!yo.usuario) { ver('vIngresar'); botonGoogle(); return; }
     if (!yo.usuario.admin) { $('saMail').textContent = yo.usuario.email; ver('vSinAcceso'); return; }
     YO = yo.usuario; $('yoMail').textContent = YO.email;
+    await cargarPrecios();
     await cargar();
     if (!$('p-msgs').hidden) cargarMensajes();
+    ['pMen','pAn'].forEach(id => $(id).addEventListener('input', ahorroTxt));
   } catch(e){ $('err').textContent = e.message; }
 }
 async function cargar(aviso){
@@ -286,7 +303,7 @@ function dashboard(){
     ['', num(r.sin_pareja), 'Sin espacio', 'entraron y no crearon ni se unieron'], ['rosa', num(r.altas_semana), 'Altas · 7 días', `${num(r.altas_mes)} en 30 días`]]);
   kpis('kSus', [['prueba', num(r.prueba), 'En prueba'], ['pago', num(r.pago), 'Pagas', 'conversión ' + pct(r.pago, r.parejas)],
     ['vencida', num(r.vencidas), 'Vencidas'], ['prueba', num(r.por_vencer), 'Por vencer', '7 días o menos'],
-    ['pago', '$ ' + num(r.pago * PRECIO), 'Ingreso mensual', 'estimado ($' + num(PRECIO) + ' c/u)']]);
+    ['pago', '$ ' + num(ingresoMes()), 'Ingreso mensual', `estimado · mensual $${num(PREC.mensual)} · anual $${num(PREC.anual)}`]]);
   kpis('kAct', [['', num(r.activos_hoy), 'Activos hoy'], ['', num(r.activos_7), 'Activos · 7 días', pct(r.activos_7, r.usuarios) + ' de los usuarios'],
     ['', num(r.con_avisos), 'Con avisos', 'notificaciones activas'], ['', num(r.registros), 'Registros', 'datos cargados en total'],
     ['', num(r.fotos), 'Fotos', (r.fotos_mb || 0) + ' MB']]);
@@ -330,6 +347,19 @@ function listar(){
   let h = `<button ${PAG === 1 ? 'disabled' : ''} onclick="irPag(${PAG - 1})" aria-label="Anterior">‹</button>`, ant = 0;
   nums.forEach(n => { if (n - ant > 1) h += '<span style="color:var(--gris2)">…</span>'; h += `<button class="${n === PAG ? 'on' : ''}" onclick="irPag(${n})">${n}</button>`; ant = n; });
   $('pag').innerHTML = h + `<button ${PAG === pags ? 'disabled' : ''} onclick="irPag(${PAG + 1})" aria-label="Siguiente">›</button>`;
+}
+const PCAMPOS = {pMen:'mensual', pAn:'anual', pAli:'alias', pCbu:'cbu', pTit:'titular', pBan:'banco', pCon:'contacto'};
+async function cargarPrecios(){
+  try { PREC = await api('precios'); } catch(e){ return; }
+  Object.entries(PCAMPOS).forEach(([id, k]) => $(id).value = PREC[k] ?? '');
+  ahorroTxt();
+}
+function ahorroTxt(){ const m = +$('pMen').value || 0, a = +$('pAn').value || 0, ah = m * 12 - a;
+  $('pAho').textContent = m && a ? (ah > 0 ? `El anual sale $${num(Math.round(a / 12))} por mes: ahorran $${num(ah)} (${(ah / m).toFixed(1).replace('.0', '')} meses gratis).` : 'Ojo: el anual no tiene descuento frente a 12 meses.') : ''; }
+async function guardarPrecios(){
+  const d = {}; Object.entries(PCAMPOS).forEach(([id, k]) => d[k] = $(id).value.trim());
+  d.cbu = d.cbu.replace(/\D/g, '');
+  try { const r = await api('admin_precios', d); PREC = r.precios; toast('Precios guardados'); dashboard(); } catch(e){ toast(e.message); }
 }
 const SUBT = {}, EMOC = {};
 function subTab(id, k){
@@ -385,7 +415,8 @@ function item(c){
           <button class="mas" onclick="dias(${c.id},1)">+1</button><button class="mas" onclick="dias(${c.id},7)">+7</button><button class="mas" onclick="dias(${c.id},30)">+30</button>
           <input type="number" id="dn${c.id}" placeholder="días" inputmode="numeric" aria-label="Cantidad de días"><button onclick="diasLibre(${c.id})">Aplicar</button>
         </div>
-        <div class="fila" style="margin-top:12px"><button class="btn" onclick="pago(${c.id},'sumar_mes')">+1 mes pago</button>
+        <div style="font-size:.85rem;font-weight:700;color:var(--gris);margin:14px 0 6px">Registrar pago (por transferencia o a mano)</div>
+        <div class="fila"><button class="btn" onclick="pago(${c.id},'sumar_mes')">+1 mes pago</button><button class="btn" onclick="pago(${c.id},'sumar_anio')">+1 año pago</button>
           ${c.pago_hasta ? `<button class="btn sec" onclick="pago(${c.id},'anular')">Anular pago</button>` : ''}</div>`]);
     secs.push(['mensajes', 'fa-solid fa-envelope', 'Mensajes', `
         <p class="nota" style="margin:0 0 10px">Le llega solo a esta cuenta: a su casilla, como cartel al abrir la app y como notificación al celu.</p>
@@ -396,7 +427,7 @@ function item(c){
         <div class="blq" style="margin-top:14px"><h3>Enviados a esta cuenta</h3><div id="cl${c.id}"><div class="vacio">Cargando…</div></div></div>`]);
     secs.push(['datos', 'fa-solid fa-folder-open', 'Datos de cuenta', `<div class="datos">
         <div><span>Código</span><b>${esc(c.codigo)}</b></div><div><span>Alta</span><b>${fecha(c.creado)}</b></div>
-        <div><span>Prueba hasta</span><b>${fecha(c.prueba_hasta)}</b></div><div><span>Pago hasta</span><b>${c.pago_hasta ? fecha(c.pago_hasta) : '—'}</b></div>
+        <div><span>Prueba hasta</span><b>${fecha(c.prueba_hasta)}</b></div><div><span>Pago hasta</span><b>${c.pago_hasta ? fecha(c.pago_hasta) : '—'}</b></div><div><span>Plan</span><b>${c.plan_pago === 'anual' ? 'Anual' : c.plan_pago === 'mensual' ? 'Mensual' : '—'}</b></div>
         <div><span>Último ingreso</span><b>${hace(c.ultimo_ingreso)}</b></div><div><span>Registros</span><b>${num(c.registros)}</b></div>
         <div><span>Fotos</span><b>${c.fotos || 0} · ${c.fotos_mb || 0} MB</b></div><div><span>Avisos activos</span><b>${c.avisos ? c.avisos + ' celu' + (c.avisos > 1 ? 's' : '') : 'no'}</b></div>
       </div>
@@ -503,9 +534,11 @@ function dias(id, n){
     n > 0 ? '' : 'rosa', async () => { await api('admin_pago', {pareja_id: id, op: 'dias', dias: n}); toast(`${n > 0 ? '+' : '−'}${Math.abs(n)} días a ${p.nombre}`); });
 }
 function diasLibre(id){ const n = parseInt($('dn' + id).value, 10); if (!n) { $('dn' + id).focus(); return; } dias(id, n); }
+function ingresoMes(){ return D.parejas.filter(p => p.estado === 'pago').reduce((t, p) => t + (p.plan_pago === 'anual' ? PREC.anual / 12 : PREC.mensual), 0); }
 function pago(id, op){
   const p = D.parejas.find(x => x.id === id);
-  confirmar(op === 'sumar_mes' ? `¿Registrar <b>1 mes pago</b> para <b>${esc(p.nombre)}</b>?<br><small>Se suma a partir de que termine lo que ya tienen.</small>`
+  confirmar(op === 'sumar_mes' ? `¿Registrar <b>1 mes pago</b> ($${num(PREC.mensual)}) para <b>${esc(p.nombre)}</b>?<br><small>Se suma a partir de que termine lo que ya tienen.</small>`
+    : op === 'sumar_anio' ? `¿Registrar <b>1 año pago</b> ($${num(PREC.anual)}) para <b>${esc(p.nombre)}</b>?<br><small>Se suma a partir de que termine lo que ya tienen.</small>`
     : `¿Anular los pagos registrados de <b>${esc(p.nombre)}</b>?<br><small>Vuelve a quedar solo con la prueba.</small>`,
     op === 'anular' ? 'rosa' : '', () => api('admin_pago', {pareja_id: id, op}));
 }

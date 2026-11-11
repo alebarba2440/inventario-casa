@@ -143,6 +143,20 @@
   .plan li::before{content:"✓";flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#DCFCE7;color:#15803d;font-weight:900;font-size:.8rem;display:grid;place-items:center;margin-top:1px}
   .plan .btn{width:100%}
   .plan .letra{font-size:.85rem;color:var(--gris);margin-top:12px}
+  /* Mensual / Anual */
+  .pers{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--crema);border-radius:8px 22px 8px 22px;padding:4px;margin:14px 0 4px}
+  .pers button{font:inherit;font-weight:800;font-size:.95rem;border:0;background:none;padding:10px 6px;border-radius:6px 18px 6px 18px;cursor:pointer;color:var(--gris);display:flex;align-items:center;justify-content:center;gap:6px}
+  .pers button.on{background:var(--rosa);color:#fff;box-shadow:0 6px 16px rgba(219,39,119,.25)}
+  .pers button i{font-style:normal;font-size:.62rem;font-weight:900;letter-spacing:.05em;background:#15803d;color:#fff;padding:2px 6px;border-radius:3px 9px 3px 9px}
+  .pp .cada b{color:#15803d}
+  /* Transferencia */
+  .transf{margin-top:18px;padding-top:16px;border-top:1px dashed var(--borde);text-align:left}
+  .transf h4{margin:0 0 10px;font-size:1rem}
+  .transf .dt{display:flex;flex-direction:column;gap:6px}
+  .transf .f{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--crema);border-radius:6px 16px 6px 16px;padding:9px 12px}
+  .transf .f span{font-size:.75rem;color:var(--gris);font-weight:800;text-transform:uppercase;letter-spacing:.05em;display:block}
+  .transf .f b{font-size:.98rem;word-break:break-all}
+  .transf .f button{font:inherit;font-size:.8rem;font-weight:800;border:1.5px solid var(--borde);background:#fff;border-radius:4px 12px 4px 12px;padding:6px 10px;cursor:pointer;flex-shrink:0}
 
   /* preguntas */
   .faq{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
@@ -306,8 +320,18 @@
     <div class="plan rev">
       <span class="badge">🎁 30 días gratis</span>
       <h3>JuntOS para dos</h3>
-      <div class="monto">$5.000 <small>/ mes</small></div>
-      <div class="cada">$2.500 cada uno · por los dos</div>
+      <div class="pers" role="tablist" aria-label="Forma de pago">
+        <button type="button" role="tab" class="on" data-p="mensual" aria-selected="true">Mensual</button>
+        <button type="button" role="tab" data-p="anual" aria-selected="false">Anual <i>PROMO</i></button>
+      </div>
+      <div class="pp" data-p="mensual">
+        <div class="monto"><span class="jx-m">$5.000</span> <small>/ mes</small></div>
+        <div class="cada"><span class="jx-mc">$2.500</span> cada uno · por los dos</div>
+      </div>
+      <div class="pp" data-p="anual" hidden>
+        <div class="monto"><span class="jx-a">$50.000</span> <small>/ año</small></div>
+        <div class="cada">Sale <span class="jx-am">$4.167</span> por mes · <b class="jx-ah">ahorrás $10.000</b></div>
+      </div>
       <ul>
         <li>Las 9 secciones, sin límites</li>
         <li>Dos cuentas: vos y tu pareja</li>
@@ -317,6 +341,11 @@
       </ul>
       <a class="btn pri jx-empezar" href="entrar.html">Empezar la prueba gratis</a>
       <p class="letra">Si al terminar la prueba no siguen, no se borra nada. Queda en la base de datos hasta que vuelvan.</p>
+      <div class="transf" id="transf" hidden>
+        <h4>🏦 También podés pagar por transferencia</h4>
+        <div class="dt" id="transfDatos"></div>
+        <p class="letra" id="transfCont"></p>
+      </div>
     </div>
   </div>
 </section>
@@ -360,6 +389,28 @@ addEventListener('scroll', () => nav.classList.toggle('sombra', scrollY > 8), {p
 (function(){ const r = document.getElementById('rota'); if (!r) return; const im = [...r.querySelectorAll('img')]; let i = 0;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   setInterval(() => { if (document.hidden) return; im[i].classList.remove('on'); i = (i + 1) % im.length; im[i].classList.add('on'); }, 2500); })();
+// Precio: pestañas Mensual / Anual, y precios y datos de transferencia actualizados desde el panel
+(function(){
+  const pl = document.querySelector('.plan'); if (!pl) return;
+  pl.querySelectorAll('.pers button').forEach(b => b.onclick = () => {
+    pl.querySelectorAll('.pers button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+    pl.querySelectorAll('.pp').forEach(x => x.hidden = x.dataset.p !== b.dataset.p);
+  });
+  const $m = n => '$' + Math.round(n).toLocaleString('es-AR'), put = (c, t) => pl.querySelectorAll(c).forEach(e => e.textContent = t);
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  fetch('api/?a=precios').then(r => r.json()).then(p => {
+    if (p.mensual) { put('.jx-m', $m(p.mensual)); put('.jx-mc', $m(p.mensual / 2)); }
+    if (p.anual) { put('.jx-a', $m(p.anual)); put('.jx-am', $m(p.anual / 12)); }
+    if (p.mensual && p.anual) { const ah = p.mensual * 12 - p.anual; put('.jx-ah', ah > 0 ? 'ahorrás ' + $m(ah) : ''); }
+    const f = [['Alias', p.alias], ['CBU / CVU', p.cbu], ['Titular', p.titular], ['Banco', p.banco]].filter(x => x[1]);
+    if (!p.alias && !p.cbu) return;
+    document.getElementById('transfDatos').innerHTML = f.map(([k, v]) => `<div class="f"><div><span>${k}</span><b>${esc(v)}</b></div>${k === 'Alias' || k === 'CBU / CVU' ? `<button type="button" data-c="${esc(v)}">Copiar</button>` : ''}</div>`).join('');
+    document.getElementById('transfCont').textContent = p.contacto ? 'Después mandanos el comprobante a ' + p.contacto + ' y activamos tu suscripción.' : 'Después mandanos el comprobante y activamos tu suscripción.';
+    document.getElementById('transf').hidden = false;
+    document.getElementById('transfDatos').onclick = e => { const b = e.target.closest('[data-c]'); if (!b) return;
+      navigator.clipboard.writeText(b.dataset.c).then(() => { b.textContent = '¡Copiado!'; setTimeout(() => b.textContent = 'Copiar', 1500); }).catch(() => {}); };
+  }).catch(() => {});
+})();
 document.querySelectorAll('.logo').forEach(l => l.addEventListener('touchstart', () => { l.classList.add('rosa'); clearTimeout(l._t); l._t = setTimeout(() => l.classList.remove('rosa'), 1500); }, {passive: true}));
 
 // Menú del celu (☰): abre/cierra; se cierra al elegir una opción, tocar afuera o con Escape

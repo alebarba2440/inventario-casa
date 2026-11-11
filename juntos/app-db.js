@@ -227,6 +227,7 @@
       var recargar = personalDesdeServidor(b.personal || {}) || otraCuenta;
       if (recargar && puedeRecargar()) { location.reload(); return; }
       recibirBandeja(b.bandeja, b.msg_visto);
+      if (b.precios) { PRECIOS = b.precios; wr('juntos_precios', b.precios); }
       avisoPorVencer();
       marcarSincronizado(); miColor(); enviar();
     }).catch(function () { marcarSincronizado(); });   // sin conexión: sigo con lo guardado
@@ -387,6 +388,7 @@
   /* ---------- Período vencido: se ven las tarjetas del inicio, pero no se entra a ninguna sección.
      Opciones (ajustes del inicio, personaje, sonidos) y la cuenta siguen andando. ---------- */
   var URL_SUSCRIPCION = '';   // link de pago (Mercado Pago): cuando esté, el botón "Suscribirme" lleva ahí
+  var PRECIOS = rd('juntos_precios', null);   // precios y datos de transferencia (vienen del servidor; se editan en el panel)
   function vencido() { return !!(window.JUNTOS && window.JUNTOS.soloLectura); }
   function esLibre(pagina) { return ['', 'index.html', 'personajes.html', 'sonidos.html'].indexOf(String(pagina || '').toLowerCase()) >= 0; }
   function paginaActual() { return location.pathname.split('/').pop(); }
@@ -433,13 +435,35 @@
         '#jxSus .x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;border-radius:50% !important;background:var(--m-x);color:var(--m-tx2);font:700 1.25rem/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer;padding:0}' +
         '#jxSus .x:active{transform:scale(.92)}' +
         '@media (max-height:640px){#jxSus .c{padding:20px 18px 12px}#jxSus .ic{width:50px;height:50px;font-size:1.6rem;margin-bottom:8px}#jxSus p{margin-bottom:12px}#jxSus .precio{margin-bottom:12px}#jxSus .si{padding:12px}#jxSus .dias{font-size:2rem}}' +
+        '#jxSus .planes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px}' +
+        '#jxSus .pl{position:relative;border:2px solid var(--m-bd);background:var(--m-bg);color:var(--m-tx);border-radius:6px 18px 6px 18px;padding:12px 6px 10px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px}' +
+        '#jxSus .pl.on{border-color:var(--m-ac);background:var(--m-tint)}' +
+        '#jxSus .pl b{font-size:1.15rem;font-weight:900}#jxSus .pl small{font-size:.74rem;font-weight:700;color:var(--m-tx2);line-height:1.25}' +
+        '#jxSus .pl i{position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-style:normal;font-size:.6rem;font-weight:900;letter-spacing:.05em;background:#15803d;color:#fff;padding:2px 7px;border-radius:3px 9px 3px 9px}' +
+        '#jxSus .dos{font-size:.78rem;font-weight:700;color:var(--m-tx2);margin:0 0 14px}' +
+        '#jxSus .trf{margin-top:12px;text-align:left}' +
+        '#jxSus .trf .ab{display:block;width:100%;border:1.5px dashed var(--m-bd);background:none;color:var(--m-tx);font:800 .92rem Nunito,system-ui,sans-serif;border-radius:6px 18px 6px 18px;padding:11px;cursor:pointer}' +
+        '#jxSus .trf .dt{display:flex;flex-direction:column;gap:6px;margin-top:8px}#jxSus .trf .dt[hidden]{display:none}' +
+        '#jxSus .trf .f{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--m-s2);border-radius:6px 16px 6px 16px;padding:8px 12px}' +
+        '#jxSus .trf .f span{display:block;font-size:.68rem;font-weight:800;color:var(--m-tx2);text-transform:uppercase;letter-spacing:.05em}#jxSus .trf .f b{font-size:.92rem;word-break:break-all}' +
+        '#jxSus .trf .cp{flex-shrink:0;border:1.5px solid var(--m-bd);background:var(--m-bg);color:var(--m-tx);font:800 .78rem Nunito,system-ui,sans-serif;border-radius:4px 12px 4px 12px;padding:6px 10px;cursor:pointer}' +
+        '#jxSus .trf .cmp{margin:4px 0 0;font-size:.82rem}' +
         '#jxSus .fila a,#jxSus .fila button{background:none;border:0;color:var(--m-tx2);font:700 .9rem Nunito,system-ui,sans-serif;cursor:pointer;text-decoration:none;padding:6px}';
       document.head.appendChild(st);
     }
     var m = document.createElement('div'); m.id = 'jxSus'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     var boton = '<a class="si" href="' + (URL_SUSCRIPCION || '#') + '"' + (URL_SUSCRIPCION ? ' target="_blank" rel="noopener"' : '') + '>Suscribirme</a>';
     var X = '<button type="button" class="x no" aria-label="Cerrar" style="border-radius:50% !important">✕</button>';
-    var precio = '<div class="precio">$5.000 / mes<small>Una sola suscripción para los dos</small></div>';
+    // Planes (mensual / anual con promo) y, si están cargados en el panel, los datos para transferir
+    var PR = PRECIOS || {}, mm = +PR.mensual || 5000, aa = +PR.anual || 50000, ah = mm * 12 - aa;
+    var pesos = function (n) { return '$' + Math.round(n).toLocaleString('es-AR'); };
+    var precio = '<div class="planes"><button type="button" class="pl on" data-p="mensual"><b>' + pesos(mm) + '</b><small>por mes</small></button>' +
+      '<button type="button" class="pl" data-p="anual">' + (ah > 0 ? '<i>PROMO</i>' : '') + '<b>' + pesos(aa) + '</b><small>por año' + (ah > 0 ? ' · ahorrás ' + pesos(ah) : '') + '</small></button></div>' +
+      '<div class="dos">Una sola suscripción para los dos</div>';
+    var tr = [['Alias', PR.alias], ['CBU / CVU', PR.cbu], ['Titular', PR.titular], ['Banco', PR.banco]].filter(function (x) { return x[1]; });
+    if (PR.alias || PR.cbu) precio += '<div class="trf"><button type="button" class="ab">🏦 Pagar por transferencia</button><div class="dt" hidden>' +
+      tr.map(function (x) { return '<div class="f"><div><span>' + x[0] + '</span><b>' + escH(x[1]) + '</b></div>' + (x[0] === 'Alias' || x[0] === 'CBU / CVU' ? '<button type="button" class="cp" data-c="' + escH(x[1]) + '">Copiar</button>' : '') + '</div>'; }).join('') +
+      '<p class="cmp">Transferí <b class="mt">' + pesos(mm) + '</b> y mandanos el comprobante' + (PR.contacto ? ' a <b>' + escH(PR.contacto) + '</b>' : '') + '. Activamos tu suscripción apenas lo recibimos.</p></div></div>';
     if (porVencer) {
       var barras = ''; if (dias <= 7) for (var k = 7; k >= 1; k--) barras += '<i class="' + (k <= dias ? 'on' : '') + '"></i>';
       m.innerHTML = '<div class="c">' + X + '<div class="ic">⏳</div>' +
@@ -454,7 +478,14 @@
         precio + boton + '<div class="fila"><a href="../entrar.html?cuenta=1">Ver mi cuenta</a><button type="button" class="no">Ahora no</button></div></div>';
     }
     function cerrar() { m.classList.remove('on'); setTimeout(function () { m.remove(); }, 200); }
-    m.addEventListener('click', function (e) { if (e.target === m || e.target.closest('.no')) cerrar(); });
+    m.addEventListener('click', function (e) {
+      if (e.target === m || e.target.closest('.no')) return cerrar();
+      var pl = e.target.closest('.pl');   // elegir mensual / anual
+      if (pl) { m.querySelectorAll('.pl').forEach(function (b) { b.classList.toggle('on', b === pl); }); var mt = m.querySelector('.mt'); if (mt) mt.textContent = pl.querySelector('b').textContent; return; }
+      if (e.target.closest('.ab')) { var dt = m.querySelector('.trf .dt'); dt.hidden = !dt.hidden; if (!dt.hidden) setTimeout(function () { dt.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 50); return; }
+      var cp = e.target.closest('.cp');
+      if (cp) { var t = cp.getAttribute('data-c'); (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { cp.textContent = '¡Copiado!'; setTimeout(function () { cp.textContent = 'Copiar'; }, 1500); }).catch(function () {}); }
+    });
     m.querySelector('.si').addEventListener('click', function (e) { if (!URL_SUSCRIPCION) { e.preventDefault(); aviso('Muy pronto vas a poder suscribirte desde acá 💞'); } });
     document.body.appendChild(m);
     requestAnimationFrame(function () { m.classList.add('on'); });
