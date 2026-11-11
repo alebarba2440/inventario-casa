@@ -89,9 +89,12 @@ input[type="search"]::placeholder,#searchInput::placeholder{color:#b8b8b0;opacit
 .corazon .c-ella{background:var(--ella,#F0A6CA);-webkit-mask:url(img/corazon/ella.png?v=1) center/contain no-repeat;mask:url(img/corazon/ella.png?v=1) center/contain no-repeat}
 .corazon .c-sombra{background:url(img/corazon/sombra.png?v=1) center/contain no-repeat;opacity:.45}
 .corazon .c-brillo{display:none}   /* sin reflejo: más plano, estilo chibi */
-.pic-cor{align-items:center !important;justify-content:center}
+.pic-cor{align-items:center !important;justify-content:center;container-type:size}
+/* el dibujo ocupa lo más que puede sin salirse, siempre en el centro, sea cual sea el tamaño de la tarjeta */
+.pic-cor .corazon{width:min(80cqw,80cqh * 420 / 354) !important}
+.pic-cor img{max-width:84% !important;max-height:84% !important;width:auto !important;height:auto !important;object-fit:contain}
 /* contorno fino oscuro como los dibujos chibi + sombra suave abajo */
 .pic-cor .corazon,.ad-cor .corazon{filter:drop-shadow(1.5px 0 0 #3b2626) drop-shadow(-1.5px 0 0 #3b2626) drop-shadow(0 1.5px 0 #3b2626) drop-shadow(0 -1.5px 0 #3b2626)}
-.pic-cor .corazon{width:78%;filter:drop-shadow(1.5px 0 0 #3b2626) drop-shadow(-1.5px 0 0 #3b2626) drop-shadow(0 1.5px 0 #3b2626) drop-shadow(0 -1.5px 0 #3b2626) drop-shadow(0 6px 6px rgba(0,0,0,.18))}
+.pic-cor .corazon{filter:drop-shadow(1.5px 0 0 #3b2626) drop-shadow(-1.5px 0 0 #3b2626) drop-shadow(0 1.5px 0 #3b2626) drop-shadow(0 -1.5px 0 #3b2626) drop-shadow(0 6px 6px rgba(0,0,0,.18))}
 .ad-cor .corazon{filter:drop-shadow(.8px 0 0 #3b2626) drop-shadow(-.8px 0 0 #3b2626) drop-shadow(0 .8px 0 #3b2626) drop-shadow(0 -.8px 0 #3b2626)}
 .ad-cor{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--surface2);display:grid;place-items:center;padding:3px;box-sizing:border-box}
