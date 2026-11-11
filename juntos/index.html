@@ -52,6 +52,9 @@
   nav .menu-btn svg{width:22px;height:22px}
   nav .menu-btn .x{display:none}nav.abierto .menu-btn .x{display:block}nav.abierto .menu-btn .h{display:none}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:800;font-size:1rem;padding:13px 22px;border-radius:6px 24px 6px 24px;border:0;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s}
+  .btn{transition:transform .2s ease,box-shadow .2s ease,background-color .2s}
+  /* con mouse: los botones se levantan un poco, así se nota que estás por tocarlos */
+  @media (hover:hover){.btn:hover{transform:translateY(-3px);box-shadow:0 10px 18px -6px rgba(0,0,0,.25)}.btn.pri:hover{box-shadow:0 12px 22px -6px rgba(219,39,119,.45)}}
   .btn:active{transform:scale(.97)}
   .btn.pri{background:var(--rosa);color:#fff;box-shadow:0 8px 20px rgba(219,39,119,.28)}
   .btn.pri:hover{box-shadow:0 10px 26px rgba(219,39,119,.38)}

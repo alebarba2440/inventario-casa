@@ -74,3 +74,10 @@ button:not(.sw):not(.sw2):not(.gear):not(.cuenta-btn):not(.camera-fab):not(.home
 /* Buscadores: solo "Buscar", en gris claro */
 input[type="search"]::placeholder,#searchInput::placeholder{color:#b8b8b0;opacity:1;font-weight:500}
 [data-theme="dark"] input[type="search"]::placeholder,[data-theme="dark"] #searchInput::placeholder{color:rgba(255,255,255,.32)}
+
+/* Con mouse: los botones principales se levantan un poco al pasar por arriba (así se nota que estás por tocarlos) */
+@media (hover:hover){
+  .btn,a.btn,.submit-btn,.add-btn,a.add,a.cta-b{transition:transform .18s ease,box-shadow .18s ease,filter .18s}
+  .btn:hover:not(:disabled),a.btn:hover,.submit-btn:hover:not(:disabled),.add-btn:hover,a.add:hover,a.cta-b:hover{transform:translateY(-3px);box-shadow:0 10px 18px -6px rgba(0,0,0,.25)}
+  .btn:active:not(:disabled),.submit-btn:active{transform:scale(.97)}
+}
