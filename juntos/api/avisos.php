@@ -1,7 +1,7 @@
 <?php
 // Avisos del calendario por notificación. Lo llama cron-job.org cada 5 minutos:
 //   https://juntosapp.com.ar/api/avisos.php
-// Todos: el día anterior a las 20. Con hora: además 1 hora antes y a la hora justa. Sin hora: además ese día a las 9.
+// Todos: el día anterior a las 20. Con hora: además 1 hora antes y a la hora justa. Sin hora: solo el de la víspera.
 // Cada aviso se manda una sola vez (tabla avisos), así que llamarlo de más no repite nada.
 require __DIR__ . '/db.php';
 require __DIR__ . '/push.php';
@@ -9,7 +9,6 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
 const ANTES_MIN = 60;      // aviso previo, en minutos
-const HORA_DIA = '09:00';  // aviso de los eventos de todo el día
 const HORA_VISPERA = '20:00';  // y el día anterior a esta hora
 const TOLERANCIA = 20;     // si el cron se atrasó, se manda igual hasta 20 min tarde
 
@@ -70,8 +69,7 @@ try {
         $pasos = $hora
           ? [['vispera', (new DateTime($dia . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 0, 'Mañana · ' . $hora . ' hs'],
              ['antes', new DateTime("$dia $hora", $tz), -ANTES_MIN, 'En 1 hora · ' . $hora . ' hs'], ['ahora', new DateTime("$dia $hora", $tz), 0, 'Ahora · ' . $hora . ' hs']]
-          : [['vispera', (new DateTime($dia . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 0, ($e['tipo'] ?? '') === 'cumple' ? 'Mañana es el cumple 🎂' : 'Mañana, todo el día'],
-             ['dia', new DateTime($dia . ' ' . HORA_DIA, $tz), 0, ($e['tipo'] ?? '') === 'cumple' ? '¡Hoy es el cumple! 🎉' : 'Hoy, todo el día']];
+          : [['vispera', (new DateTime($dia . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 0, ($e['tipo'] ?? '') === 'cumple' ? 'Mañana es el cumple 🎂' : 'Mañana, todo el día']];
         foreach ($pasos as [$tipo, $t, $min, $texto]) {
           if ($min) $t->modify("$min minutes");
           $dif = ($ahora->getTimestamp() - $t->getTimestamp()) / 60;
@@ -91,7 +89,7 @@ try {
     }
   }
   // ---------- Mascotas: lo que "le toca" (próxima vacuna, desparasitación, control…) ----------
-  // Por cada mascota y tipo vale el último registro; si tiene "próxima vez", se avisa el día anterior a las 20 y ese día a las 9.
+  // Por cada mascota y tipo vale el último registro; si tiene "próxima vez", se avisa el día anterior a las 20.
   $TIP = ['vacuna' => ['💉', 'Vacuna'], 'despar' => ['🪱', 'Desparasitación'], 'pelu' => ['✂️', 'Peluquería'], 'bano' => ['🛁', 'Baño'],
     'vete' => ['🩺', 'Veterinario'], 'enfer' => ['🤒', 'Control'], 'lesion' => ['🦴', 'Control'], 'raro' => ['⚠️', 'Control'],
     'comida' => ['🍖', 'Comida'], 'juguete' => ['🧸', 'Compras'], 'otro' => ['🐾', 'Recordatorio']];
@@ -114,8 +112,7 @@ try {
       $prox = (string)($x['prox'] ?? '');
       if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $prox) || ($prox !== $hoy && $prox !== $manana)) continue;
       $t = $TIP[$x['tipo']] ?? $TIP['otro']; $pet = $pets[$x['mascota']];
-      $pasos = [['vispera', (new DateTime($prox . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 'Mañana le toca a ' . ($pet['nombre'] ?? 'tu mascota')],
-                ['dia', new DateTime($prox . ' ' . HORA_DIA, $tz), 'Hoy le toca a ' . ($pet['nombre'] ?? 'tu mascota')]];
+      $pasos = [['vispera', (new DateTime($prox . ' ' . HORA_VISPERA, $tz))->modify('-1 day'), 'Mañana le toca a ' . ($pet['nombre'] ?? 'tu mascota')]];
       foreach ($pasos as [$tipo, $tt, $texto]) {
         $dif = ($ahora->getTimestamp() - $tt->getTimestamp()) / 60;
         if ($dif < 0 || $dif > TOLERANCIA) continue;
@@ -131,7 +128,7 @@ try {
   }
 
   // ---------- Hijos: cumpleaños, próximas vacunas y fechas importantes (controles, turnos, colegio) ----------
-  // Todos avisan el día anterior a las 20; ese día a las 9 (o 1 hora antes si tienen hora).
+  // Todos avisan el día anterior a las 20; los que tienen hora, además 1 hora antes.
   $TF = ['control' => '🩺 Control pediátrico', 'turno' => '🏥 Turno médico', 'escolar' => '🎒 Inscripción escolar', 'colegio' => '🏫 Evento del colegio', 'otro' => '📌'];
   $leer = function (int $pid, string $col) use ($db) {
     $q = $db->prepare("SELECT id, data FROM docs WHERE pareja_id = ? AND col = ? AND data IS NOT NULL"); $q->execute([$pid, $col]);
@@ -170,8 +167,8 @@ try {
       $items[] = ["fecha|{$f['id']}", $h, $fe, $hr, $tit, 'Mañana' . ($hr ? " a las $hr hs" : ''), $hr ? "En 1 hora · $hr hs" : 'Hoy'];
     }
     foreach ($items as [$clave, $h, $dia, $hr, $tit, $tMan, $tHoy]) {
-      $pasos = [['vispera', (new DateTime("$dia " . HORA_VISPERA, $tz))->modify('-1 day'), $tMan],
-                ['dia', $hr ? (new DateTime("$dia $hr", $tz))->modify('-' . ANTES_MIN . ' minutes') : new DateTime("$dia " . HORA_DIA, $tz), $tHoy]];
+      $pasos = [['vispera', (new DateTime("$dia " . HORA_VISPERA, $tz))->modify('-1 day'), $tMan]];
+      if ($hr) $pasos[] = ['dia', (new DateTime("$dia $hr", $tz))->modify('-' . ANTES_MIN . ' minutes'), $tHoy];
       foreach ($pasos as [$tipo, $tt, $texto]) {
         $dif = ($ahora->getTimestamp() - $tt->getTimestamp()) / 60;
         if ($dif < 0 || $dif > TOLERANCIA) continue;
