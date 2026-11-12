@@ -42,10 +42,12 @@
         + '#jxPerfil .gs{display:grid;grid-template-columns:1fr 1fr;gap:10px}'
         + '#jxPerfil .g{border:2.5px solid var(--border2,#ddd);background:var(--surface2,#f6f6f6);border-radius:16px;padding:10px 6px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-weight:900;font-size:1rem;color:inherit}'
         + '#jxPerfil .g img{height:110px;width:auto;object-fit:contain}#jxPerfil .g.on{border-color:var(--accent,#1D9E75);background:var(--accent-light,#E1F5EE)}'
-        + '#jxPerfil label{display:flex;flex-direction:column;gap:6px;font-size:.78rem;font-weight:900;letter-spacing:.06em;color:var(--text2,#666)}'
+        + '#jxPerfil label,#jxPerfil .lb{display:flex;flex-direction:column;gap:6px;font-size:.78rem;font-weight:900;letter-spacing:.06em;color:var(--text2,#666)}'
         + '#jxPerfil input{font:inherit;font-size:1.05rem;font-weight:700;padding:12px;border-radius:12px;border:1px solid var(--border2,#ddd);background:var(--surface2,#f6f6f6);color:inherit;outline:none}'
         + '#jxPerfil .nt{margin-top:-8px;font-size:.78rem;color:var(--text2,#666);text-align:center}#jxPerfil .nt.err{color:var(--err,#E24B4A);font-weight:800}'
         + '#jxPerfil input[type=date]{min-height:48px;-webkit-appearance:none;appearance:none}'
+        + '#jxPerfil .cs{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}#jxPerfil .c{aspect-ratio:1;border-radius:50%;border:3px solid var(--surface,#fff);box-shadow:0 0 0 1px rgba(0,0,0,.12);cursor:pointer;padding:0;transition:transform .12s}'
+        + '#jxPerfil .c.on{box-shadow:0 0 0 3px var(--text,#1a1a1a);transform:scale(1.08)}#jxPerfil .c:active{transform:scale(.9)}'
         + '#jxPerfil .ok{font:inherit;font-weight:900;font-size:1.05rem;padding:14px;border:none;border-radius:14px;background:var(--accent,#1D9E75);color:#fff;cursor:pointer}#jxPerfil .ok:disabled{opacity:.4;cursor:default}';
       document.head.appendChild(st);
     }
@@ -57,10 +59,22 @@
       + '<button type="button" class="g" data-g="m"><img src="' + window.personaje('alejandro').img + '" alt="">Él</button></div>'
       + '<label>TU NOMBRE O APODO<input id="jxPN" maxlength="30" autocomplete="nickname" placeholder="Ej: Juli"></label>'
       + '<label>TU CUMPLEAÑOS<input id="jxPC" type="date" autocomplete="bday"></label><small class="nt" id="jxPCn">Lo agendamos en el Calendario para que tu pareja no se lo olvide 🎂</small>'
+      + '<div class="lb">ELEGÍ TU COLOR FAVORITO<span class="cs" id="jxPCol"></span></div><small class="nt">Es el color de la app en tu celu. Lo podés cambiar cuando quieras en Ajustes.</small>'
       + '<button type="button" class="ok" id="jxPOk">Listo</button></div>';
     document.body.appendChild(d);
     const inp = d.querySelector('#jxPN'), ok = d.querySelector('#jxPOk'), cum = d.querySelector('#jxPC'), nota = d.querySelector('#jxPCn');
     inp.value = nom; cum.value = J.miCumple || '';
+    // Color favorito: se ve al instante y se guarda en los ajustes (cfg_v2, el mismo que usa Ajustes del inicio)
+    const COLS = ['#65A30D','#16A34A','#1D9E75','#0D9488','#0891B2','#0EA5E9','#2563EB','#6366F1','#7C3AED','#9333EA','#EC4899','#E11D48','#DC2626','#EA580C','#F59E0B','#CA8A04','#64748B','#78716C'];
+    const mix = (h, to, t) => { const n = parseInt(h.slice(1), 16), f = v => Math.round(v + (to - v) * t).toString(16).padStart(2, '0'); return ('#' + f(n >> 16) + f(n >> 8 & 255) + f(n & 255)).toUpperCase(); };
+    let cfgAct = {}; try { cfgAct = (typeof cfg === 'object' && cfg) || JSON.parse(localStorage.getItem('cfg_v2') || '{}'); } catch (e) {}
+    let col = String(cfgAct.accent || getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#1D9E75').toUpperCase();
+    const ponerColor = c => { const r = document.documentElement.style; r.setProperty('--accent', c); r.setProperty('--accent-dark', mix(c, 0, .4)); r.setProperty('--accent-light', mix(c, 255, .87)); };
+    const pc = d.querySelector('#jxPCol');
+    pc.innerHTML = COLS.map(c => '<button type="button" class="c" data-c="' + c + '" style="background:' + c + '" aria-label="Color ' + c + '"></button>').join('');
+    const marcarCol = () => pc.querySelectorAll('.c').forEach(b => b.classList.toggle('on', b.dataset.c === col));
+    pc.onclick = e => { const b = e.target.closest('.c'); if (!b) return; col = b.dataset.c; ponerColor(col); marcarCol(); try { window.sonido && sonido('tick'); } catch (er) {} };
+    marcarCol();
     const hoy = new Date().toISOString().slice(0, 10); cum.max = hoy; cum.min = '1900-01-01';
     const cumOk = () => /^\d{4}-\d{2}-\d{2}$/.test(cum.value) && cum.value <= hoy && cum.value >= '1900-01-01';
     // Sin "ella/él", nombre y cumpleaños no deja avanzar
@@ -70,6 +84,13 @@
     inp.oninput = pintar; cum.oninput = pintar; cum.onchange = pintar; inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
     ok.onclick = () => {
       window.guardarPerfilYo({ genero: gen, apodo: inp.value.trim(), cumple: cum.value });
+      // guardar el color (si está la página de inicio, por su propio cfg para que Ajustes no lo pise)
+      try {
+        const o = (typeof cfg === 'object' && cfg) ? cfg : JSON.parse(localStorage.getItem('cfg_v2') || '{}');
+        o.accent = col; o.accentD = mix(col, 0, .4); o.accentL = mix(col, 255, .87);
+        if (typeof saveCfg === 'function' && typeof cfg === 'object' && o === cfg) saveCfg(); else { localStorage.setItem('cfg_v2', JSON.stringify(o)); if (window.barraDeColor) barraDeColor(); }
+        ponerColor(col); if (typeof markColor === 'function') markColor();
+      } catch (e) {}
       d.remove(); try { window.sonido && sonido('agregar'); } catch (e) {}
       try { window.dispatchEvent(new Event('juntos')); } catch (e) {}
     };
