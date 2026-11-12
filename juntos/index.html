@@ -219,21 +219,6 @@
   .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(app/img/logo-texto.png) center/contain no-repeat;mask:url(app/img/logo-texto.png) center/contain no-repeat}
   .logo i.c{background:var(--pri);-webkit-mask-image:url(app/img/logo-corazon.png);mask-image:url(app/img/logo-corazon.png)}
 
-  /* Probador de color principal (solo para probar: se activa abriendo la landing con ?color) */
-  #cp{position:fixed;right:14px;bottom:14px;z-index:60;font:600 14px/1.2 system-ui,sans-serif}
-  #cp>button{width:52px;height:52px;border-radius:50%;border:3px solid #fff;background:var(--pri);color:#fff;cursor:pointer;
-    box-shadow:0 8px 22px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
-  #cp .pn{position:absolute;right:0;bottom:62px;width:236px;background:#fff;border:1px solid var(--borde);border-radius:14px;
-    box-shadow:0 14px 34px rgba(0,0,0,.18);padding:14px;display:grid;gap:12px}
-  #cp .pn[hidden]{display:none}
-  #cp .sw{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
-  #cp .sw button{aspect-ratio:1;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);cursor:pointer;padding:0}
-  #cp .sw button.on{box-shadow:0 0 0 2px var(--tinta)}
-  #cp label{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  #cp input[type=color]{width:46px;height:34px;border:1px solid var(--borde);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
-  #cp code{font-size:13px;color:var(--gris)}
-  #cp .fila{display:flex;gap:8px}
-  #cp .fila button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--borde);background:#f6f5f1;cursor:pointer;font:inherit;font-size:13px}
 </style>
 </head>
 <body>
@@ -472,45 +457,6 @@ if (desdeIcono) fetch('api/?a=yo', {credentials: 'same-origin'}).then(r => r.jso
 setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]'), y = document.querySelector('.instalar [data-instalar-ya]'), n = document.querySelector('[data-instalar-nada]'); if (n) n.hidden = !(b.hidden && y.hidden); }, 2700);
 </script>
 
-<!-- Probador de color principal (abrir con ?color; para sacarlo: ?color=no) -->
-<div id="cp" hidden>
-  <div class="pn" id="cpPn" hidden>
-    <b>Color principal</b>
-    <div class="sw" id="cpSw"></div>
-    <label>Elegir otro <span><code id="cpHex"></code> <input type="color" id="cpIn"></span></label>
-    <div class="fila"><button type="button" id="cpCopy">Copiar código</button><button type="button" id="cpReset">Verde (actual)</button></div>
-  </div>
-  <button type="button" id="cpBtn" aria-label="Probar color principal">🎨</button>
-</div>
-<script>
-(function(){
-  const K='jx-color-prueba', KV='jx-probador', ORIG='#65A30D', root=document.documentElement;
-  const q=new URLSearchParams(location.search).get('color');
-  try{ if(q==='no'){localStorage.removeItem(KV);localStorage.removeItem(K);} else if(q!==null) localStorage.setItem(KV,'1'); }catch(e){}
-  let on=false, c=null; try{ on=localStorage.getItem(KV)==='1'; c=localStorage.getItem(K); }catch(e){}
-  const meta=document.querySelector('meta[name="theme-color"]');
-  const aplicar=v=>{
-    if(!v||v.toUpperCase()===ORIG){ root.style.removeProperty('--pri'); root.style.removeProperty('--priL'); if(meta) meta.content='#EBF3E0'; v=ORIG; }
-    else { root.style.setProperty('--pri',v); root.style.setProperty('--priL',`color-mix(in srgb,${v} 13%,#fff)`);
-      if(meta){ const n=parseInt(v.slice(1),16), m=x=>Math.round(x*.13+255*.87); meta.content=`rgb(${m(n>>16)},${m(n>>8&255)},${m(n&255)})`; } }
-    return v.toUpperCase();
-  };
-  if(!on) return;               // la gente que entra normal ve el rosado de siempre
-  let act=aplicar(c);
-  const box=document.getElementById('cp'), pn=document.getElementById('cpPn'), inp=document.getElementById('cpIn'),
-        hex=document.getElementById('cpHex'), sw=document.getElementById('cpSw');
-  const PAL=['#65A30D','#0EA5E9','#DB2777','#E11D48','#DC2626','#EA580C','#D97706','#CA8A04','#16A34A','#0D9488','#0891B2','#0284C7','#2563EB','#4F46E5','#7C3AED','#9333EA','#C026D3','#475569','#1F2937'];
-  sw.innerHTML=PAL.map(x=>`<button type="button" data-c="${x}" style="background:${x}" aria-label="${x}"></button>`).join('');
-  const marcar=()=>{ inp.value=act.toLowerCase(); hex.textContent=act; sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===act)); };
-  const elegir=v=>{ act=aplicar(v); try{ act===ORIG?localStorage.removeItem(K):localStorage.setItem(K,act); }catch(e){} marcar(); };
-  sw.onclick=e=>{ const b=e.target.closest('[data-c]'); if(b) elegir(b.dataset.c); };
-  inp.oninput=()=>elegir(inp.value);
-  document.getElementById('cpReset').onclick=()=>elegir(ORIG);
-  document.getElementById('cpCopy').onclick=e=>navigator.clipboard.writeText(act).then(()=>{e.target.textContent='¡Copiado!';setTimeout(()=>e.target.textContent='Copiar código',1500);}).catch(()=>{});
-  document.getElementById('cpBtn').onclick=ev=>{ ev.stopPropagation(); pn.hidden=!pn.hidden; };
-  document.addEventListener('click',e=>{ if(!box.contains(e.target)) pn.hidden=true; });
-  box.hidden=false; marcar();
-})();
-</script>
+<script>try{localStorage.removeItem('jx-probador');localStorage.removeItem('jx-color-prueba')}catch(e){}</script>
 </body>
 </html>
