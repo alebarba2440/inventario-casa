@@ -104,7 +104,8 @@
   .hero p.lead{font-size:1.18rem;color:var(--gris);margin:0 0 26px;max-width:520px}
   .hero .ctas{display:flex;gap:10px;flex-wrap:wrap}
   .hero .ctas .btn{padding:11px 20px;font-size:.98rem;line-height:1.2}
-  .hero .nota{margin-top:14px;font-size:.9rem;color:var(--gris)}
+  .hero .nota{margin-top:12px;font-size:.9rem;color:var(--gris);white-space:nowrap;overflow:hidden;text-overflow:clip}
+  .hero .wrap>div{min-width:0}   /* el tamaño se ajusta solo al ancho de los dos botones (ver ajustarNota) */
   .hero .ilus{position:relative;display:flex;justify-content:center}
   .hero .ilus::before{content:"";position:absolute;inset:8% 6% 2%;background:#fff;border-radius:46% 54% 50% 50%/55% 50% 50% 45%;opacity:.7}
   .hero .ilus img{position:relative;max-height:440px;width:auto;filter:drop-shadow(0 18px 30px rgba(0,0,0,.12))}
@@ -483,5 +484,21 @@ setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]')
 </script>
 
 <script>try{localStorage.removeItem('jx-probador');localStorage.removeItem('jx-color-prueba')}catch(e){}</script>
+<script>
+/* "Sin tarjeta · …": que ocupe justo el ancho de los dos botones de arriba */
+(function () {
+  const n = document.querySelector('.hero .nota'), c = document.querySelector('.hero .ctas'); if (!n || !c) return;
+  function ajustarNota() {
+    const bs = [...c.children].filter(b => b.offsetParent); if (!bs.length) return;
+    const rs = bs.map(b => b.getBoundingClientRect()), fila = rs.filter(r => Math.abs(r.top - rs[0].top) < 4);
+    const ancho = Math.max(...fila.map(r => r.right)) - Math.min(...fila.map(r => r.left));
+    n.style.fontSize = '16px'; n.style.width = 'max-content';
+    const nat = n.getBoundingClientRect().width; n.style.width = '';
+    n.style.fontSize = Math.max(9.5, Math.min(15, 16 * ancho / nat)).toFixed(2) + 'px';
+  }
+  ajustarNota(); addEventListener('resize', ajustarNota); addEventListener('load', ajustarNota);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajustarNota);
+})();
+</script>
 </body>
 </html>
