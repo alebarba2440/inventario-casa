@@ -73,10 +73,15 @@
       conic-gradient(from var(--giro),var(--borde) 0 55%,color-mix(in srgb,var(--pri) 35%,var(--borde)) 65%,var(--pri) 80%,var(--pri) 86%,var(--borde) 96%) border-box;
     animation:giroBorde 3s linear infinite}
   @keyframes giroBorde{to{--giro:360deg}}
+  /* "Ver qué hace": el mismo recorrido del borde, en gris oscuro */
+  .hero .btn.sec.ver-que{border:2px solid transparent;
+    background:linear-gradient(#fff,#fff) padding-box,
+      conic-gradient(from var(--giro),var(--borde) 0 55%,#9a9a92 65%,#4a4a45 80%,#4a4a45 86%,var(--borde) 96%) border-box;
+    animation:giroBorde 3s linear infinite}
   /* "Instalar": late suave (se agranda y vuelve) para llamar la atención */
   [data-instalar]:not([hidden]){animation:pulsoInst 2.4s ease-in-out infinite}
   @keyframes pulsoInst{0%,55%,100%{scale:1}20%{scale:1.07}35%{scale:.98}45%{scale:1.03}}
-  @media (prefers-reduced-motion:reduce){nav .btn.jx-entrar{animation:none;border-color:var(--pri);background:#fff}[data-instalar]{animation:none}}
+  @media (prefers-reduced-motion:reduce){nav .btn.jx-entrar{animation:none;border-color:var(--pri);background:#fff}[data-instalar]{animation:none}.hero .btn.sec.ver-que{animation:none;border-color:#4a4a45;background:#fff}}
   .inst-link{display:inline-flex;align-items:center;gap:10px;margin-top:16px;border:1.5px solid color-mix(in srgb,var(--pri) 35%,transparent);background:rgba(255,255,255,.75);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--tinta);font:800 .95rem 'Nunito',sans-serif;cursor:pointer;
     padding:7px 16px 7px 7px;border-radius:6px 22px 6px 22px;box-shadow:0 6px 18px color-mix(in srgb,var(--pri) 12%,transparent);transition:transform .15s,box-shadow .15s,border-color .15s}
@@ -259,7 +264,7 @@
       <p class="lead">Una app para gestionar sus gastos, controlar sus ahorros, planificar proyectos y compartir tareas. Todo en un solo lugar, actualizado y sincronizado para ambos.</p>
       <div class="ctas">
         <a class="btn pri jx-empezar" href="entrar.html">Probar gratis 30 días</a>
-        <a class="btn sec" href="#que">Ver qué hace</a>
+        <a class="btn sec ver-que" href="#que">Ver qué hace</a>
       </div>
       <p class="nota">Sin tarjeta · Entrás con tu cuenta de Google · Android y iPhone</p>
       <button type="button" class="inst-link" data-instalar hidden><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span><span class="t">Instalar la app<small>Gratis · en un toque</small></span></button>
