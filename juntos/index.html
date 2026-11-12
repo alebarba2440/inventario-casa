@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>JuntOS · La app para organizar la vida en pareja</title>
 <meta name="description" content="Inventario de la casa, ahorros, vacaciones, el auto, gastos personales y compartidos, calendario, mascotas e hijos. Todo en una app para los dos. 30 días gratis.">
-<meta name="theme-color" content="#FCE7F3">
+<meta name="theme-color" content="#E0F3FC">
 <script>try{var c=JSON.parse(localStorage.getItem('jx:cfg_v2')||'{}');if(c.accent||c.theme==='dark')document.querySelector('meta[name="theme-color"]').content=c.theme==='dark'?'#111111':c.accent;}catch(e){}</script>
 <meta property="og:title" content="JuntOS · La app para organizar la vida en pareja">
 <meta property="og:description" content="Casa, ahorros, viajes, auto, gastos, calendario, mascotas e hijos en una sola app para los dos. Probala 30 días gratis.">
@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Jost:wght@400&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root{--rosa:#DB2777;--rosaL:#FCE7F3;--azul:#0284C7;--azulL:#E0F2FE;--crema:#FFF7E6;--tinta:#1a1a1a;--gris:#5f5f58;--borde:#ebe8e0}
+  :root{--pri:#0EA5E9;--priL:#E0F3FC;--azul:#0284C7;--azulL:#E0F2FE;--crema:#FFF7E6;--tinta:#1a1a1a;--gris:#5f5f58;--borde:#ebe8e0}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;font-family:'Nunito',system-ui,sans-serif;color:var(--tinta);background:#fffdf8;line-height:1.5}
@@ -28,7 +28,7 @@
   a{color:inherit}
   .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
   .marca{font-family:'Dancing Script',cursive;font-weight:700;line-height:1}
-  .marca b{color:var(--rosa);font-weight:700}
+  .marca b{color:var(--pri);font-weight:700}
 
   /* barra superior */
   nav{position:sticky;top:0;z-index:10;background:rgba(255,253,248,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
@@ -36,9 +36,9 @@
   nav .wrap{display:flex;align-items:center;gap:16px;height:64px}
   nav .marca{font-size:2.3rem;text-decoration:none;display:flex}
   .logo.enh1{height:1.25em;width:calc(1.25em * 2.866);vertical-align:-.28em}
-  /* al pasar el mouse (o tocar en el celu) las letras del logo se ponen rosas */
+  /* al pasar el mouse (o tocar en el celu) las letras del logo se ponen del color principal */
   .logo i:not(.c){transition:background-color .35s ease}
-  .logo:hover i:not(.c),.logo.rosa i:not(.c){background-color:var(--rosa)}
+  .logo:hover i:not(.c),.logo.rosa i:not(.c){background-color:var(--pri)}
   /* corazón del logo del título que late suave */
   .logo.enh1 i.c{transform-origin:68% 55%;animation:late 1.3s ease-in-out infinite}
   @keyframes late{0%,100%{transform:scale(1)}15%{transform:scale(1.12)}30%{transform:scale(1)}45%{transform:scale(1.08)}}
@@ -47,32 +47,32 @@
   nav .links{display:flex;gap:22px;margin-left:auto;font-weight:700;font-size:.95rem}
   nav .links a{text-decoration:none;color:var(--gris)}
   nav .links a{transition:color .25s ease}
-  nav .links a:hover,nav .links a:active,nav .links a:focus-visible{color:var(--rosa)}
+  nav .links a:hover,nav .links a:active,nav .links a:focus-visible{color:var(--pri)}
   nav .menu-btn{display:none;place-items:center;width:42px;height:42px;flex-shrink:0;border:1.5px solid var(--borde);background:#fff;border-radius:4px 14px 4px 14px;cursor:pointer;padding:0;color:var(--tinta)}
   nav .menu-btn svg{width:22px;height:22px}
   nav .menu-btn .x{display:none}nav.abierto .menu-btn .x{display:block}nav.abierto .menu-btn .h{display:none}
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:800;font-size:1rem;padding:13px 22px;border-radius:6px 24px 6px 24px;border:0;cursor:pointer;text-decoration:none;transition:transform .15s,box-shadow .15s}
   .btn{transition:transform .2s ease,box-shadow .2s ease,background-color .2s}
   /* con mouse: los botones se levantan un poco, así se nota que estás por tocarlos */
-  @media (hover:hover){.btn:hover{transform:translateY(-3px);box-shadow:0 10px 18px -6px rgba(0,0,0,.25)}.btn.pri:hover{box-shadow:0 12px 22px -6px color-mix(in srgb,var(--rosa) 45%,transparent)}}
+  @media (hover:hover){.btn:hover{transform:translateY(-3px);box-shadow:0 10px 18px -6px rgba(0,0,0,.25)}.btn.pri:hover{box-shadow:0 12px 22px -6px color-mix(in srgb,var(--pri) 45%,transparent)}}
   .btn:active{transform:scale(.97)}
-  .btn.pri{background:var(--rosa);color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--rosa) 28%,transparent)}
-  .btn.pri:hover{box-shadow:0 10px 26px color-mix(in srgb,var(--rosa) 38%,transparent)}
+  .btn.pri{background:var(--pri);color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--pri) 28%,transparent)}
+  .btn.pri:hover{box-shadow:0 10px 26px color-mix(in srgb,var(--pri) 38%,transparent)}
   .btn.sec{background:#fff;color:var(--tinta);border:1.5px solid var(--borde)}
-  /* reflejo que cruza el botón cada 3 segundos: blanco en "Probar gratis", rosado en "Ingresar" */
+  /* reflejo que cruza el botón cada 3 segundos: blanco en "Probar gratis", del color principal en "Ingresar" */
   .btn.pri.jx-empezar,nav .jx-entrar{position:relative;overflow:hidden;isolation:isolate}
   .btn.pri.jx-empezar::after,nav .jx-entrar::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;pointer-events:none;
     transform:translateX(-160%) skewX(-20deg);animation:reflejo 3s ease-in-out infinite}
   .btn.pri.jx-empezar::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent)}
-  nav .jx-entrar::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--rosa) 38%,transparent),transparent);z-index:-1}
+  nav .jx-entrar::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--pri) 38%,transparent),transparent);z-index:-1}
   @keyframes reflejo{0%{transform:translateX(-160%) skewX(-20deg)}30%,100%{transform:translateX(330%) skewX(-20deg)}}
   @media (prefers-reduced-motion:reduce){.btn.pri.jx-empezar::after,nav .jx-entrar::after{animation:none;display:none}}
-  .inst-link{display:inline-flex;align-items:center;gap:10px;margin-top:16px;border:1.5px solid color-mix(in srgb,var(--rosa) 35%,transparent);background:rgba(255,255,255,.75);
+  .inst-link{display:inline-flex;align-items:center;gap:10px;margin-top:16px;border:1.5px solid color-mix(in srgb,var(--pri) 35%,transparent);background:rgba(255,255,255,.75);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--tinta);font:800 .95rem 'Nunito',sans-serif;cursor:pointer;
-    padding:7px 16px 7px 7px;border-radius:6px 22px 6px 22px;box-shadow:0 6px 18px color-mix(in srgb,var(--rosa) 12%,transparent);transition:transform .15s,box-shadow .15s,border-color .15s}
-  .inst-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px color-mix(in srgb,var(--rosa) 20%,transparent);border-color:var(--rosa)}
+    padding:7px 16px 7px 7px;border-radius:6px 22px 6px 22px;box-shadow:0 6px 18px color-mix(in srgb,var(--pri) 12%,transparent);transition:transform .15s,box-shadow .15s,border-color .15s}
+  .inst-link:hover{transform:translateY(-2px);box-shadow:0 10px 24px color-mix(in srgb,var(--pri) 20%,transparent);border-color:var(--pri)}
   .inst-link:active{transform:scale(.97)}
-  .inst-link .ic{width:34px;height:34px;border-radius:4px 14px 4px 14px;background:var(--rosa);color:#fff;display:grid;place-items:center;flex-shrink:0}
+  .inst-link .ic{width:34px;height:34px;border-radius:4px 14px 4px 14px;background:var(--pri);color:#fff;display:grid;place-items:center;flex-shrink:0}
   .inst-link .ic svg{width:19px;height:19px}
   .inst-link small{display:block;font-weight:700;font-size:.74rem;color:var(--gris);line-height:1.1}
   .inst-link span.t{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15;text-align:left}
@@ -82,7 +82,7 @@
   .btn.chico{padding:9px 16px;font-size:.92rem;border-radius:4px 16px 4px 16px}
 
   /* portada */
-  .hero{background:linear-gradient(160deg,var(--rosaL) 0%,var(--crema) 55%,var(--azulL) 100%);overflow:hidden}
+  .hero{background:linear-gradient(160deg,var(--priL) 0%,var(--crema) 55%,var(--azulL) 100%);overflow:hidden}
   .hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:30px;padding-top:56px;padding-bottom:56px}
   .hero h1{font-family:'Jost','Nunito',system-ui,sans-serif;font-size:clamp(2.2rem,5vw,3.4rem);line-height:1.12;margin:0 0 16px;font-weight:400;letter-spacing:-.01em}
   .hero h1 .marca{font-size:1.35em;display:inline-block}
@@ -101,7 +101,7 @@
 
   section{padding:72px 0}
   .tit{text-align:center;max-width:620px;margin:0 auto 40px}
-  .tit .eti{display:inline-block;font-size:.8rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--rosa);margin-bottom:8px}
+  .tit .eti{display:inline-block;font-size:.8rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--pri);margin-bottom:8px}
   .tit h2{font-size:clamp(1.7rem,3.6vw,2.4rem);line-height:1.15;margin:0 0 10px;font-weight:900;letter-spacing:-.01em}
   .tit p{margin:0;color:var(--gris);font-size:1.06rem}
 
@@ -118,7 +118,7 @@
   .como{background:var(--crema)}
   .pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:p}
   .paso{background:#fff;border-radius:24px;padding:24px;position:relative}
-  .paso::before{counter-increment:p;content:counter(p);display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--rosa);color:#fff;font-weight:900;font-size:1.2rem;margin-bottom:12px}
+  .paso::before{counter-increment:p;content:counter(p);display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--pri);color:#fff;font-weight:900;font-size:1.2rem;margin-bottom:12px}
   .paso h3{margin:0 0 6px;font-size:1.15rem}
   .paso p{margin:0;color:var(--gris)}
   .instalar{margin-top:22px;background:#fff;border-radius:24px;padding:22px 24px;display:grid;grid-template-columns:auto 1fr 1fr;gap:20px;align-items:start}
@@ -135,13 +135,13 @@
   .extra span{color:var(--gris);font-size:.93rem}
 
   /* precio */
-  .precio{background:linear-gradient(160deg,var(--rosaL),var(--crema) 60%,var(--azulL))}
+  .precio{background:linear-gradient(160deg,var(--priL),var(--crema) 60%,var(--azulL))}
   .plan{max-width:440px;margin:0 auto;background:#fff;border-radius:30px;padding:32px 28px;text-align:center;box-shadow:0 24px 50px rgba(0,0,0,.08);position:relative}
   .plan .badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--azul);color:#fff;font-weight:900;font-size:.82rem;padding:6px 14px;border-radius:999px;white-space:nowrap}
   .plan h3{margin:4px 0 2px;font-size:1.3rem}
   .plan .monto{font-size:3rem;font-weight:900;letter-spacing:-.02em;margin:10px 0 0}
   .plan .monto small{font-size:1rem;color:var(--gris);font-weight:700}
-  .plan .cada{color:var(--rosa);font-weight:800;margin-bottom:18px}
+  .plan .cada{color:var(--pri);font-weight:800;margin-bottom:18px}
   .plan ul{list-style:none;padding:0;margin:0 0 24px;text-align:left;display:flex;flex-direction:column;gap:10px}
   .plan li{display:flex;gap:10px}
   .plan li::before{content:"✓";flex-shrink:0;width:22px;height:22px;border-radius:50%;background:#DCFCE7;color:#15803d;font-weight:900;font-size:.8rem;display:grid;place-items:center;margin-top:1px}
@@ -150,7 +150,7 @@
   /* Mensual / Anual */
   .pers{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--crema);border-radius:8px 22px 8px 22px;padding:4px;margin:14px 0 4px}
   .pers button{font:inherit;font-weight:800;font-size:.95rem;border:0;background:none;padding:10px 6px;border-radius:6px 18px 6px 18px;cursor:pointer;color:var(--gris);display:flex;align-items:center;justify-content:center;gap:6px}
-  .pers button.on{background:var(--rosa);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--rosa) 25%,transparent)}
+  .pers button.on{background:var(--pri);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--pri) 25%,transparent)}
   .pers button i{font-style:normal;font-size:.62rem;font-weight:900;letter-spacing:.05em;background:#15803d;color:#fff;padding:2px 6px;border-radius:3px 9px 3px 9px}
   .pp .cada b{color:#15803d}
   /* Transferencia */
@@ -167,7 +167,7 @@
   details{background:#fff;border:1px solid var(--borde);border-radius:18px;padding:0 20px}
   summary{cursor:pointer;list-style:none;font-weight:800;padding:18px 0;display:flex;justify-content:space-between;gap:12px}
   summary::-webkit-details-marker{display:none}
-  summary::after{content:"+";font-size:1.4rem;line-height:1;color:var(--rosa);transition:transform .2s}
+  summary::after{content:"+";font-size:1.4rem;line-height:1;color:var(--pri);transition:transform .2s}
   details[open] summary::after{transform:rotate(45deg)}
   details p{margin:0 0 18px;color:var(--gris)}
 
@@ -213,15 +213,15 @@
     .hero .ctas .btn{flex:1 1 auto;padding:10px 14px;font-size:.93rem;white-space:nowrap}
   }
   .o-cor{display:inline-block;width:.82em;height:.82em;margin:0 -.02em;vertical-align:-.1em}
-  .o-cor svg{width:100%;height:100%;display:block;fill:var(--rosa);transform-origin:50% 55%;animation:late 1.3s ease-in-out infinite}
+  .o-cor svg{width:100%;height:100%;display:block;fill:var(--pri);transform-origin:50% 55%;animation:late 1.3s ease-in-out infinite}
   @media (prefers-reduced-motion:reduce){.o-cor svg{animation:none}}
   .logo{display:inline-block;position:relative;height:1em;width:calc(1em * 2.866);vertical-align:middle;line-height:0}
   .logo i{position:absolute;inset:0;background:currentColor;-webkit-mask:url(app/img/logo-texto.png) center/contain no-repeat;mask:url(app/img/logo-texto.png) center/contain no-repeat}
-  .logo i.c{background:var(--rosa);-webkit-mask-image:url(app/img/logo-corazon.png);mask-image:url(app/img/logo-corazon.png)}
+  .logo i.c{background:var(--pri);-webkit-mask-image:url(app/img/logo-corazon.png);mask-image:url(app/img/logo-corazon.png)}
 
   /* Probador de color principal (solo para probar: se activa abriendo la landing con ?color) */
   #cp{position:fixed;right:14px;bottom:14px;z-index:60;font:600 14px/1.2 system-ui,sans-serif}
-  #cp>button{width:52px;height:52px;border-radius:50%;border:3px solid #fff;background:var(--rosa);color:#fff;cursor:pointer;
+  #cp>button{width:52px;height:52px;border-radius:50%;border:3px solid #fff;background:var(--pri);color:#fff;cursor:pointer;
     box-shadow:0 8px 22px rgba(0,0,0,.25);display:grid;place-items:center;font-size:22px}
   #cp .pn{position:absolute;right:0;bottom:62px;width:236px;background:#fff;border:1px solid var(--borde);border-radius:14px;
     box-shadow:0 14px 34px rgba(0,0,0,.18);padding:14px;display:grid;gap:12px}
@@ -287,7 +287,7 @@
         <h3>Vacaciones</h3><p>Planifiquen cada viaje: presupuesto estimado y real, lo que llevan ahorrado y un PDF con todas sus escapadas.</p></article>
       <article class="sec rev" style="--c:#EDE9FE"><div class="pic"><img src="app/img/landing/copito.webp?v=1" alt="" loading="lazy"></div>
         <h3>Vehículos</h3><p>Los gastos del mes divididos entre los dos y el mantenimiento con aviso de lo próximo, por fecha o kilómetros. Uno o varios autos, con PDF.</p></article>
-      <article class="sec rev" style="--c:var(--rosaL)"><div class="pic"><img src="app/img/landing/gastos.webp?v=1" alt="" loading="lazy"></div>
+      <article class="sec rev" style="--c:var(--priL)"><div class="pic"><img src="app/img/landing/gastos.webp?v=1" alt="" loading="lazy"></div>
         <h3>Gastos personales</h3><p>Tus gastos por categoría, con gráficos, comparación con el mes anterior y la tendencia del año. Solo los ves vos.</p></article>
       <article class="sec rev" style="--c:#FEF9C3"><div class="pic"><img src="app/img/landing/compartidos.webp?v=1" alt="" loading="lazy"></div>
         <h3>Gastos compartidos</h3><p>Quién pagó qué y cuánto le toca a cada uno. Los gastos fijos se cargan solos cada mes y la cuenta sale sola.</p></article>
@@ -295,12 +295,12 @@
         <h3>Calendario</h3><p>La agenda de los dos: turnos, cumpleaños, el colegio. Eventos que se repiten y aviso al celu antes de cada uno.</p></article>
       <article class="sec rev" style="--c:#DCFCE7"><div class="pic"><img src="app/img/landing/landing-mascotas.webp?v=1" alt="" loading="lazy"></div>
         <h3>Mascotas</h3><p>Vacunas, desparasitación, veterinario y peso de cada mascota, con lo que gastan por mes y aviso de lo que viene.</p></article>
-      <article class="sec rev" style="--c:var(--rosaL)"><div class="pic"><img src="app/img/landing/landing-hijos.webp?v=1" alt="" loading="lazy"></div>
+      <article class="sec rev" style="--c:var(--priL)"><div class="pic"><img src="app/img/landing/landing-hijos.webp?v=1" alt="" loading="lazy"></div>
         <h3>Hijos</h3><p>Vacunas, pediatra, alergias y cómo van creciendo (peso y altura), más fotos del DNI y la partida siempre a mano.</p></article>
       <article class="sec rev" style="--c:#E0F2FE"><div class="pic"><img src="app/img/landing/corazon-vinculo.webp?v=1" alt="" loading="lazy"></div>
         <h3>Nuestro vínculo</h3><p>Cartas para conversar, un chequeo semanal de cómo están (privado hasta que responden los dos), notas de gratitud e ideas de citas.</p></article>
-      <article class="sec rev" style="--c:var(--rosaL)"><div class="pic"><img src="app/img/corazon-fuego.webp?v=1" alt="" loading="lazy"></div>
-        <h3>Modo travieso <small style="font-size:.7em;color:var(--rosa)">+18</small></h3><p>Juegos para los dos: dados de a dos (cada uno en su celu), verdad o reto, retos y una lista de deseos donde solo ven lo que coinciden.</p></article>
+      <article class="sec rev" style="--c:var(--priL)"><div class="pic"><img src="app/img/corazon-fuego.webp?v=1" alt="" loading="lazy"></div>
+        <h3>Modo travieso <small style="font-size:.7em;color:var(--pri)">+18</small></h3><p>Juegos para los dos: dados de a dos (cada uno en su celu), verdad o reto, retos y una lista de deseos donde solo ven lo que coinciden.</p></article>
     </div>
   </div>
 </section>
@@ -410,7 +410,7 @@
 const nav = document.getElementById('nav');
 addEventListener('scroll', () => nav.classList.toggle('sombra', scrollY > 8), {passive: true});
 
-// Logo: en el celu, tocarlo lo pone rosa un ratito (en la compu alcanza con pasar el mouse)
+// Logo: en el celu, tocarlo lo pone del color principal un ratito (en la compu alcanza con pasar el mouse)
 // Ilustración del inicio: cambia cada 2,5 s (no si la persona pidió menos animaciones, ni con la pestaña oculta)
 (function(){ const r = document.getElementById('rota'); if (!r) return; const im = [...r.querySelectorAll('img')]; let i = 0;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -478,20 +478,20 @@ setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]')
     <b>Color principal</b>
     <div class="sw" id="cpSw"></div>
     <label>Elegir otro <span><code id="cpHex"></code> <input type="color" id="cpIn"></span></label>
-    <div class="fila"><button type="button" id="cpCopy">Copiar código</button><button type="button" id="cpReset">Rosado original</button></div>
+    <div class="fila"><button type="button" id="cpCopy">Copiar código</button><button type="button" id="cpReset">Celeste (actual)</button></div>
   </div>
   <button type="button" id="cpBtn" aria-label="Probar color principal">🎨</button>
 </div>
 <script>
 (function(){
-  const K='jx-color-prueba', KV='jx-probador', ORIG='#DB2777', root=document.documentElement;
+  const K='jx-color-prueba', KV='jx-probador', ORIG='#0EA5E9', root=document.documentElement;
   const q=new URLSearchParams(location.search).get('color');
   try{ if(q==='no'){localStorage.removeItem(KV);localStorage.removeItem(K);} else if(q!==null) localStorage.setItem(KV,'1'); }catch(e){}
   let on=false, c=null; try{ on=localStorage.getItem(KV)==='1'; c=localStorage.getItem(K); }catch(e){}
   const meta=document.querySelector('meta[name="theme-color"]');
   const aplicar=v=>{
-    if(!v||v.toUpperCase()===ORIG){ root.style.removeProperty('--rosa'); root.style.removeProperty('--rosaL'); if(meta) meta.content='#FCE7F3'; v=ORIG; }
-    else { root.style.setProperty('--rosa',v); root.style.setProperty('--rosaL',`color-mix(in srgb,${v} 13%,#fff)`);
+    if(!v||v.toUpperCase()===ORIG){ root.style.removeProperty('--pri'); root.style.removeProperty('--priL'); if(meta) meta.content='#E0F3FC'; v=ORIG; }
+    else { root.style.setProperty('--pri',v); root.style.setProperty('--priL',`color-mix(in srgb,${v} 13%,#fff)`);
       if(meta){ const n=parseInt(v.slice(1),16), m=x=>Math.round(x*.13+255*.87); meta.content=`rgb(${m(n>>16)},${m(n>>8&255)},${m(n&255)})`; } }
     return v.toUpperCase();
   };
@@ -499,7 +499,7 @@ setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]')
   let act=aplicar(c);
   const box=document.getElementById('cp'), pn=document.getElementById('cpPn'), inp=document.getElementById('cpIn'),
         hex=document.getElementById('cpHex'), sw=document.getElementById('cpSw');
-  const PAL=['#DB2777','#E11D48','#DC2626','#EA580C','#D97706','#CA8A04','#65A30D','#16A34A','#0D9488','#0891B2','#0284C7','#2563EB','#4F46E5','#7C3AED','#9333EA','#C026D3','#475569','#1F2937'];
+  const PAL=['#0EA5E9','#DB2777','#E11D48','#DC2626','#EA580C','#D97706','#CA8A04','#65A30D','#16A34A','#0D9488','#0891B2','#0284C7','#2563EB','#4F46E5','#7C3AED','#9333EA','#C026D3','#475569','#1F2937'];
   sw.innerHTML=PAL.map(x=>`<button type="button" data-c="${x}" style="background:${x}" aria-label="${x}"></button>`).join('');
   const marcar=()=>{ inp.value=act.toLowerCase(); hex.textContent=act; sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===act)); };
   const elegir=v=>{ act=aplicar(v); try{ act===ORIG?localStorage.removeItem(K):localStorage.setItem(K,act); }catch(e){} marcar(); };

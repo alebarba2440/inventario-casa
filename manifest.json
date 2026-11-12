@@ -3,7 +3,7 @@
   "short_name": "JuntOS",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#DB2777",
+  "background_color": "#0EA5E9",
   "theme_color": "#1D9E75",
   "icons": [
     {
