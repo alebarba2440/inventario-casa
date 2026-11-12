@@ -35,6 +35,11 @@ def main():
     (app / 'app-db.js').write_bytes(adaptador)
     shutil.copy2(JUNTOS / 'sw.js', app / 'sw.js')   # notificaciones (alcance: app/)
     v = hashlib.md5(adaptador).hexdigest()[:8]
+    # versión del manifest según su contenido: si cambian los íconos, Chrome/Edge lo vuelven a leer
+    vm = hashlib.md5((JUNTOS / 'manifest.webmanifest').read_bytes()).hexdigest()[:8]
+    for raiz in ['index.html', 'entrar.html']:
+        r = SALIDA / raiz
+        r.write_text(re.sub(r'href="manifest\.webmanifest[^"]*"', f'href="manifest.webmanifest?v={vm}"', r.read_text(encoding='utf-8')), encoding='utf-8')
     shutil.copy2(JUNTOS / 'instalar.js', app / 'instalar.js')
     vi = hashlib.md5((JUNTOS / 'instalar.js').read_bytes()).hexdigest()[:8]
     for f in ARCHIVOS:
@@ -59,7 +64,7 @@ def main():
             html = re.sub(r'((?:src|href)=")' + re.escape(res) + r'(?:\?v=[^"]*)?"', lambda m: f'{m.group(1)}{res}?v={h}"', html)
         # Un solo manifest para toda la app (el de la raíz): así instalar desde la landing o desde adentro es la misma app
         html = re.sub(r'<link rel="manifest" href="[^"]*">', '', html)
-        html = re.sub(r'(</head>)', '<link rel="manifest" href="../manifest.webmanifest">\n\\1', html, count=1, flags=re.I)
+        html = re.sub(r'(</head>)', f'<link rel="manifest" href="../manifest.webmanifest?v={vm}">\n\\1', html, count=1, flags=re.I)
         if Path(f).name == 'index.html':   # en el inicio: aviso para instalarla (se puede cerrar)
             html = re.sub(r'(</body>)', f'<script>window.JX_INSTALAR_AVISO=true;window.JX_SW=\'sw.js\'</script><script src="instalar.js?v={vi}"></script>\n\\1', html, count=1, flags=re.I)
         (app / Path(f).name).write_text(html, encoding='utf-8')
