@@ -590,8 +590,9 @@
       '#jxMsg .m .tt{flex:1;min-width:0}' +
       '#jxMsg .m.ac{cursor:pointer;padding-top:10px;padding-bottom:10px}#jxMsg .m.ac p,#jxMsg .m.ac .ir{display:none}#jxMsg .m.ac.ab p{display:block}#jxMsg .m.ac.ab .ir{display:inline-flex}' +
       '#jxMsg .m.ac .e{width:38px;height:38px;font-size:1.25rem}' +
-      '#jxMsg .m .fl{flex-shrink:0;align-self:center;width:9px;height:9px;border-right:2.5px solid var(--m-tx2);border-bottom:2.5px solid var(--m-tx2);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s;opacity:.7;margin-right:2px}' +
-      '#jxMsg .m.ab .fl{transform:rotate(225deg) translate(-2px,-2px)}' +
+      '#jxMsg .m .tl{display:flex;align-items:flex-start;gap:8px}#jxMsg .m .tl .fl{margin-top:.5em}#jxMsg .m .tt:has(.fl) small{margin-left:18px}' +
+      '#jxMsg .m .fl{flex-shrink:0;width:8px;height:8px;border-right:2.5px solid var(--m-tx2);border-bottom:2.5px solid var(--m-tx2);transform:rotate(-45deg);transition:transform .2s;opacity:.75;margin-left:2px}' +
+      '#jxMsg .m.ab .fl{transform:rotate(45deg) translate(-2px,-2px)}' +
       '#jxMsg .m.ab{background:var(--m-nl)}' +
       '#jxMsg .m .t{display:flex;align-items:flex-start;gap:10px}' +
       '#jxMsg .m .bx{position:absolute;top:8px;right:6px;width:26px;height:26px;border:0;border-radius:50% !important;background:none;color:var(--m-tx2);font:700 .95rem/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;opacity:.7;padding:0}' +
@@ -629,8 +630,8 @@
     var items = lista.length ? lista.map(function (x) {
       var url = x.url && /^[a-z0-9_-]+\.html([#?].*)?$/i.test(x.url) && !/^index\.html$/i.test(x.url) ? x.url : '';
       var emo = x.emoji || (x.k === 'b1' ? '' : '🔔');   // la bienvenida va sin ícono (si quieren, el emoji va en el título)
-      return '<div class="m' + (casilla ? ' ac' : '') + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="cu"><div class="t">' + (emo ? '<div class="e">' + escH(emo) + '</div>' : '') + '<div class="tt"><h3>' + escH(x.titulo) +
-        '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div>' + (casilla && (x.texto || x.url) ? '<span class="fl" aria-hidden="true"></span>' : '') + '</div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') + '</div>' +
+      return '<div class="m' + (casilla ? ' ac' : '') + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="cu"><div class="t">' + (emo ? '<div class="e">' + escH(emo) + '</div>' : '') + '<div class="tt"><div class="tl">' + (casilla && (x.texto || x.url) ? '<span class="fl" aria-hidden="true"></span>' : '') + '<h3>' + escH(x.titulo) +
+        '</h3></div><small>' + escH(fechaMsg(x.creado)) + '</small></div></div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') + '</div>' +
         (x.url === '#suscribir' ? '<button type="button" class="ir sus">Suscribirme →</button>' : url ? '<a class="ir" href="' + escH(url) + '">Ver →</a>' : '<span></span>') +
         (casilla ? '<button type="button" class="bx" aria-label="Borrar notificación">✕</button>' : '') + '</div>';
     }).join('') : '<div class="vacio"><div>📭</div>No tenés notificaciones</div>';
