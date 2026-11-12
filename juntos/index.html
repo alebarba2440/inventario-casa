@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>JuntOS · La app para organizar la vida en pareja</title>
 <meta name="description" content="Inventario de la casa, ahorros, vacaciones, el auto, gastos personales y compartidos, calendario, mascotas e hijos. Todo en una app para los dos. 30 días gratis.">
-<meta name="theme-color" content="#E0F3FC">
+<meta name="theme-color" content="#EBF3E0">
 <script>try{var c=JSON.parse(localStorage.getItem('jx:cfg_v2')||'{}');if(c.accent||c.theme==='dark')document.querySelector('meta[name="theme-color"]').content=c.theme==='dark'?'#111111':c.accent;}catch(e){}</script>
 <meta property="og:title" content="JuntOS · La app para organizar la vida en pareja">
 <meta property="og:description" content="Casa, ahorros, viajes, auto, gastos, calendario, mascotas e hijos en una sola app para los dos. Probala 30 días gratis.">
 <meta property="og:image" content="https://juntosapp.com.ar/app/img/pareja-hero.webp">
-<link rel="icon" href="app/img/icono.png?v=11">
-<link rel="apple-touch-icon" href="app/img/apple-touch.png?v=10">
+<link rel="icon" href="app/img/icono.png?v=12">
+<link rel="apple-touch-icon" href="app/img/apple-touch.png?v=11">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -20,7 +20,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Jost:wght@400&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root{--pri:#0EA5E9;--priL:#E0F3FC;--azul:#0284C7;--azulL:#E0F2FE;--crema:#FFF7E6;--tinta:#1a1a1a;--gris:#5f5f58;--borde:#ebe8e0}
+  :root{--pri:#65A30D;--priL:#EBF3E0;--azul:#0284C7;--azulL:#E0F2FE;--crema:#FFF7E6;--tinta:#1a1a1a;--gris:#5f5f58;--borde:#ebe8e0}
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0;font-family:'Nunito',system-ui,sans-serif;color:var(--tinta);background:#fffdf8;line-height:1.5}
@@ -478,19 +478,19 @@ setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]')
     <b>Color principal</b>
     <div class="sw" id="cpSw"></div>
     <label>Elegir otro <span><code id="cpHex"></code> <input type="color" id="cpIn"></span></label>
-    <div class="fila"><button type="button" id="cpCopy">Copiar código</button><button type="button" id="cpReset">Celeste (actual)</button></div>
+    <div class="fila"><button type="button" id="cpCopy">Copiar código</button><button type="button" id="cpReset">Verde (actual)</button></div>
   </div>
   <button type="button" id="cpBtn" aria-label="Probar color principal">🎨</button>
 </div>
 <script>
 (function(){
-  const K='jx-color-prueba', KV='jx-probador', ORIG='#0EA5E9', root=document.documentElement;
+  const K='jx-color-prueba', KV='jx-probador', ORIG='#65A30D', root=document.documentElement;
   const q=new URLSearchParams(location.search).get('color');
   try{ if(q==='no'){localStorage.removeItem(KV);localStorage.removeItem(K);} else if(q!==null) localStorage.setItem(KV,'1'); }catch(e){}
   let on=false, c=null; try{ on=localStorage.getItem(KV)==='1'; c=localStorage.getItem(K); }catch(e){}
   const meta=document.querySelector('meta[name="theme-color"]');
   const aplicar=v=>{
-    if(!v||v.toUpperCase()===ORIG){ root.style.removeProperty('--pri'); root.style.removeProperty('--priL'); if(meta) meta.content='#E0F3FC'; v=ORIG; }
+    if(!v||v.toUpperCase()===ORIG){ root.style.removeProperty('--pri'); root.style.removeProperty('--priL'); if(meta) meta.content='#EBF3E0'; v=ORIG; }
     else { root.style.setProperty('--pri',v); root.style.setProperty('--priL',`color-mix(in srgb,${v} 13%,#fff)`);
       if(meta){ const n=parseInt(v.slice(1),16), m=x=>Math.round(x*.13+255*.87); meta.content=`rgb(${m(n>>16)},${m(n>>8&255)},${m(n&255)})`; } }
     return v.toUpperCase();
@@ -499,7 +499,7 @@ setTimeout(() => { const b = document.querySelector('.instalar [data-instalar]')
   let act=aplicar(c);
   const box=document.getElementById('cp'), pn=document.getElementById('cpPn'), inp=document.getElementById('cpIn'),
         hex=document.getElementById('cpHex'), sw=document.getElementById('cpSw');
-  const PAL=['#0EA5E9','#DB2777','#E11D48','#DC2626','#EA580C','#D97706','#CA8A04','#65A30D','#16A34A','#0D9488','#0891B2','#0284C7','#2563EB','#4F46E5','#7C3AED','#9333EA','#C026D3','#475569','#1F2937'];
+  const PAL=['#65A30D','#0EA5E9','#DB2777','#E11D48','#DC2626','#EA580C','#D97706','#CA8A04','#16A34A','#0D9488','#0891B2','#0284C7','#2563EB','#4F46E5','#7C3AED','#9333EA','#C026D3','#475569','#1F2937'];
   sw.innerHTML=PAL.map(x=>`<button type="button" data-c="${x}" style="background:${x}" aria-label="${x}"></button>`).join('');
   const marcar=()=>{ inp.value=act.toLowerCase(); hex.textContent=act; sw.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.c===act)); };
   const elegir=v=>{ act=aplicar(v); try{ act===ORIG?localStorage.removeItem(K):localStorage.setItem(K,act); }catch(e){} marcar(); };

@@ -3,17 +3,17 @@
   "short_name": "JuntOS",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0EA5E9",
+  "background_color": "#65A30D",
   "theme_color": "#1D9E75",
   "icons": [
     {
-      "src": "img/icono-grande.png?v=11",
+      "src": "img/icono-grande.png?v=12",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "img/icono-512.png?v=10",
+      "src": "img/icono-512.png?v=11",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -43,7 +43,7 @@
     }
     return ms;
   }
-  var DEF_COL = { j: '#0EA5E9', a: '#0284C7' };
+  var DEF_COL = { j: '#65A30D', a: '#0284C7' };
   function hex(c) { return /^#[0-9a-f]{6}$/i.test(c || '') ? c.toUpperCase() : null; }
   function mezcla(c, a) { var n = parseInt(c.slice(1), 16); return 'rgba(' + (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255) + ',' + a + ')'; }
   function aplicarColores(ms) {
@@ -439,7 +439,7 @@
     if (!document.getElementById('jxSusCss')) {
       var st = document.createElement('style'); st.id = 'jxSusCss';
       st.textContent =
-        '#jxSus{--m-ac:var(--accent,#0EA5E9);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-s2:var(--surface2,#f5f5f0);--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-tint2:color-mix(in srgb,var(--m-ac) 30%,var(--m-bg));--m-sh:color-mix(in srgb,var(--m-ac) 30%,transparent);--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
+        '#jxSus{--m-ac:var(--accent,#65A30D);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-s2:var(--surface2,#f5f5f0);--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-tint2:color-mix(in srgb,var(--m-ac) 30%,var(--m-bg));--m-sh:color-mix(in srgb,var(--m-ac) 30%,transparent);--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
         '#jxSus.on{opacity:1}' +
         '#jxSus .c{position:relative;box-sizing:border-box;background:var(--m-bg);color:var(--m-tx);width:100%;max-width:380px;max-height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border-radius:10px 30px 10px 30px;padding:26px 22px 18px;text-align:center;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
         '#jxSus.on .c{transform:none}' +
@@ -562,7 +562,7 @@
     if (document.getElementById('jxMsgCss')) return;
     var st = document.createElement('style'); st.id = 'jxMsgCss';
     st.textContent =
-      '#jxMsg{--m-ac:var(--accent,#0EA5E9);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-nl:color-mix(in srgb,var(--m-ac) 7%,var(--m-bg));--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);' +
+      '#jxMsg{--m-ac:var(--accent,#65A30D);--m-bg:var(--surface,#fff);--m-tx:var(--text,#1a1a1a);--m-tx2:var(--text2,#5f5f58);--m-bd:var(--border,rgba(0,0,0,.08));--m-tint:color-mix(in srgb,var(--m-ac) 16%,var(--m-bg));--m-nl:color-mix(in srgb,var(--m-ac) 7%,var(--m-bg));--m-x:color-mix(in srgb,var(--m-tx) 9%,transparent);' +
         'position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 14px calc(14px + env(safe-area-inset-bottom));box-sizing:border-box;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
       '#jxMsg.on{opacity:1}' +
       '#jxMsg .c{position:relative;box-sizing:border-box;background:var(--m-bg);color:var(--m-tx);width:100%;max-width:400px;max-height:100%;display:flex;flex-direction:column;border-radius:10px 30px 10px 30px;padding:22px 0 14px;transform:scale(.94);transition:transform .2s;box-shadow:0 20px 50px rgba(0,0,0,.3)}' +
@@ -697,7 +697,7 @@
     var a = document.createElement('button'); a.id = 'juntosRO'; a.type = 'button';
     a.textContent = (p.tuvo_pago ? '⏰ Venció tu suscripción' : '⏰ Terminó tu prueba gratis') + ' · Tocá acá';
     a.onclick = modalSuscripcion;
-    a.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;border:0;width:100%;cursor:pointer;background:var(--accent,#0EA5E9);color:#fff;font:800 13px Nunito,system-ui,sans-serif;text-align:center;padding:calc(7px + env(safe-area-inset-top)) 10px 7px';
+    a.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99998;border:0;width:100%;cursor:pointer;background:var(--accent,#65A30D);color:#fff;font:800 13px Nunito,system-ui,sans-serif;text-align:center;padding:calc(7px + env(safe-area-inset-top)) 10px 7px';
     document.body.appendChild(a);
   }
   document.addEventListener('DOMContentLoaded', bandaSoloLectura);
