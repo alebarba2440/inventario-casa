@@ -212,8 +212,7 @@
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <p style="margin:0;color:var(--gris);font-size:.9rem">Le aparece a <b>cada usuario nuevo</b> como cartel la primera vez que entra a la app, y después queda en su casilla ✉️. A los que ya usan la app no les llega.</p>
         <label class="bvSw">Mensaje de bienvenida activado <input type="checkbox" id="bvOn"></label>
-        <div class="campo">Ícono<div class="emojis" id="bvEmojis"></div></div>
-        <label class="campo">Título<input id="bvTit" maxlength="120" placeholder="Ej: ¡Bienvenidos a JuntOS! 💞"></label>
+        <label class="campo">Título<input id="bvTit" maxlength="120" placeholder="Ej: 👋 ¡Bienvenidos a JuntOS!"></label>
         <label class="campo">Mensaje<textarea id="bvTxt" maxlength="2000" placeholder="Ej: Gracias por sumarse. Empiecen por invitar a su pareja con el código…"></textarea></label>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button class="btn rosa" onclick="guardarBienvenida()">💾 Guardar bienvenida</button><span class="bvEst" id="bvEst"></span></div>
       </div>
@@ -590,10 +589,8 @@ const EMOJIS = ['📣','🎉','✨','💞','🛠️','⚠️','🎁','💡'];
 let EMO = EMOJIS[0];
 function pintarEmojis(){ $('mEmojis').innerHTML = EMOJIS.map(e => `<button type="button" class="${e === EMO ? 'on' : ''}" onclick="EMO='${e}';pintarEmojis()">${e}</button>`).join(''); }
 /* ---------- Bienvenida para usuarios nuevos ---------- */
-const BV_EMOJIS = ['👋','💞','🎉','✨','🏡','🥰','🎁','💡'];
-let BV = {activo:false, titulo:'', texto:'', emoji:'👋', desde:''};
+let BV = {activo:false, titulo:'', texto:'', desde:''};
 function pintarBv(){
-  $('bvEmojis').innerHTML = BV_EMOJIS.map(e => `<button type="button" class="${e === BV.emoji ? 'on' : ''}" onclick="BV.emoji='${e}';pintarBv()">${e}</button>`).join('');
   $('bvEst').className = 'bvEst' + (BV.activo ? ' on' : '');
   $('bvEst').textContent = BV.activo ? 'Activa' + (BV.desde ? ' desde el ' + fecha(BV.desde.replace(' ', 'T') + 'Z') : '') : 'Desactivada';
 }
@@ -602,7 +599,7 @@ async function cargarBienvenida(){
   catch(e){ toast(e.message); }
 }
 async function guardarBienvenida(){
-  const datos = {activo: $('bvOn').checked, titulo: $('bvTit').value.trim(), texto: $('bvTxt').value.trim(), emoji: BV.emoji};
+  const datos = {activo: $('bvOn').checked, titulo: $('bvTit').value.trim(), texto: $('bvTxt').value.trim()};
   if (datos.activo && !datos.titulo) { toast('Poné un título'); $('bvTit').focus(); return; }
   if (datos.activo && !datos.texto) { toast('Escribí el mensaje'); $('bvTxt').focus(); return; }
   try { BV = await api('admin_bienvenida', datos); $('bvOn').checked = BV.activo; pintarBv(); toast(BV.activo ? 'Bienvenida guardada 👋' : 'Bienvenida guardada (desactivada)'); }

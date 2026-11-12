@@ -587,6 +587,12 @@
       '#jxMsg .m .t h3::before{content:"";display:none;width:8px;height:8px;border-radius:50%;background:var(--m-ac);margin:0 6px 2px 0;vertical-align:middle}#jxMsg .m.nl .t h3::before{display:inline-block}' +
       '#jxMsg .m{display:grid;grid-template-columns:1fr auto;column-gap:8px;align-items:center;padding-right:30px}' +
       '#jxMsg .m .cu{min-width:0}' +
+      '#jxMsg .m .tt{flex:1;min-width:0}' +
+      '#jxMsg .m.ac{cursor:pointer;padding-top:10px;padding-bottom:10px}#jxMsg .m.ac p,#jxMsg .m.ac .ir{display:none}#jxMsg .m.ac.ab p{display:block}#jxMsg .m.ac.ab .ir{display:inline-flex}' +
+      '#jxMsg .m.ac .e{width:38px;height:38px;font-size:1.25rem}' +
+      '#jxMsg .m .fl{flex-shrink:0;align-self:center;width:9px;height:9px;border-right:2.5px solid var(--m-tx2);border-bottom:2.5px solid var(--m-tx2);transform:rotate(45deg) translate(-2px,-2px);transition:transform .2s;opacity:.7;margin-right:2px}' +
+      '#jxMsg .m.ab .fl{transform:rotate(225deg) translate(-2px,-2px)}' +
+      '#jxMsg .m.ab{background:var(--m-nl)}' +
       '#jxMsg .m .t{display:flex;align-items:flex-start;gap:10px}' +
       '#jxMsg .m .bx{position:absolute;top:8px;right:6px;width:26px;height:26px;border:0;border-radius:50% !important;background:none;color:var(--m-tx2);font:700 .95rem/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center;opacity:.7;padding:0}' +
       '#jxMsg .m .bx:active{transform:scale(.9)}' +
@@ -622,8 +628,9 @@
     var m = document.createElement('div'); m.id = 'jxMsg'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
     var items = lista.length ? lista.map(function (x) {
       var url = x.url && /^[a-z0-9_-]+\.html([#?].*)?$/i.test(x.url) && !/^index\.html$/i.test(x.url) ? x.url : '';
-      return '<div class="m' + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="cu"><div class="t"><div class="e">' + escH(x.emoji || '🔔') + '</div><div><h3>' + escH(x.titulo) +
-        '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div></div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') + '</div>' +
+      var emo = x.emoji || (x.k === 'b1' ? '' : '🔔');   // la bienvenida va sin ícono (si quieren, el emoji va en el título)
+      return '<div class="m' + (casilla ? ' ac' : '') + (casilla && !x.leido ? ' nl' : '') + '" data-k="' + escH(x.k) + '"><div class="cu"><div class="t">' + (emo ? '<div class="e">' + escH(emo) + '</div>' : '') + '<div class="tt"><h3>' + escH(x.titulo) +
+        '</h3><small>' + escH(fechaMsg(x.creado)) + '</small></div>' + (casilla && (x.texto || x.url) ? '<span class="fl" aria-hidden="true"></span>' : '') + '</div>' + (x.texto ? '<p>' + escH(x.texto) + '</p>' : '') + '</div>' +
         (x.url === '#suscribir' ? '<button type="button" class="ir sus">Suscribirme →</button>' : url ? '<a class="ir" href="' + escH(url) + '">Ver →</a>' : '<span></span>') +
         (casilla ? '<button type="button" class="bx" aria-label="Borrar notificación">✕</button>' : '') + '</div>';
     }).join('') : '<div class="vacio"><div>📭</div>No tenés notificaciones</div>';
@@ -650,6 +657,9 @@
       if (bx) { var it2 = bx.closest('.m'), k2 = it2.getAttribute('data-k'); it2.style.transition = 'opacity .2s'; it2.style.opacity = '0';
         setTimeout(function () { it2.remove(); if (!m.querySelector('.m')) { m.querySelector('.lst').innerHTML = '<div class="vacio"><div>📭</div>No tenés notificaciones</div>'; var pie = m.querySelector('.pie'); if (pie) pie.remove(); } }, 200);
         borrarNotifs([k2]); return; }
+      // Casilla en acordeones: tocar una notificación la abre (y cierra las demás); tocarla de nuevo la cierra
+      var ac = casilla && !e.target.closest('.ir') && e.target.closest('.m.ac');
+      if (ac) { var abrir = !ac.classList.contains('ab'); m.querySelectorAll('.m.ab').forEach(function (o) { o.classList.remove('ab'); }); if (abrir) ac.classList.add('ab'); }
       var it = e.target.closest('.m.nl');   // tocar un aviso no leído lo marca como leído
       if (it) { it.classList.remove('nl'); marcarLeidos([it.getAttribute('data-k')]); if (!m.querySelector('.m.nl')) { var t = m.querySelector('.todo'); if (t) t.remove(); } }
     });

@@ -146,7 +146,7 @@ function bandeja(array $u): array {
   // Bienvenida: la ven los usuarios creados desde que se activó en el panel (sale como cartel la primera vez y queda en la casilla)
   $bv = bienvenida();
   if ($bv['activo'] && $bv['desde'] !== '' && $u['creado'] >= $bv['desde'])
-    $items[] = ['k' => 'b1', 'tipo' => 'directo', 'id' => 0, 'titulo' => $bv['titulo'], 'texto' => $bv['texto'], 'emoji' => $bv['emoji'] ?: '👋', 'url' => '', 'creado' => iso($u['creado']), 'viejo' => false];
+    $items[] = ['k' => 'b1', 'tipo' => 'directo', 'id' => 0, 'titulo' => $bv['titulo'], 'texto' => $bv['texto'], 'emoji' => $bv['emoji'], 'url' => '', 'creado' => iso($u['creado']), 'viejo' => false];
   // lo que esta persona borró de su casilla no se muestra
   $q = db()->prepare('SELECT clave FROM notif_borradas WHERE usuario_id = ?'); $q->execute([$u['id']]);
   $borr = array_flip($q->fetchAll(PDO::FETCH_COLUMN));
@@ -162,7 +162,7 @@ function bandeja(array $u): array {
 function bienvenida(): array {
   $v = db()->query("SELECT valor FROM ajustes WHERE clave = 'bienvenida'")->fetchColumn();
   $b = json_decode($v ?: '{}', true) ?: [];
-  return ['activo' => !empty($b['activo']), 'titulo' => (string)($b['titulo'] ?? ''), 'texto' => (string)($b['texto'] ?? ''), 'emoji' => (string)($b['emoji'] ?? '👋'), 'desde' => (string)($b['desde'] ?? '')];
+  return ['activo' => !empty($b['activo']), 'titulo' => (string)($b['titulo'] ?? ''), 'texto' => (string)($b['texto'] ?? ''), 'emoji' => (string)($b['emoji'] ?? ''), 'desde' => (string)($b['desde'] ?? '')];
 }
 // Mensajes globales (los más nuevos primero)
 function mensajes(int $max = 30): array {
@@ -374,7 +374,7 @@ try {
       requerirAdmin();
       $in = entrada(); $b = bienvenida();
       $b['titulo'] = trim((string)($in['titulo'] ?? '')); $b['texto'] = trim(str_replace("\r", '', (string)($in['texto'] ?? '')));
-      $b['emoji'] = mb_substr(trim((string)($in['emoji'] ?? '')), 0, 8) ?: '👋';
+      $b['emoji'] = '';   // sin ícono: si quiere, pone el emoji adelante del título
       $activo = !empty($in['activo']);
       if ($activo && ($b['titulo'] === '' || $b['texto'] === '')) error_('Para activarla poné título y mensaje');
       if (mb_strlen($b['titulo']) > 120) error_('El título puede tener hasta 120 letras');
