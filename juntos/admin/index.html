@@ -148,6 +148,11 @@
   .msg .e{width:40px;height:40px;flex-shrink:0;border-radius:5px 14px 5px 14px;background:var(--rosaL);display:grid;place-items:center;font-size:1.3rem}
   .msg .tx p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;color:#3f3f3a;font-size:.92rem}
   .msg .tx b{white-space:normal}
+  .bvSw{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800}
+  .bvSw input{appearance:none;width:48px;height:28px;border-radius:7px 15px 7px 15px;background:#d6d3cb;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+  .bvSw input::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:5px 11px 5px 11px;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .bvSw input:checked{background:var(--rosa)}.bvSw input:checked::after{left:23px}
+  .bvEst{font-size:.82rem;font-weight:800;padding:3px 9px;border-radius:4px 10px 4px 10px;background:#eee;color:var(--gris)}.bvEst.on{background:var(--rosaL);color:var(--rosa)}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111;color:#fff;padding:11px 18px;border-radius:14px;font-weight:800;z-index:99;font-size:.92rem}
 </style>
 </head>
@@ -202,6 +207,15 @@
         <label class="campo">Título<input id="mTit" maxlength="120" placeholder="Ej: ¡Novedades en JuntOS!"></label>
         <label class="campo">Mensaje<textarea id="mTxt" maxlength="2000" placeholder="Escribí el mensaje…"></textarea></label>
         <button class="btn rosa" onclick="mandarMensaje()">📣 Mandar a todos</button>
+      </div>
+      <h2>Mensaje de bienvenida</h2>
+      <div class="card" style="display:flex;flex-direction:column;gap:12px">
+        <p style="margin:0;color:var(--gris);font-size:.9rem">Le aparece a <b>cada usuario nuevo</b> como cartel la primera vez que entra a la app, y después queda en su casilla ✉️. A los que ya usan la app no les llega.</p>
+        <label class="bvSw">Mensaje de bienvenida activado <input type="checkbox" id="bvOn"></label>
+        <div class="campo">Ícono<div class="emojis" id="bvEmojis"></div></div>
+        <label class="campo">Título<input id="bvTit" maxlength="120" placeholder="Ej: ¡Bienvenidos a JuntOS! 💞"></label>
+        <label class="campo">Mensaje<textarea id="bvTxt" maxlength="2000" placeholder="Ej: Gracias por sumarse. Empiecen por invitar a su pareja con el código…"></textarea></label>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button class="btn rosa" onclick="guardarBienvenida()">💾 Guardar bienvenida</button><span class="bvEst" id="bvEst"></span></div>
       </div>
       <h2>Mensajes enviados</h2>
       <div class="card" id="mLista"><div class="vacio">Cargando…</div></div>
@@ -575,8 +589,27 @@ function copiar(t){ navigator.clipboard?.writeText(t).then(() => toast('Mail cop
 const EMOJIS = ['📣','🎉','✨','💞','🛠️','⚠️','🎁','💡'];
 let EMO = EMOJIS[0];
 function pintarEmojis(){ $('mEmojis').innerHTML = EMOJIS.map(e => `<button type="button" class="${e === EMO ? 'on' : ''}" onclick="EMO='${e}';pintarEmojis()">${e}</button>`).join(''); }
+/* ---------- Bienvenida para usuarios nuevos ---------- */
+const BV_EMOJIS = ['👋','💞','🎉','✨','🏡','🥰','🎁','💡'];
+let BV = {activo:false, titulo:'', texto:'', emoji:'👋', desde:''};
+function pintarBv(){
+  $('bvEmojis').innerHTML = BV_EMOJIS.map(e => `<button type="button" class="${e === BV.emoji ? 'on' : ''}" onclick="BV.emoji='${e}';pintarBv()">${e}</button>`).join('');
+  $('bvEst').className = 'bvEst' + (BV.activo ? ' on' : '');
+  $('bvEst').textContent = BV.activo ? 'Activa' + (BV.desde ? ' desde el ' + fecha(BV.desde.replace(' ', 'T') + 'Z') : '') : 'Desactivada';
+}
+async function cargarBienvenida(){
+  try { BV = await api('admin_bienvenida'); $('bvOn').checked = BV.activo; $('bvTit').value = BV.titulo; $('bvTxt').value = BV.texto; pintarBv(); }
+  catch(e){ toast(e.message); }
+}
+async function guardarBienvenida(){
+  const datos = {activo: $('bvOn').checked, titulo: $('bvTit').value.trim(), texto: $('bvTxt').value.trim(), emoji: BV.emoji};
+  if (datos.activo && !datos.titulo) { toast('Poné un título'); $('bvTit').focus(); return; }
+  if (datos.activo && !datos.texto) { toast('Escribí el mensaje'); $('bvTxt').focus(); return; }
+  try { BV = await api('admin_bienvenida', datos); $('bvOn').checked = BV.activo; pintarBv(); toast(BV.activo ? 'Bienvenida guardada 👋' : 'Bienvenida guardada (desactivada)'); }
+  catch(e){ toast(e.message); }
+}
 async function cargarMensajes(){
-  pintarEmojis();
+  pintarEmojis(); cargarBienvenida();
   try {
     const r = await api('admin_mensajes');
     $('mLista').innerHTML = r.mensajes.length ? r.mensajes.map(m => `<div class="msg"><div class="e">${esc(m.emoji || '📣')}</div>

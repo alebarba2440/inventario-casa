@@ -143,6 +143,10 @@ function bandeja(array $u): array {
     // Los avisos de prueba/vencimiento solo se ven si siguen valiendo (si se sumaron días o se pagó, desaparecen)
     foreach ($q->fetchAll() as $n) if (!in_array($n['tipo'], ['prueba', 'vence'], true) || $n['ref'] === $hasta) $items[] = ['k' => 'n' . $n['id'], 'tipo' => $n['tipo'] === 'directo' ? 'directo' : 'aviso', 'id' => (int)$n['id'], 'titulo' => $n['titulo'], 'texto' => $n['texto'], 'emoji' => $n['emoji'] ?: '🔔', 'url' => $n['url'], 'creado' => iso($n['creado']), 'viejo' => false];
   }
+  // Bienvenida: la ven los usuarios creados desde que se activó en el panel (sale como cartel la primera vez y queda en la casilla)
+  $bv = bienvenida();
+  if ($bv['activo'] && $bv['desde'] !== '' && $u['creado'] >= $bv['desde'])
+    $items[] = ['k' => 'b1', 'tipo' => 'directo', 'id' => 0, 'titulo' => $bv['titulo'], 'texto' => $bv['texto'], 'emoji' => $bv['emoji'] ?: '👋', 'url' => '', 'creado' => iso($u['creado']), 'viejo' => false];
   // lo que esta persona borró de su casilla no se muestra
   $q = db()->prepare('SELECT clave FROM notif_borradas WHERE usuario_id = ?'); $q->execute([$u['id']]);
   $borr = array_flip($q->fetchAll(PDO::FETCH_COLUMN));
@@ -153,6 +157,12 @@ function bandeja(array $u): array {
   $leidos = array_flip($q->fetchAll(PDO::FETCH_COLUMN));
   foreach ($items as &$i) { $i['leido'] = $i['viejo'] || isset($leidos[$i['k']]); unset($i['viejo']); }
   return $items;
+}
+// Mensaje de bienvenida para usuarios nuevos (se arma en el panel → Mensajes)
+function bienvenida(): array {
+  $v = db()->query("SELECT valor FROM ajustes WHERE clave = 'bienvenida'")->fetchColumn();
+  $b = json_decode($v ?: '{}', true) ?: [];
+  return ['activo' => !empty($b['activo']), 'titulo' => (string)($b['titulo'] ?? ''), 'texto' => (string)($b['texto'] ?? ''), 'emoji' => (string)($b['emoji'] ?? '👋'), 'desde' => (string)($b['desde'] ?? '')];
 }
 // Mensajes globales (los más nuevos primero)
 function mensajes(int $max = 30): array {
@@ -258,7 +268,7 @@ try {
       $ks = $k === 'todo' ? array_column(bandeja($u), 'k') : (array) $k;
       $ins = db()->prepare('INSERT IGNORE INTO notif_borradas (usuario_id, clave) VALUES (?, ?)');
       $lei = db()->prepare('INSERT IGNORE INTO leidos (usuario_id, clave) VALUES (?, ?)');
-      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^[mn]\d{1,10}$/', $x)) { $ins->execute([$u['id'], $x]); $lei->execute([$u['id'], $x]); }
+      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^([mn]\d{1,10}|b1)$/', $x)) { $ins->execute([$u['id'], $x]); $lei->execute([$u['id'], $x]); }
       responder(['ok' => true]);
 
     case 'POST leido':
@@ -266,7 +276,7 @@ try {
       $u = requerirUsuario(); $k = entrada()['k'] ?? [];
       $ks = $k === 'todo' ? array_column(bandeja($u), 'k') : (array) $k;
       $ins = db()->prepare('INSERT IGNORE INTO leidos (usuario_id, clave) VALUES (?, ?)');
-      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^[mn]\d{1,10}$/', $x)) $ins->execute([$u['id'], $x]);
+      foreach (array_slice($ks, 0, 100) as $x) if (is_string($x) && preg_match('/^([mn]\d{1,10}|b1)$/', $x)) $ins->execute([$u['id'], $x]);
       responder(['ok' => true]);
 
     case 'POST mensaje_visto':
@@ -355,6 +365,25 @@ try {
       if (strlen($j) > 300000) error_('Demasiado contenido');
       db()->prepare("REPLACE INTO ajustes (clave, valor) VALUES ('contenido', ?)")->execute([$j]);
       responder(['ok' => true]);
+
+    case 'GET admin_bienvenida':
+      requerirAdmin();
+      responder(bienvenida());
+
+    case 'POST admin_bienvenida':
+      requerirAdmin();
+      $in = entrada(); $b = bienvenida();
+      $b['titulo'] = trim((string)($in['titulo'] ?? '')); $b['texto'] = trim(str_replace("\r", '', (string)($in['texto'] ?? '')));
+      $b['emoji'] = mb_substr(trim((string)($in['emoji'] ?? '')), 0, 8) ?: '👋';
+      $activo = !empty($in['activo']);
+      if ($activo && ($b['titulo'] === '' || $b['texto'] === '')) error_('Para activarla poné título y mensaje');
+      if (mb_strlen($b['titulo']) > 120) error_('El título puede tener hasta 120 letras');
+      if (mb_strlen($b['texto']) > 2000) error_('El mensaje puede tener hasta 2000 letras');
+      // al activarla, cuenta desde ahora: solo la ven los que se registran después (no les salta a los que ya usan la app)
+      if ($activo && (!$b['activo'] || $b['desde'] === '')) $b['desde'] = ahora();
+      $b['activo'] = $activo;
+      db()->prepare("REPLACE INTO ajustes (clave, valor) VALUES ('bienvenida', ?)")->execute([json_encode($b, JSON_UNESCAPED_UNICODE)]);
+      responder($b);
 
     case 'GET precios':
       // Público: lo usa la landing para mostrar precios y datos de transferencia

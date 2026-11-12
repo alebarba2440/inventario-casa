@@ -663,14 +663,17 @@
   function mostrarMensajesNuevos() {
     if (mostrando || !globalesNuevos().length || /personajes|sonidos/i.test(paginaActual())) return;
     mostrando = true;
+    var t0 = Date.now();
     var esperar = function () {
-      var intro = document.getElementById('intro');
-      var ocupado = !document.body || document.getElementById('jxSus') ||
+      var intro = document.getElementById('intro'), J = window.JUNTOS || {};
+      // en el inicio, si a la persona le falta completar el perfil, primero sale esa ventana y después el mensaje
+      var faltaPerfil = document.getElementById('grid') && (!J.perfilListo || (J.miSlot && (!J.miGenero || !J.miCumple))) && Date.now() - t0 < 20000;
+      var ocupado = !document.body || document.getElementById('jxSus') || document.getElementById('jxPerfil') || faltaPerfil ||   // primero que completen su perfil
         (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden');
       if (ocupado) return setTimeout(esperar, 400);
       mostrando = false;
       var nuevos = globalesNuevos(); if (!nuevos.length) return;
-      modalMensajes(nuevos, nuevos.length > 1 ? 'Mensajes nuevos' : 'Mensaje nuevo', false);
+      modalMensajes(nuevos, nuevos.length > 1 ? 'Mensajes nuevos' : nuevos[0].k === 'b1' ? 'Bienvenida' : 'Mensaje nuevo', false);
     };
     setTimeout(esperar, 500);
   }
