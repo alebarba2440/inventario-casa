@@ -76,12 +76,12 @@
   /* "Ver qué hace": el mismo recorrido del borde, en gris oscuro */
   .hero .btn.sec.ver-que{border:2px solid transparent;
     background:linear-gradient(#fff,#fff) padding-box,
-      conic-gradient(from var(--giro),var(--borde) 0 55%,#9a9a92 65%,#4a4a45 80%,#4a4a45 86%,var(--borde) 96%) border-box;
+      conic-gradient(from var(--giro),var(--borde) 0 55%,#b5b5ad 65%,#85857d 80%,#85857d 86%,var(--borde) 96%) border-box;
     animation:giroBorde 3s linear infinite}
   /* "Instalar": late suave (se agranda y vuelve) para llamar la atención */
   [data-instalar]:not([hidden]){animation:pulsoInst 2.4s ease-in-out infinite}
   @keyframes pulsoInst{0%,55%,100%{scale:1}20%{scale:1.07}35%{scale:.98}45%{scale:1.03}}
-  @media (prefers-reduced-motion:reduce){nav .btn.jx-entrar{animation:none;border-color:var(--pri);background:#fff}[data-instalar]{animation:none}.hero .btn.sec.ver-que{animation:none;border-color:#4a4a45;background:#fff}}
+  @media (prefers-reduced-motion:reduce){nav .btn.jx-entrar{animation:none;border-color:var(--pri);background:#fff}[data-instalar]{animation:none}.hero .btn.sec.ver-que{animation:none;border-color:#85857d;background:#fff}}
   .inst-link{display:inline-flex;align-items:center;gap:10px;margin-top:16px;border:1.5px solid color-mix(in srgb,var(--pri) 35%,transparent);background:rgba(255,255,255,.75);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:var(--tinta);font:800 .95rem 'Nunito',sans-serif;cursor:pointer;
     padding:7px 16px 7px 7px;border-radius:6px 22px 6px 22px;box-shadow:0 6px 18px color-mix(in srgb,var(--pri) 12%,transparent);transition:transform .15s,box-shadow .15s,border-color .15s}
