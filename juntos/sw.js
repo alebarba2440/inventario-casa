@@ -1,4 +1,24 @@
-/* JuntOS · service worker de la app: muestra las notificaciones y, sin conexión, un aviso en vez del error (no guarda nada en caché). */
+/* JuntOS · service worker de la app: muestra las notificaciones, sin conexión un aviso en vez del error,
+   y guarda en el celu los archivos fijos (estilos, scripts, imágenes, fuentes) para que cada sección abra rápido.
+   Las páginas y los datos (api/) siempre van a internet. */
+const CACHE = 'jx-archivos-v1';
+self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k.startsWith('jx-archivos-') && k !== CACHE).map(k => caches.delete(k))))));
+self.addEventListener('fetch', e => {
+  const r = e.request; if (r.method !== 'GET' || r.mode === 'navigate') return;
+  const u = new URL(r.url), propio = u.origin === location.origin;
+  if (propio && u.pathname.includes('/api/')) return;
+  const ext = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdn.jsdelivr.net'].includes(u.hostname);
+  if (!(propio && ['script', 'style', 'image', 'font'].includes(r.destination)) && !ext) return;
+  e.respondWith(caches.open(CACHE).then(c => c.match(r).then(guardado => {
+    const red = fetch(r).then(res => { if (res && (res.ok || res.type === 'opaque')) c.put(r, res.clone()); return res; });
+    if (guardado) {
+      // con versión (?v=...) no cambia nunca: va directo lo guardado. Sin versión: lo guardado ya, y se actualiza para la próxima.
+      if (!(propio && u.searchParams.has('v'))) e.waitUntil(red.catch(() => {}));
+      return guardado;
+    }
+    return red;
+  })));
+});
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 

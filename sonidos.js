@@ -80,10 +80,16 @@
   document.addEventListener('click', e => {
     const n = cual(e.target); if (!n) return;
     sonido(n);
-    // al cambiar de página, esperar un instante para que el sonido se escuche
     const a = e.target.closest('a[href]');
-    if (a && (n === 'entrar' || n === 'volver') && activo() && !e.defaultPrevented && !a.target) {
-      e.preventDefault(); const href = a.href; setTimeout(() => { location.href = href; }, 230);
+    if (!a || (n !== 'entrar' && n !== 'volver') || e.defaultPrevented || a.target) return;
+    // Volver al inicio: si venimos justo de ahí, "atrás" lo muestra al instante (el navegador lo tiene guardado, con el scroll donde estaba)
+    if (n === 'volver') {
+      let ref = null; try { ref = document.referrer && new URL(document.referrer); } catch (er) {}
+      const dest = new URL(a.href, location.href), limpio = u => u.pathname.replace(/index\.html$/, '');
+      if (ref && ref.origin === location.origin && limpio(ref) === limpio(dest) && history.length > 1) { e.preventDefault(); if (Date.now() - (a._yendo || 0) < 1000) return; a._yendo = Date.now(); let fue = false; addEventListener('pagehide', () => { fue = true; }, { once: true }); history.back();
+        setTimeout(() => { if (!fue && document.visibilityState === 'visible') location.href = a.href; }, 700); return; }   // por las dudas: si "atrás" no anduvo, va igual
     }
+    // al cambiar de página, un instante para que arranque el sonido (corto: la app no tiene que sentirse lenta)
+    if (activo()) { e.preventDefault(); if (Date.now() - (a._yendo || 0) < 1000) return; a._yendo = Date.now(); const href = a.href; setTimeout(() => { location.href = href; }, 70); }
   }, true);
 })();

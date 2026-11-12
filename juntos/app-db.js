@@ -188,9 +188,9 @@
       if (!forzar && ant === nuevo) return;
       vista[k] = nuevo;
       var p = partes(k); cols[p.c] = 1;
-      (docL[k] || []).forEach(function (f) { try { f(snapDoc(p.c, p.i)); } catch (e) { console.error(e); } });
+      (docL[k] || []).forEach(function (f) { f.__jxYa = true; try { f(snapDoc(p.c, p.i)); } catch (e) { console.error(e); } });
     });
-    Object.keys(cols).forEach(function (c) { (colL[c] || []).forEach(function (f) { try { f(snapCol(c)); } catch (e) { console.error(e); } }); });
+    Object.keys(cols).forEach(function (c) { (colL[c] || []).forEach(function (f) { f.__jxYa = true; try { f(snapCol(c)); } catch (e) { console.error(e); } }); });
     return cols;
   }
   function todasLasClaves() {
@@ -229,9 +229,17 @@
   function marcarSincronizado() {
     if (sincronizado) return;
     sincronizado = true;
-    var hechas = notificar(todasLasClaves(), true);   // primera foto para todas las escuchas
-    Object.keys(colL).forEach(function (c) { if (!hechas[c]) (colL[c] || []).forEach(function (f) { try { f(snapCol(c)); } catch (e) { console.error(e); } }); });
+    // Si las pantallas ya se dibujaron con lo guardado en el celu, solo se avisa lo que cambió (no se redibuja todo de nuevo)
+    var hechas = notificar(todasLasClaves(), !temprano || forzarSync);
+    var faltan = function (f) { return forzarSync || !f.__jxYa; };
+    Object.keys(colL).forEach(function (c) { if (!hechas[c]) (colL[c] || []).filter(faltan).forEach(function (f) { f.__jxYa = true; try { f(snapCol(c)); } catch (e) { console.error(e); } }); });
+    Object.keys(docL).forEach(function (k) { (docL[k] || []).filter(function (f) { return !f.__jxYa; }).forEach(function (f) { f.__jxYa = true; var p = partes(k); try { f(snapDoc(p.c, p.i)); } catch (e) { console.error(e); } }); });
   }
+  /* Mostrar al instante lo guardado en el celu (como hace Firebase), sin esperar la respuesta del servidor:
+     así cada sección abre rápido y después se actualiza sola con lo nuevo. */
+  var temprano = false, forzarSync = false;
+  function hayGuardado() { return !!(cache && cache.pareja && YO && YO.pareja_id === cache.pareja && cache.ver > 0); }
+  function fotoVista() { todasLasClaves().forEach(function (k) { vista[k] = JSON.stringify([valor(k), pendiente(k)]); }); }
 
   function boot() {
     pedir('boot&desde=' + (cache.pareja ? cache.ver : 0)).then(function (b) {
@@ -242,7 +250,7 @@
       if (otraCuenta) {
         // Cambió la cuenta en este celu: borro todo lo local de la cuenta anterior.
         try { lclear(); } catch (e) {}
-        pend = []; cache = { pareja: b.pareja_id, ver: 0, srv: {} };
+        pend = []; cache = { pareja: b.pareja_id, ver: 0, srv: {} }; forzarSync = true;
       }
       YO = yo; wr(K_YO, yo);
       aplicarDocs(b); servidorOk = true;
@@ -313,6 +321,11 @@
   function escuchar(mapa, k, f, inicial) {
     (mapa[k] = mapa[k] || []).push(f);
     if (sincronizado) setTimeout(function () { try { f(inicial()); } catch (e) { console.error(e); } }, 0);
+    else if (hayGuardado()) setTimeout(function () {
+      if (sincronizado || f.__jxYa) return;
+      if (!temprano) { temprano = true; fotoVista(); }
+      f.__jxYa = true; try { f(inicial()); } catch (e) { console.error(e); }
+    }, 0);
     return function () { mapa[k] = (mapa[k] || []).filter(function (x) { return x !== f; }); };
   }
   function ref(c, i) {
@@ -331,7 +344,7 @@
       doc: function (i) { return ref(c, i == null ? idNuevo() : String(i)); },
       add: function (d) { var r = ref(c, idNuevo()); return r.set(d).then(function () { return r; }); },
       get: function () { return cambios().then(function () { return snapCol(c); }); },
-      onSnapshot: function (f) { return escuchar(colL, c, f, function () { return snapCol(c); }); }
+      onSnapshot: function (f) { return escuchar(colL, c, function (s) { f(s); }, function () { return snapCol(c); }); }
     };
   }
   var db = {
@@ -714,6 +727,7 @@
     pedir('contenido').then(function (r) { if (JSON.stringify(r) !== JSON.stringify(c)) { wr('juntos_contenido', r); cb(r); } }).catch(function () {});
   };
   window.jxPrivado = { leer: function (clave) { return pedir('privado&clave=' + encodeURIComponent(clave)); }, guardar: function (clave, data) { return pedir('privado', { clave: clave, data: data }); } };
+  window.addEventListener('pageshow', function (e) { if (e.persisted) { cambios(); enviar(); } });
   document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { cambios(); enviar(); revisarMensajes(); } });
   window.addEventListener('online', function () { cambios(); enviar(); subirPersonal(); });
 })();
