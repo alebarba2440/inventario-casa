@@ -46,6 +46,11 @@
   .def.on{border-color:var(--accent);background:var(--accent-light)}
   .def .ok{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:20px;height:20px;font-size:.75rem;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
   .def.on .ok{display:grid}
+  /* "Volver al Default" y "Cambiar mi nombre…" dentro del primer recuadro */
+  .yo-acc{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:10px}
+  .yo-acc .def{margin:0;min-width:0;padding:6px 30px 6px 12px;border-radius:5px 14px 5px 14px}
+  .yo-acc .def b{font-size:.82rem}
+  .yo-acc .perfil-b{margin:0;text-align:left;font-size:.84rem}
   .perfil-b{display:block;margin:14px auto 0;border:none;background:none;color:var(--accent);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;text-decoration:underline}
   .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1a1a;color:#fff;font-weight:800;padding:11px 18px;border-radius:999px;transition:all .25s;pointer-events:none;z-index:60;white-space:nowrap}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -59,11 +64,11 @@
   <h1>MI AVATAR</h1>
 </div>
 <main>
-  <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small></div></section>
+  <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small>
+    <div class="yo-acc"><button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Volver al Default</b></button>
+    <button class="perfil-b" id="bPerfil" onclick="abrirPerfil()" hidden>✏️ Cambiar mi nombre o apodo / ella-él</button></div></div></section>
   <h2>Mujeres</h2><div class="grid" id="gF"></div>
   <h2>Hombres</h2><div class="grid" id="gM"></div>
-  <button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Default</b></button>
-  <button class="perfil-b" id="bPerfil" onclick="abrirPerfil()" hidden>✏️ Cambiar mi nombre o apodo / ella-él</button>
 </main>
 <div class="toast" id="toast"></div>
 <script>
