@@ -38,6 +38,7 @@
   /* resumen arriba */
   .card{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:14px}
   .res{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .card-res{border-radius:10px 24px 10px 24px;padding:10px}   /* el recuadro de atrás con las mismas esquinas cruzadas (4px más que los cuadros de adentro) */
   .res div{background:var(--surface2);border-radius:6px 18px 6px 18px;padding:10px;text-align:center}   /* esquinas cruzadas como el resto de la app */
   .res small{display:block;font-size:.72rem;color:var(--text2);font-weight:700}
   .res b{font-size:1.05rem;font-weight:800;font-variant-numeric:tabular-nums}
@@ -197,7 +198,7 @@
   </div>
 
   <section class="tab on" id="tabG">
-    <div class="card"><div class="res">
+    <div class="card card-res"><div class="res">
       <div><small>Este mes</small><b id="rMes">$ 0</b></div>
       <div><small>C/U este mes</small><b id="rCu">$ 0</b></div>
     </div></div>
