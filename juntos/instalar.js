@@ -42,6 +42,7 @@
   css.textContent =
     '.jxi-fondo{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s;font-family:Nunito,system-ui,sans-serif}' +
     '.jxi-fondo.on{opacity:1}' +
+    '.jxi-ic{display:inline-flex !important;vertical-align:-3px;margin:0 2px 0 -4px !important;color:inherit !important;font-size:inherit !important}.jxi-ic svg{width:18px;height:18px}' +
     '.jxi-hoja{background:#fff;color:#1a1a1a;width:100%;max-width:440px;border-radius:22px 22px 0 0;padding:20px 18px calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateY(30px);transition:transform .2s;position:relative}' +
     '.jxi-fondo.on .jxi-hoja{transform:none}' +
     '@media (min-width:700px){.jxi-fondo{align-items:center}.jxi-hoja{border-radius:22px}}' +
@@ -112,11 +113,36 @@
     }
   }
 
+  // ---------- texto del botón según el dispositivo ----------
+  var esMac = /Macintosh/.test(ua) && !esIOS, ipadD = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var IC_CEL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/></svg>';
+  var IC_PC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/></svg>';
+  function textoBoton(m) {
+    // iPhone, iPad y Safari en Mac no instalan con un botón: el botón abre la guía, por eso dice "Cómo instalar…"
+    if (m === 'ios') return { t: 'Cómo instalar en tu ' + (ipadD ? 'iPad' : 'iPhone'), s: 'Te mostramos los 2 pasos', ic: IC_CEL };
+    if (m === 'mac') return { t: 'Cómo instalar en tu Mac', s: 'Te mostramos los 2 pasos', ic: IC_PC };
+    if (m === 'abrir') return { t: 'Cómo instalar la app', s: 'Te mostramos cómo', ic: esMovil ? IC_CEL : IC_PC };
+    if (esAndroid) return { t: 'Instalar en tu Android', s: 'Gratis · en un toque', ic: IC_CEL };
+    if (esMovil) return { t: 'Instalar en tu celu', s: 'Gratis · en un toque', ic: IC_CEL };
+    return { t: 'Instalar en tu ' + (esMac ? 'Mac' : 'PC'), s: 'Gratis · en un click', ic: IC_PC };
+  }
+  function rotular(b, m) {
+    if (!m) return;
+    var x = textoBoton(m), t = b.querySelector('.t');
+    if (t) {   // botón chico del inicio: "Título + <small>detalle</small>"
+      var sm = t.querySelector('small'); t.firstChild && t.firstChild.nodeType === 3 ? (t.firstChild.nodeValue = x.t) : t.insertBefore(document.createTextNode(x.t), t.firstChild);
+      if (sm) sm.textContent = x.s;
+    } else if (b.dataset.instalarTexto !== 'no') {
+      b.innerHTML = '<span class="jxi-ic">' + x.ic + '</span>' + x.t;
+    }
+    b.setAttribute('aria-label', x.t);
+  }
+
   // ---------- botones [data-instalar] ----------
   function pintar() {
     var m = modo();
     document.querySelectorAll('[data-instalar]').forEach(function (b) {
-      b.hidden = !m;
+      b.hidden = !m; rotular(b, m);
       if (!b.dataset.jxi) { b.dataset.jxi = '1'; b.addEventListener('click', function (e) { e.preventDefault(); instalar(); }); }
     });
     document.querySelectorAll('[data-instalar-ya]').forEach(function (el) { el.hidden = !instalada(); });
