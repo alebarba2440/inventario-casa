@@ -47,15 +47,21 @@
   .def .ok{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:20px;height:20px;font-size:.75rem;border-radius:50%;background:var(--accent);color:#fff;font-weight:900;display:none;place-items:center}
   .def.on .ok{display:grid}
   /* "Volver al Default" y "Cambiar mi nombre…" dentro del primer recuadro */
-  .yo-acc{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:10px}
-  .yo-acc .def{margin:0;min-width:0;padding:6px 30px 6px 12px;border-radius:5px 14px 5px 14px}
+  .yo{flex-wrap:wrap}
+  .yo>div:not(.fig):not(.yo-acc){flex:1 1 0;min-width:0}
+  .yo-acc{flex-basis:100%;display:flex;gap:8px}   /* los dos botones uno al lado del otro, debajo de todo el recuadro */
+  .yo-acc>button{min-width:0}
+  .yo-acc .def{flex:0 0 auto}
+  .yo-acc .perfil-b{flex:1 1 0}
+  .yo-acc .def{margin:0;padding:6px 36px 6px 12px;border-radius:5px 14px 5px 14px}
   .yo-acc .def b{font-size:.82rem}
   .yo-acc .perfil-b{margin:0;display:flex;align-items:center;gap:9px;text-align:left;text-decoration:none;background:var(--accent);color:#fff;
     padding:8px 14px 8px 11px;border-radius:5px 14px 5px 14px;box-shadow:0 6px 14px -6px color-mix(in srgb,var(--accent) 70%,transparent);transition:transform .15s,box-shadow .15s}
   .yo-acc .perfil-b[hidden]{display:none}
   .yo-acc .perfil-b i{font-size:1.25rem}
+  .yo-acc .perfil-b>span{min-width:0}
   .yo-acc .perfil-b b{display:block;font-size:.86rem;font-weight:900;line-height:1.15}
-  .yo-acc .perfil-b small{display:block;margin:0;color:rgba(255,255,255,.85);font-size:.72rem;font-weight:700;line-height:1.2}
+  .yo-acc .perfil-b small{display:block;margin:0;color:rgba(255,255,255,.85);font-size:.7rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;line-height:1.2}
   .yo-acc .perfil-b:active{transform:scale(.96)}
   @media (hover:hover){.yo-acc .perfil-b:hover{transform:translateY(-2px);box-shadow:0 10px 18px -8px color-mix(in srgb,var(--accent) 80%,transparent)}}
   .perfil-b{display:block;margin:14px auto 0;border:none;background:none;color:var(--accent);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;text-decoration:underline}
@@ -71,9 +77,9 @@
   <h1>MI AVATAR</h1>
 </div>
 <main>
-  <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small>
-    <div class="yo-acc"><button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Volver al Default</b></button>
-    <button class="perfil-b" id="bPerfil" onclick="abrirPerfil()" hidden><i class="ti ti-user-edit" aria-hidden="true"></i><span><b>Editar mi perfil</b><small>Nombre, apodo y ella / él</small></span></button></div></div></section>
+  <section class="yo"><div class="fig" id="yoFig"></div><div><b id="yoNom">Elegí tu personaje</b><small>Es el que te representa en la app: por ejemplo, aparece en tu tarjeta de <b>Gastos personales</b>. Cada uno elige el suyo.</small></div>
+    <div class="yo-acc"><button class="def" id="bDef" onclick="elegir('default')"><span class="ok">✓</span><b>Restablecer</b></button>
+    <button class="perfil-b" id="bPerfil" onclick="abrirPerfil()" hidden><i class="ti ti-user-edit" aria-hidden="true"></i><span><b>Editar mi perfil</b><small>Nombre, apodo, ella/él</small></span></button></div></section>
   <h2>Mujeres</h2><div class="grid" id="gF"></div>
   <h2>Hombres</h2><div class="grid" id="gM"></div>
 </main>
