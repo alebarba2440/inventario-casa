@@ -624,6 +624,9 @@ aplicarPersonaje();window.addEventListener('juntos',aplicarPersonaje);
 })();
 window.addEventListener('juntos',pintarCuentaBtn);document.addEventListener('DOMContentLoaded',pintarCuentaBtn);
 function closeCfg(){document.getElementById('cfgOverlay').classList.remove('open');if(location.hash==='#ajustes')history.replaceState(null,'',location.pathname);}
+// Al volver con "atrás" desde otra pantalla (ej. Mi avatar), el navegador muestra el inicio tal cual quedó: cerrar Ajustes
+addEventListener('pagehide',()=>{if(location.hash==='#ajustes')history.replaceState(null,'',location.pathname+location.search);});   // que al volver no se reabra por el #ajustes
+addEventListener('pageshow',e=>{if(e.persisted&&document.getElementById('cfgOverlay').classList.contains('open')){const o=document.getElementById('cfgOverlay');o.style.transition='none';closeCfg();requestAnimationFrame(()=>requestAnimationFrame(()=>o.style.transition=''));}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfg();closeCuenta()}});
 
 testFb();
