@@ -605,7 +605,7 @@ aplicarPersonaje();window.addEventListener('juntos',aplicarPersonaje);
 /* tarjetas de Mascotas e Hijos: el avatar elegido de cada uno (si no eligió, uno al azar) */
 (function(){
   const T={masc:{pic:'picMasc',ls:'mascotas_v1',col:'mascotas',n:23,pre:'mascota'},hijos:{pic:'picHijos',ls:'hijos_v1',col:'hijos',n:28,pre:'bebe'}};
-  const p2=n=>String(n).padStart(2,'0'),url=a=>'img/avatares/'+a+'.webp?v=3';
+  const p2=n=>String(n).padStart(2,'0'),url=a=>'img/avatares/'+a+'.webp?v='+(a.startsWith('mascota')?4:3);
   const azar=(t,semilla)=>{let h=0;String(semilla).split('').forEach(c=>h=(h*31+c.charCodeAt(0))>>>0);return t.pre+p2(h%t.n+1);};
   let al;try{al=sessionStorage.getItem('av_azar')}catch(e){}if(!al){al=String(Math.random());try{sessionStorage.setItem('av_azar',al)}catch(e){}}
   function pintar(k,datos){const t=T[k],el=document.getElementById(t.pic);if(!el)return;
@@ -674,7 +674,7 @@ function llenarPantalla(){
   g.style.setProperty('--picH',Math.floor(h)+'px');
 }
 // Imagen de la lista de Accesos directos: Hijos y Mascotas usan un avatar en lugar del dibujo de la tarjeta
-const ICONO_ACC={hijos:'img/avatares/bebe02.webp?v=3',mascotas:'img/avatares/mascota01.webp?v=3'};
+const ICONO_ACC={hijos:'img/avatares/bebe02.webp?v=3',mascotas:'img/avatares/mascota01.webp?v=4'};
 function dibujarAccesos(){
   const A=accCfg();
   document.getElementById('accList').innerHTML=cards().map(a=>{const k=a.dataset.k,c=A[k]||{},on=c.on!==false,nom=c.nombre||defNombre(a);

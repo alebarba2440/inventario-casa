@@ -196,7 +196,7 @@ const fFecha=s=>s2f(s).toLocaleDateString('es-AR',{day:'numeric',month:'short',y
 const yo=()=>{const J=window.JUNTOS;return (J&&J.miSlot)||null};
 
 const AVS=Array.from({length:23},(_,i)=>'mascota'+String(i+1).padStart(2,'0'));
-const avURL=a=>'img/avatares/'+a+'.webp?v=3';
+const avURL=a=>'img/avatares/'+a+'.webp?v='+(a.startsWith('mascota')?4:3);
 const avHTML=p=>p.avatar?`<img src="${avURL(p.avatar)}" alt="">`:esc(p.emoji||'🐾');
 // tipo: [emoji, nombre, grupo, próxima vez sugerida]
 const TIPOS={
