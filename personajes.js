@@ -58,7 +58,7 @@
       + '<div class="gs"><button type="button" class="g" data-g="f"><img src="' + window.personaje('julieta').img + '" alt="">Ella</button>'
       + '<button type="button" class="g" data-g="m"><img src="' + window.personaje('alejandro').img + '" alt="">Él</button></div>'
       + '<label>TU NOMBRE O APODO<input id="jxPN" maxlength="30" autocomplete="nickname" placeholder="Ej: Juli"></label>'
-      + '<label>TU CUMPLEAÑOS<input id="jxPC" type="date" autocomplete="bday"></label><small class="nt" id="jxPCn">Lo agendamos en el Calendario para que tu pareja no se lo olvide 🎂</small>'
+      + '<label>TU CUMPLEAÑOS<input id="jxPC" type="date" autocomplete="bday"></label><small class="nt" id="jxPCn" hidden></small>'
       + '<div class="lb">ELEGÍ TU COLOR FAVORITO<span class="cs" id="jxPCol"></span></div><small class="nt">Es el color de la app en tu celu. Lo podés cambiar cuando quieras en Ajustes.</small>'
       + '<button type="button" class="ok" id="jxPOk">Listo</button></div>';
     document.body.appendChild(d);
@@ -79,7 +79,7 @@
     const cumOk = () => /^\d{4}-\d{2}-\d{2}$/.test(cum.value) && cum.value <= hoy && cum.value >= '1900-01-01';
     // Sin "ella/él", nombre y cumpleaños no deja avanzar
     const pintar = () => { d.querySelectorAll('.g').forEach(b => b.classList.toggle('on', b.dataset.g === gen)); ok.disabled = !gen || !inp.value.trim() || !cumOk();
-      nota.classList.toggle('err', !!cum.value && !cumOk()); nota.textContent = cum.value && !cumOk() ? 'Revisá la fecha de tu cumpleaños' : 'Lo agendamos en el Calendario para que tu pareja no se lo olvide 🎂'; };
+      nota.classList.toggle('err', !!cum.value && !cumOk()); nota.textContent = cum.value && !cumOk() ? 'Revisá la fecha de tu cumpleaños' : ''; nota.hidden = !nota.textContent; };
     d.querySelectorAll('.g').forEach(b => b.onclick = () => { gen = b.dataset.g; pintar(); try { window.sonido && sonido('aceptar'); } catch (e) {} });
     inp.oninput = pintar; cum.oninput = pintar; cum.onchange = pintar; inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
     ok.onclick = () => {
