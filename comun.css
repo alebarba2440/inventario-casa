@@ -98,3 +98,10 @@ input[type="search"]::placeholder,#searchInput::placeholder{color:#b8b8b0;opacit
 .pic-cor .corazon{filter:drop-shadow(1.5px 0 0 #3b2626) drop-shadow(-1.5px 0 0 #3b2626) drop-shadow(0 1.5px 0 #3b2626) drop-shadow(0 -1.5px 0 #3b2626) drop-shadow(0 6px 6px rgba(0,0,0,.18))}
 .ad-cor .corazon{filter:drop-shadow(.8px 0 0 #3b2626) drop-shadow(-.8px 0 0 #3b2626) drop-shadow(0 .8px 0 #3b2626) drop-shadow(0 -.8px 0 #3b2626)}
 .ad-cor{width:40px;height:40px;flex-shrink:0;border-radius:10px;background:var(--surface2);display:grid;place-items:center;padding:3px;box-sizing:border-box}
+
+/* Sombra en los recuadros blancos de toda la app (como las tarjetas del inicio, más suave) para despegarlos del fondo.
+   :where() = sin peso: si una página ya define su propia sombra para un recuadro, manda la de la página. */
+:root{--sombra-caja:0 1px 3px rgba(0,0,0,.05),0 10px 18px -10px rgba(0,0,0,.24)}
+:where(.card,.acc,.mes,.car,.reg,.anio,.trip,.graf,.doc,.inv-item,.alerts-section){box-shadow:var(--sombra-caja)}
+/* los recuadros que van dentro de otro no llevan sombra (si no, se ve doble) */
+:where(.card,.acc,.mes,.car,.reg,.anio,.trip) :where(.card,.acc,.mes,.reg,.graf,.doc){box-shadow:none}
