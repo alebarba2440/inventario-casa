@@ -430,6 +430,13 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     </div>
 
     <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-palette"></i> Color<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="pal" id="pal"></div>
+      <label class="custom-color"><span class="cc-dot" id="ccDot"><input type="color" id="ccInput" aria-label="Elegir color a mano"></span><span>Elegir otro color a mano</span></label>
+      </div>
+    </div>
+
+    <div class="block acc">
       <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-sun-moon"></i> Modo<i class="ti ti-chevron-down chev"></i></button>
       <div class="acc-b">      <div class="seg desliz" style="--pad:4px;--kr:9px">
         <button data-t="light" onclick="setTheme('light')"><i class="ti ti-sun"></i> Claro</button>
@@ -450,13 +457,6 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
         <button data-s="1" onclick="setSonidos(true)"><i class="ti ti-volume"></i> Activados</button>
         <button data-s="0" onclick="setSonidos(false)"><i class="ti ti-volume-off"></i> Apagados</button>
         </div>
-      </div>
-    </div>
-
-    <div class="block acc">
-      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-palette"></i> Color<i class="ti ti-chevron-down chev"></i></button>
-      <div class="acc-b">      <div class="pal" id="pal"></div>
-      <label class="custom-color"><span class="cc-dot" id="ccDot"><input type="color" id="ccInput" aria-label="Elegir color a mano"></span><span>Elegir otro color a mano</span></label>
       </div>
     </div>
 
