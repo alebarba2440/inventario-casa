@@ -10,7 +10,7 @@
 <title>Mi avatar</title>
 <script src="tema.js"></script>
 <script src="sonidos.js"></script>
-<script src="personajes.js?v=6"></script>
+<script src="personajes.js?v=7"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -50,9 +50,9 @@
   .yo{flex-wrap:wrap}
   .yo>div:not(.fig):not(.yo-acc){flex:1 1 0;min-width:0}
   .yo-acc{flex-basis:100%;display:flex;gap:8px}   /* los dos botones uno al lado del otro, debajo de todo el recuadro */
-  .yo-acc>button{min-width:0}
-  .yo-acc .def{flex:0 0 auto}
-  .yo-acc .perfil-b{flex:1 1 0}
+  .yo-acc{justify-content:center}
+  .yo-acc>button{min-width:0;flex:0 1 190px;justify-content:center}   /* los dos del mismo ancho y centrados */
+  .yo-acc .def{padding-left:28px;padding-right:28px}
   .yo-acc .def{margin:0;padding:6px 36px 6px 12px;border-radius:5px 14px 5px 14px}
   .yo-acc .def b{font-size:.82rem}
   .yo-acc .perfil-b{margin:0;display:flex;align-items:center;gap:9px;text-align:left;text-decoration:none;background:var(--accent);color:#fff;

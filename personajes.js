@@ -31,7 +31,7 @@
 
   /* ---------- Bienvenida: "¿ella o él?" y nombre o apodo (solo en JuntOS) ----------
      Aparece sola la primera vez en el inicio; después se puede abrir con abrirPerfil(). */
-  window.abrirPerfil = function () {
+  window.abrirPerfil = function (sola) {   // sola = true cuando aparece automáticamente (perfil sin completar)
     const J = window.JUNTOS; if (!J || !window.guardarPerfilYo || document.getElementById('jxPerfil')) return;
     if (!document.getElementById('jxPerfilCss')) {
       const st = document.createElement('style'); st.id = 'jxPerfilCss';
@@ -54,7 +54,7 @@
     const yo = J.miSlot, nom = (J.apodos && yo && J.apodos[yo]) || (J.usuario && String(J.usuario.nombre || '').split(' ')[0]) || '';
     let gen = J.miGenero || null;
     const d = document.createElement('div'); d.id = 'jxPerfil';
-    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">' + (J.miGenero ? 'Completá tu perfil 🎂' : '¡Bienvenido/a a JuntOS! 💞') + '</h2><p>' + (J.miGenero ? 'Nos falta tu cumpleaños.' : 'Contanos cómo querés aparecer en la app.') + '</p>'
+    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">' + (sola !== true ? 'Editar perfil' : J.miGenero ? 'Completá tu perfil 🎂' : '¡Bienvenido/a a JuntOS! 💞') + '</h2>' + (sola !== true ? '' : '<p>' + (J.miGenero ? 'Nos falta tu cumpleaños.' : 'Contanos cómo querés aparecer en la app.') + '</p>')
       + '<div class="gs"><button type="button" class="g" data-g="f"><img src="' + window.personaje('julieta').img + '" alt="">Ella</button>'
       + '<button type="button" class="g" data-g="m"><img src="' + window.personaje('alejandro').img + '" alt="">Él</button></div>'
       + '<label>TU NOMBRE O APODO<input id="jxPN" maxlength="30" autocomplete="nickname" placeholder="Ej: Juli"></label>'
@@ -102,7 +102,7 @@
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', revisarBienvenida, { once: true }); return; }
     if (!(J && J.perfilListo && J.miSlot && (!J.miGenero || !J.miCumple) && document.getElementById('grid'))) return;
     if (document.getElementById('intro')) { setTimeout(revisarBienvenida, 700); return; }   // después de la animación de inicio
-    window.abrirPerfil();
+    window.abrirPerfil(true);
   }
   window.addEventListener('juntos', revisarBienvenida);
 })();

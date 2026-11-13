@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" href="img/icono.png?v=12">
 <title>JuntOS</title>
 <script src="tema.js"></script>
-<script src="personajes.js?v=6"></script>
+<script src="personajes.js?v=7"></script>
 <script src="sonidos.js"></script>
 <script src="firebase-config.js"></script>
 <link rel="preload" as="image" href="img/inventario.webp?v=2">
@@ -425,28 +425,8 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     <h2>Ajustes</h2>
 
     <div class="block acc">
-      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-layout-grid"></i> Accesos directos<i class="ti ti-chevron-down chev"></i></button>
-      <div class="acc-b"><div id="accList"></div><p class="acc-hint">Tocá el lápiz para cambiar el nombre. Con el interruptor apagado, la tarjeta no aparece en el inicio.</p></div>
-    </div>
-
-    <div class="block">
-      <h3><i class="ti ti-user-heart"></i> Personalizar</h3>
-      <a class="btn pri" href="personajes.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none"><i class="ti ti-mood-smile"></i> Elegir mi avatar</a>
-    </div>
-
-    <div class="block acc">
-      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-volume"></i> Sonidos<i class="ti ti-chevron-down chev"></i></button>
-      <div class="acc-b">      <div class="seg desliz" id="sndSeg" style="--pad:4px;--kr:9px">
-        <button data-s="1" onclick="setSonidos(true)"><i class="ti ti-volume"></i> Activados</button>
-        <button data-s="0" onclick="setSonidos(false)"><i class="ti ti-volume-off"></i> Apagados</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="block acc">
-      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-typography"></i> Tamaño del texto<i class="ti ti-chevron-down chev"></i></button>
-      <div class="acc-b">      <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
-      </div>
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-user-heart"></i> Personalizar<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b"><a class="btn pri" href="personajes.html" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none"><i class="ti ti-mood-smile"></i> Elegir mi avatar</a></div>
     </div>
 
     <div class="block acc">
@@ -459,10 +439,30 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     </div>
 
     <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-typography"></i> Tamaño del texto<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="size-row"><span style="font-size:.8rem">A</span><input type="range" id="fsSlider" min="0.7" max="1.4" step="0.02"><span style="font-size:1.25rem">A</span></div>
+      </div>
+    </div>
+
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-volume"></i> Sonidos<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b">      <div class="seg desliz" id="sndSeg" style="--pad:4px;--kr:9px">
+        <button data-s="1" onclick="setSonidos(true)"><i class="ti ti-volume"></i> Activados</button>
+        <button data-s="0" onclick="setSonidos(false)"><i class="ti ti-volume-off"></i> Apagados</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="block acc">
       <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-palette"></i> Color<i class="ti ti-chevron-down chev"></i></button>
       <div class="acc-b">      <div class="pal" id="pal"></div>
       <label class="custom-color"><span class="cc-dot" id="ccDot"><input type="color" id="ccInput" aria-label="Elegir color a mano"></span><span>Elegir otro color a mano</span></label>
       </div>
+    </div>
+
+    <div class="block acc">
+      <button class="acc-h" onclick="toggleAccCfg(this)" aria-expanded="false"><i class="ti ti-layout-grid"></i> Accesos directos<i class="ti ti-chevron-down chev"></i></button>
+      <div class="acc-b"><div id="accList"></div><p class="acc-hint">Tocá el lápiz para cambiar el nombre. Con el interruptor apagado, la tarjeta no aparece en el inicio.</p></div>
     </div>
 
     <div class="block" style="display:none"><!-- oculto: estado de Firebase (se puede volver a mostrar) -->
