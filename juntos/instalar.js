@@ -30,7 +30,7 @@
     if (esIOS) return 'ios';
     if (safariMac) return 'mac';
     if (firefoxPC) return null;                      // Firefox en PC no instala webs
-    if (chromePC && listo) return 'barra';           // Chrome/Edge en PC todavía no avisó: se instala desde el ícono de la barra
+    // Chrome/Edge en PC: si no avisó que se puede instalar es porque YA está instalada (cuando no lo está, avisa siempre) → no mostrar nada
     // Android con un navegador que no avisa (Firefox, Opera...): pasos con el menú ⋮.
     // En Chrome/Samsung/Edge no: si no avisó es porque ya está instalada.
     if (esAndroid && listo && (/Firefox|OPR|UCBrowser|MiuiBrowser|YaBrowser/.test(ua) || !/Chrome\//.test(ua))) return 'android';
