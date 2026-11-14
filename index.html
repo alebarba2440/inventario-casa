@@ -63,6 +63,15 @@
   .cta-falta .cta-av{background:none;border:2px dashed var(--border2);color:var(--text2)}
   .cta-cod{font-size:1.7rem;font-weight:900;letter-spacing:.3em;text-align:center;background:var(--accent-light);color:var(--accent);border-radius:12px;padding:10px;margin:8px 0}
   .cta-plan{border-radius:12px;padding:12px;text-align:center;background:var(--surface2);line-height:1.4}
+  /* Administrar mi suscripción (botón de baja y de arrepentimiento) */
+  .sus-acc{margin-top:10px;border:1px solid var(--border2);border-radius:6px 20px 6px 20px;background:var(--surface);overflow:hidden}
+  .sus-h{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;border:0;background:none;font:inherit;font-weight:800;color:var(--text);cursor:pointer;text-align:left}
+  .sus-h .chev{margin-left:auto;transition:transform .2s}.sus-acc.open .chev{transform:rotate(180deg)}
+  .sus-b{display:none;padding:0 14px 14px;font-size:.9rem;line-height:1.45;color:var(--text2)}.sus-acc.open .sus-b{display:flex;flex-direction:column;gap:10px}
+  .sus-b b{color:var(--text)}
+  .sus-b .cta-b{margin:0}
+  .sus-cod{display:inline-block;font-weight:900;letter-spacing:.06em;color:var(--text);background:var(--surface2);padding:2px 8px;border-radius:4px 10px 4px 10px}
+  .sus-ok{padding:10px 12px;border-radius:6px 16px 6px 16px;background:var(--accent-light);color:var(--text)}
   .cta-b{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-weight:800;padding:13px;border-radius:12px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;margin-top:8px;text-decoration:none}
   .cta-b[hidden]{display:none !important}   /* el botón del panel solo para admins (sin esto, display:flex le ganaba a hidden) */
   .cta-b.salir{color:#c0392b;border-color:rgba(192,57,43,.35)}
@@ -413,7 +422,9 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     <h2>Mi cuenta</h2>
     <div class="cta-yo" id="ctaYo"></div>
     <div class="block"><h3><i class="ti ti-heart"></i> <span id="ctaParNom">Pareja</span></h3><div id="ctaPar"></div></div>
-    <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div></div>
+    <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div>
+      <div class="sus-acc" id="susAcc"><button class="sus-h" onclick="this.parentElement.classList.toggle('open')" aria-expanded="false"><i class="ti ti-receipt"></i> Administrar mi suscripción<i class="ti ti-chevron-down chev"></i></button>
+        <div class="sus-b" id="susB"></div></div></div>
     <a class="cta-b" id="ctaAdmin" href="../admin/" hidden><i class="ti ti-chart-bar"></i> Panel de administración</a>
     <a class="cta-b" id="ctaTyc" href="../terminos.html"><i class="ti ti-file-text"></i> Términos y privacidad</a>
     <button class="cta-b salir" onclick="salirCuenta()"><i class="ti ti-logout"></i> Cerrar sesión</button>
@@ -591,7 +602,40 @@ function openCuenta(){const J=window.JUNTOS||{},u=J.usuario||{},p=J.pareja;
     document.getElementById('ctaPlan').innerHTML=p.solo_lectura?'⏸️ Tu período terminó.<br>Podés ver todo, pero no cargar cosas nuevas.'
       :p.plan==='pago'?`✅ Suscripción activa<br>hasta el <b>${f}</b>`
       :`🎁 Prueba gratis: te quedan <b>${p.dias_restantes} ${p.dias_restantes===1?'día':'días'}</b><br>(hasta el ${f})`;}
+  pintarSuscripcion();
   document.getElementById('cuentaOverlay').classList.add('open');}
+/* ---------- Administrar mi suscripción: botón de baja (Res. 316/2018) y de arrepentimiento (Ley 24.240 / Res. 424/2020) ---------- */
+function pintarSuscripcion(){const p=(window.JUNTOS||{}).pareja,b=document.getElementById('susB'),acc=document.getElementById('susAcc');
+  if(!p){acc.hidden=true;return;}acc.hidden=false;
+  const f=d=>new Date(d).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}),hasta=f(p.activo_hasta);
+  let h='';
+  if(p.plan!=='pago'){
+    h+=`<p style="margin:0">Estás en la <b>prueba gratis</b> o sin suscripción activa: <b>no hay ningún cobro automático</b>, así que no hace falta darse de baja. Si no pagás, no se te cobra nada.</p>`;
+  }else if(p.baja){
+    h+=`<div class="sus-ok">✅ <b>Pediste la baja</b> el ${f(p.baja)}. Tu suscripción <b>no se va a renovar</b> y no se te va a cobrar nada más. Podés seguir usando JuntOS hasta el <b>${hasta}</b>.${p.baja_codigo?`<br>Código de trámite: <span class="sus-cod">${esc(p.baja_codigo)}</span>`:''}</div>
+      <button class="cta-b" onclick="reactivarSus()"><i class="ti ti-refresh"></i> Reactivar mi suscripción</button>`;
+  }else{
+    h+=`<p style="margin:0">Tu suscripción ${p.plan_pago==='anual'?'<b>anual</b>':p.plan_pago==='mensual'?'<b>mensual</b>':''} está activa hasta el <b>${hasta}</b>. Si te das de baja, no se renueva y la seguís usando hasta esa fecha.</p>
+      <button class="cta-b salir" onclick="darDeBaja()"><i class="ti ti-circle-x"></i> Darme de baja</button>`;
+  }
+  if(p.plan==='pago'&&(p.arrepentimiento||p.arrep_codigo)){
+    h+=p.arrep_codigo
+      ?`<div class="sus-ok">↩️ <b>Pediste la devolución</b> por botón de arrepentimiento. Te devolvemos el total pagado.<br>Código de trámite: <span class="sus-cod">${esc(p.arrep_codigo)}</span></div>`
+      :`<p style="margin:0"><b>Botón de arrepentimiento:</b> pagaste hace menos de 10 días. Podés cancelar sin dar explicaciones y te devolvemos el total.</p>
+        <button class="cta-b salir" onclick="arrepentirme()"><i class="ti ti-arrow-back-up"></i> Me arrepiento: cancelar y devolver</button>`;
+  }
+  h+=`<p style="margin:0;font-size:.8rem">¿Dudas? Escribinos a <a href="mailto:soporte@juntosapp.com.ar">soporte@juntosapp.com.ar</a>.</p>`;
+  b.innerHTML=h;}
+async function pedirSus(accion){try{const r=await fetch('../api/?a='+accion,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Juntos':'1'},body:'{}'});
+    const j=await r.json();if(!r.ok||j.error)throw new Error(j.error||'No se pudo completar');
+    if(j.pareja&&window.JUNTOS)window.JUNTOS.pareja=j.pareja;openCuenta();document.getElementById('susAcc').classList.add('open');return j;}
+  catch(e){avisar('No se pudo',e.message||'Revisá tu conexión e intentá de nuevo.',{icono:'⚠️'});return null;}}
+async function darDeBaja(){const p=(window.JUNTOS||{}).pareja||{};
+  if(!(await confirmar('¿Darte de baja?',`Tu suscripción no se va a renovar. Seguís usando JuntOS hasta el ${new Date(p.activo_hasta).toLocaleDateString('es-AR',{day:'numeric',month:'long'})}. Tus datos quedan guardados.`,{boton:'Darme de baja',icono:'👋'})))return;
+  const j=await pedirSus('suscripcion_baja');if(j)avisar('Listo, te diste de baja',`Tu código de trámite es ${j.codigo}. Guardalo por cualquier consulta.`,{icono:'✅'});}
+async function reactivarSus(){const j=await pedirSus('suscripcion_reactivar');if(j)avisar('¡Qué bueno!','Tu suscripción vuelve a estar activa.',{icono:'💞'});}
+async function arrepentirme(){if(!(await confirmar('¿Cancelar y pedir la devolución?','Se cancela tu suscripción y te devolvemos el total pagado. Te vamos a contactar para hacer la devolución.',{boton:'Sí, me arrepiento',icono:'↩️'})))return;
+  const j=await pedirSus('suscripcion_arrepentimiento');if(j)avisar('Pedido recibido',`Tu código de trámite es ${j.codigo}. Te contactamos para devolverte el dinero.`,{icono:'✅'});}
 function closeCuenta(){document.getElementById('cuentaOverlay').classList.remove('open');}
 async function compartirCodigo(){const p=(window.JUNTOS||{}).pareja;if(!p)return;
   const t=`Sumate a nuestro espacio en Juntos 💞\nEntrá a ${location.origin}${location.pathname.replace(/app\/.*$/,'')}entrar.html y usá el código: ${p.codigo}`;

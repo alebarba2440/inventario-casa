@@ -50,6 +50,7 @@
   .btn.grow{flex:1}
   .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
   .btn.danger{background:var(--neg)}
+  .btn.danger.naranja{background:#EA580C}   /* Limpiar mes: distinto del rojo de Limpiar todo */
 
   /* categorías (acordeón) y gastos */
   .grp{border:.5px solid var(--border2);border-radius:14px;margin-bottom:8px;overflow:hidden;background:var(--surface)}
@@ -268,7 +269,7 @@
         <input type="file" id="fileIn" accept="application/json,.json" style="display:none">
       </div>
     </section>
-    <button class="btn danger" onclick="limpiarMes()"><i class="ti ti-calendar-x"></i> <span id="lmTxt">Limpiar mes</span></button>
+    <button class="btn danger naranja" onclick="limpiarMes()"><i class="ti ti-calendar-x"></i> <span id="lmTxt">Limpiar mes</span></button>
     <button class="btn danger" onclick="limpiarTodo()"><i class="ti ti-trash"></i> Limpiar todo</button>
     <button class="btn ghost" onclick="cerrarOpts()">Cerrar</button>
   </div>

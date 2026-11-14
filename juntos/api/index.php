@@ -69,9 +69,27 @@ function estado(array $u): array {
       'dias_restantes' => max(0, (int)ceil(($hasta - time()) / 86400)),
       'solo_lectura' => $hasta < time(),
       'tuvo_pago' => (bool)$p['pago_hasta'],
+      'plan_pago' => $p['plan_pago'] ?? null,
+      // baja pedida (no se renueva) y botón de arrepentimiento (hasta 10 días corridos desde el último pago)
+      'baja' => iso($p['baja'] ?? null),
+      'baja_codigo' => !empty($p['baja']) ? ultimoCodigo((int)$u['pareja_id'], 'baja') : null,
+      'arrepentimiento' => !empty($p['pago_fecha']) && strtotime($p['pago_fecha'] . ' UTC') > time() - 10 * 86400 && $p['pago_hasta'] && strtotime($p['pago_hasta'] . ' UTC') > time(),
+      'arrep_codigo' => ultimoCodigo((int)$u['pareja_id'], 'arrepentimiento', $p['pago_fecha'] ?? null),
     ];
   }
   return $out;
+}
+
+// Código de trámite del último pedido de baja / arrepentimiento (si es posterior a "desde")
+function ultimoCodigo(int $pid, string $tipo, ?string $desde = null): ?string {
+  $q = db()->prepare('SELECT codigo FROM solicitudes WHERE pareja_id = ? AND tipo = ? AND creado >= ? ORDER BY id DESC LIMIT 1');
+  $q->execute([$pid, $tipo, $desde ?: '2000-01-01']); return $q->fetchColumn() ?: null;
+}
+function nuevaSolicitud(array $u, string $tipo): string {
+  $abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; $c = ($tipo === 'baja' ? 'B-' : 'A-');
+  for ($i = 0; $i < 6; $i++) $c .= $abc[random_int(0, strlen($abc) - 1)];
+  db()->prepare('INSERT INTO solicitudes (pareja_id, usuario_id, tipo, codigo, creado) VALUES (?, ?, ?, ?, ?)')->execute([$u['pareja_id'], $u['id'], $tipo, $c, ahora()]);
+  return $c;
 }
 
 function esAdmin(array $u): bool {
@@ -538,6 +556,40 @@ try {
       if ($a = $q->fetch()) { @unlink(rutaArchivo((int)$p['id'], $a['id'], $a['tipo'])); db()->prepare('DELETE FROM archivos WHERE id = ?')->execute([$id]); }
       responder(['ok' => true]);
 
+    // ---------- Administrar mi suscripción (botón de baja y de arrepentimiento) ----------
+    case 'POST suscripcion_baja':
+      $u = requerirUsuario(); if (!$u['pareja_id']) error_('Todavía no tenés un espacio de pareja');
+      $p = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $p->execute([$u['pareja_id']]); $p = $p->fetch();
+      if (empty($p['baja'])) { db()->prepare('UPDATE parejas SET baja = ? WHERE id = ?')->execute([ahora(), $u['pareja_id']]); $cod = nuevaSolicitud($u, 'baja'); }
+      else $cod = ultimoCodigo((int)$u['pareja_id'], 'baja');
+      responder(['ok' => true, 'codigo' => $cod] + estado(usuarioActual()));
+
+    case 'POST suscripcion_reactivar':
+      $u = requerirUsuario(); if (!$u['pareja_id']) error_('Todavía no tenés un espacio de pareja');
+      db()->prepare('UPDATE parejas SET baja = NULL WHERE id = ?')->execute([$u['pareja_id']]);
+      db()->prepare("UPDATE solicitudes SET estado = 'cancelada' WHERE pareja_id = ? AND tipo = 'baja' AND estado = 'pendiente'")->execute([$u['pareja_id']]);
+      responder(['ok' => true] + estado(usuarioActual()));
+
+    case 'POST suscripcion_arrepentimiento':
+      $u = requerirUsuario(); if (!$u['pareja_id']) error_('Todavía no tenés un espacio de pareja');
+      $p = db()->prepare('SELECT * FROM parejas WHERE id = ?'); $p->execute([$u['pareja_id']]); $p = $p->fetch();
+      if (empty($p['pago_fecha']) || strtotime($p['pago_fecha'] . ' UTC') < time() - 10 * 86400) error_('Ya pasaron los 10 días desde el pago. Podés darte de baja para que no se renueve.');
+      $cod = ultimoCodigo((int)$u['pareja_id'], 'arrepentimiento', $p['pago_fecha']) ?: nuevaSolicitud($u, 'arrepentimiento');
+      if (empty($p['baja'])) { db()->prepare('UPDATE parejas SET baja = ? WHERE id = ?')->execute([ahora(), $u['pareja_id']]); nuevaSolicitud($u, 'baja'); }
+      responder(['ok' => true, 'codigo' => $cod] + estado(usuarioActual()));
+
+    case 'GET admin_solicitudes':
+      requerirAdmin();
+      $q = db()->query("SELECT s.id, s.tipo, s.codigo, s.estado, s.creado, p.nombre pareja, p.id pareja_id, u.email FROM solicitudes s
+        LEFT JOIN parejas p ON p.id = s.pareja_id LEFT JOIN usuarios u ON u.id = s.usuario_id ORDER BY s.id DESC LIMIT 100");
+      responder(['solicitudes' => array_map(fn($x) => ['creado' => iso($x['creado'])] + $x, $q->fetchAll())]);
+
+    case 'POST admin_solicitud':
+      requerirAdmin();
+      $in = entrada(); $est = in_array($in['estado'] ?? '', ['pendiente', 'resuelta', 'cancelada'], true) ? $in['estado'] : error_('Estado inválido');
+      db()->prepare('UPDATE solicitudes SET estado = ? WHERE id = ?')->execute([$est, (int)($in['id'] ?? 0)]);
+      responder(['ok' => true]);
+
     case 'GET admin_datos':
       requerirAdmin();
       $ps = db()->query('SELECT * FROM parejas ORDER BY creado DESC')->fetchAll();
@@ -619,7 +671,7 @@ try {
         $db->commit();
         responder(['ok' => true, 'invertido' => $d->invertido]);
       } else error_('Operación inválida');
-      db()->prepare('UPDATE parejas SET pago_hasta = ?, plan_pago = ? WHERE id = ?')->execute([$nuevo, $plan, $pid]);
+      db()->prepare('UPDATE parejas SET pago_hasta = ?, plan_pago = ?, pago_fecha = ?, baja = NULL WHERE id = ?')->execute([$nuevo, $plan, $nuevo ? ahora() : null, $pid]);
       db()->prepare("DELETE FROM notifs WHERE pareja_id = ? AND tipo IN ('prueba','vence')")->execute([$pid]);
       responder(['ok' => true]);
 

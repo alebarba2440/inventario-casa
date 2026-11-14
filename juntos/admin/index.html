@@ -55,6 +55,11 @@
   .prox{display:flex;flex-direction:column}
   .prox button{all:unset;cursor:pointer;display:flex;justify-content:space-between;gap:10px;padding:9px 2px;border-top:1px solid var(--borde);font-weight:700;font-size:.92rem}
   .prox button:first-child{border-top:0}
+  .sol .it{display:flex;align-items:center;gap:10px;padding:10px 2px;border-top:1px solid var(--borde)}.sol .it:first-child{border-top:0}
+  .sol .it .tx{flex:1;min-width:0;font-size:.9rem}.sol .it .tx b{display:block}.sol .it small{color:var(--gris)}
+  .sol .tg{font-size:.72rem;font-weight:900;padding:2px 8px;border-radius:4px 10px 4px 10px;background:#eee;white-space:nowrap}
+  .sol .tg.arrepentimiento{background:#FEE2E2;color:#B91C1C}.sol .tg.baja{background:#FFEDD5;color:#C2410C}
+  .sol .it.hecha{opacity:.5}
   .prox em{font-style:normal;color:#CA8A04;font-weight:800;white-space:nowrap}
   /* Cuentas */
   .barra-b{display:flex;flex-direction:column;gap:10px}
@@ -186,6 +191,7 @@
       <div class="card"><div class="barras" id="gAltas"></div><div class="ejes" id="gEjes"></div></div>
       <h2>Uso por sección</h2><div class="card sec" id="gSec"></div>
       <h2>Por vencer (7 días o menos)</h2><div class="card prox" id="gProx"></div>
+      <h2>Bajas y arrepentimientos</h2><div class="card sol" id="gSol"></div>
     </section>
     <!-- CUENTAS -->
     <section id="p-ctas" hidden style="display:flex;flex-direction:column;gap:10px">
@@ -309,6 +315,17 @@ async function inicio(){
     ['pMen','pAn'].forEach(id => $(id).addEventListener('input', ahorroTxt));
   } catch(e){ $('err').textContent = e.message; }
 }
+/* Pedidos de baja y de arrepentimiento (con su código de trámite). El de arrepentimiento hay que devolver la plata. */
+async function cargarSolicitudes(){
+  try {
+    const r = await api('admin_solicitudes'), L = r.solicitudes || [];
+    $('gSol').innerHTML = L.length ? L.map(x => `<div class="it${x.estado !== 'pendiente' ? ' hecha' : ''}"><span class="tg ${x.tipo}">${x.tipo === 'baja' ? 'Baja' : 'Arrepentimiento'}</span>
+      <div class="tx"><b>${esc(x.pareja || '—')} · ${esc(x.codigo)}</b><small>${esc(x.email || '')} · ${fecha(x.creado)} · ${x.estado}</small></div>
+      ${x.estado === 'pendiente' ? `<button class="btn" onclick="resolverSol(${x.id})">✓ Resuelta</button>` : ''}</div>`).join('')
+      : '<p style="margin:0;color:var(--gris)">Nadie pidió la baja todavía 🙌</p>';
+  } catch(e){ $('gSol').textContent = e.message; }
+}
+async function resolverSol(id){ try { await api('admin_solicitud', {id, estado:'resuelta'}); cargarSolicitudes(); toast('Marcada como resuelta'); } catch(e){ toast(e.message); } }
 async function cargar(aviso){
   $('bAct').classList.add('gira');
   try {
@@ -317,7 +334,7 @@ async function cargar(aviso){
       ...D.parejas.map(p => ({...p, tipo:'pareja', vence: p.estado !== 'vencida' && p.dias <= 7})),
       ...D.sin_pareja.map((u, i) => ({tipo:'suelto', id:'u' + i, estado:'suelto', nombre:u.nombre || u.email, creado:u.creado, ultimo_ingreso:u.ultimo_ingreso, miembros:[u]}))
     ];
-    dashboard(); listar(); ver('vPanel'); if (aviso) toast('Datos actualizados');
+    dashboard(); listar(); ver('vPanel'); cargarSolicitudes(); if (aviso) toast('Datos actualizados');
   } catch(e){ $('err').textContent = e.message; }
   $('bAct').classList.remove('gira');
 }

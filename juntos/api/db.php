@@ -2,7 +2,7 @@
 // Conexión a la base y creación automática de las tablas de JuntOS.
 const GOOGLE_CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const DIAS_PRUEBA = 30;
-const VERSION_ESQUEMA = 10;
+const VERSION_ESQUEMA = 11;
 
 function config(): array {
   static $c = null;
@@ -179,6 +179,22 @@ function esquema(PDO $db): void {
       clave VARCHAR(24) NOT NULL,
       PRIMARY KEY (usuario_id, clave),
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+  }
+  if ($v < 11) {
+    // Suscripción: cuándo pagaron por última vez (botón de arrepentimiento: 10 días) y si pidieron la baja
+    $c = $db->query("SHOW COLUMNS FROM parejas LIKE 'pago_fecha'")->fetch();
+    if (!$c) $db->exec("ALTER TABLE parejas ADD COLUMN pago_fecha DATETIME NULL, ADD COLUMN baja DATETIME NULL");
+    // Pedidos de baja / arrepentimiento con su código de trámite (Res. 316/2018 y 424/2020)
+    $db->exec("CREATE TABLE IF NOT EXISTS solicitudes (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      pareja_id INT NOT NULL,
+      usuario_id INT NOT NULL,
+      tipo VARCHAR(20) NOT NULL,
+      codigo VARCHAR(12) NOT NULL,
+      estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+      creado DATETIME NOT NULL,
+      INDEX (pareja_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
   }
   $db->prepare("REPLACE INTO meta (clave, valor) VALUES ('version', ?)")->execute([VERSION_ESQUEMA]);
