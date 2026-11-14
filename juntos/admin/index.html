@@ -8,8 +8,9 @@
 <link rel="icon" type="image/png" href="favicon-admin.png?v=1">
 <link rel="apple-touch-icon" href="apple-touch-admin.png?v=1">
 <title>JuntOS · Panel</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *{box-sizing:border-box}
@@ -269,8 +270,8 @@
 
 <dialog id="dlg"><p id="dTxt"></p><div class="fila"><button class="btn sec" style="color:var(--tinta);border-color:var(--borde)" onclick="dlg.close()">Cancelar</button><button class="btn" id="dOk">Confirmar</button></div></dialog>
 
-<script src="../app/coaching-datos.js"></script>
-<script src="../app/intimidad-datos.js"></script>
+<script src="../app/coaching-datos.js" defer></script>
+<script src="../app/intimidad-datos.js" defer></script>
 <script>
 const CLIENT_ID = '457912406995-23uq0tpoet60emrrgclsdeansh8cq3il.apps.googleusercontent.com';
 const $ = id => document.getElementById(id);
@@ -308,8 +309,8 @@ async function inicio(){
     if (!yo.usuario) { ver('vIngresar'); botonGoogle(); return; }
     if (!yo.usuario.admin) { $('saMail').textContent = yo.usuario.email; ver('vSinAcceso'); return; }
     YO = yo.usuario; $('yoMail').textContent = YO.email;
-    await cargarPrecios();
-    await cargar();
+    mostrarGuardado();   // lo de la última vez, al instante; enseguida se actualiza
+    await Promise.all([cargarPrecios(), cargar()]);
     if (!$('p-msgs').hidden) cargarMensajes();
     if (!$('p-cont').hidden) verContenido();
     ['pMen','pAn'].forEach(id => $(id).addEventListener('input', ahorroTxt));
@@ -326,15 +327,25 @@ async function cargarSolicitudes(){
   } catch(e){ $('gSol').textContent = e.message; }
 }
 async function resolverSol(id){ try { await api('admin_solicitud', {id, estado:'resuelta'}); cargarSolicitudes(); toast('Marcada como resuelta'); } catch(e){ toast(e.message); } }
+const K_ADM = 'adm_datos_v1';
+function prepararCuentas(){
+  D.cuentas = [
+    ...D.parejas.map(p => ({...p, tipo:'pareja', vence: p.estado !== 'vencida' && p.dias <= 7})),
+    ...D.sin_pareja.map((u, i) => ({tipo:'suelto', id:'u' + i, estado:'suelto', nombre:u.nombre || u.email, creado:u.creado, ultimo_ingreso:u.ultimo_ingreso, miembros:[u]}))
+  ];
+}
+function mostrarGuardado(){
+  try { const g = JSON.parse(localStorage.getItem(K_ADM) || 'null'); if (!g || !g.parejas) return;
+    D = g; prepararCuentas(); dashboard(); listar(); ver('vPanel'); } catch(e){}
+}
 async function cargar(aviso){
   $('bAct').classList.add('gira');
+  cargarSolicitudes();   // en paralelo
   try {
     D = await api('admin_datos');
-    D.cuentas = [
-      ...D.parejas.map(p => ({...p, tipo:'pareja', vence: p.estado !== 'vencida' && p.dias <= 7})),
-      ...D.sin_pareja.map((u, i) => ({tipo:'suelto', id:'u' + i, estado:'suelto', nombre:u.nombre || u.email, creado:u.creado, ultimo_ingreso:u.ultimo_ingreso, miembros:[u]}))
-    ];
-    dashboard(); listar(); ver('vPanel'); cargarSolicitudes(); if (aviso) toast('Datos actualizados');
+    try { localStorage.setItem(K_ADM, JSON.stringify(D)); } catch(e){}
+    prepararCuentas();
+    dashboard(); listar(); ver('vPanel'); if (aviso) toast('Datos actualizados');
   } catch(e){ $('err').textContent = e.message; }
   $('bAct').classList.remove('gira');
 }
@@ -708,7 +719,7 @@ function botonGoogle(){
     try { await api('login', {credencial: r.credential}); inicio(); } catch(e){ $('err').textContent = e.message; } }}); gIniciado = true; }
   google.accounts.id.renderButton($('gbtn'), {theme:'outline', size:'large', shape:'pill', text:'continue_with', locale:'es'});
 }
-async function salir(){ try { await api('salir', {}); } catch(e){} window.google?.accounts?.id?.disableAutoSelect?.(); ver('vIngresar'); botonGoogle(); }
+async function salir(){ try { localStorage.removeItem(K_ADM); } catch(e){} try { await api('salir', {}); } catch(e){} window.google?.accounts?.id?.disableAutoSelect?.(); ver('vIngresar'); botonGoogle(); }
 
 
 try { const t = sessionStorage.getItem('adm_tab'); if (t) pestana(t); } catch(e){}

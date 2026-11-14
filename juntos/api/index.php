@@ -608,10 +608,14 @@ try {
       $res['activos_hoy'] = count(array_filter($us, fn($x) => $x['ultimo_ingreso'] && strtotime($x['ultimo_ingreso'] . ' UTC') > $t - 86400));
       $res['por_vencer'] = 0; $res['completas'] = 0;
       $res['con_avisos'] = (int)db()->query('SELECT COUNT(DISTINCT usuario_id) FROM push_subs')->fetchColumn();
-      $porCol = db()->query("SELECT IF(col = 'ahorros', CONCAT('ahorros/', id), col) k, COUNT(*) n FROM docs WHERE data IS NOT NULL GROUP BY k ORDER BY n DESC")->fetchAll(PDO::FETCH_KEY_PAIR);   // en 'ahorros' cada documento es una sección distinta
+      // una sola pasada por la tabla de registros (antes eran dos): por sección y por pareja
+      $porCol = []; $regPar = [];
+      foreach (db()->query("SELECT pareja_id, IF(col = 'ahorros', CONCAT('ahorros/', id), col) k, COUNT(*) n FROM docs WHERE data IS NOT NULL GROUP BY pareja_id, k")->fetchAll() as $r) {   // en 'ahorros' cada documento es una sección distinta
+        $porCol[$r['k']] = ($porCol[$r['k']] ?? 0) + (int)$r['n']; $regPar[$r['pareja_id']] = ($regPar[$r['pareja_id']] ?? 0) + (int)$r['n'];
+      }
+      arsort($porCol);
       $res['registros'] = (int)array_sum($porCol);
-      $res['por_seccion'] = array_map('intval', $porCol);
-      $regPar = db()->query('SELECT pareja_id, COUNT(*) n FROM docs WHERE data IS NOT NULL GROUP BY pareja_id')->fetchAll(PDO::FETCH_KEY_PAIR);
+      $res['por_seccion'] = $porCol;
       $avisosPar = db()->query('SELECT u.pareja_id, COUNT(*) n FROM push_subs s JOIN usuarios u ON u.id = s.usuario_id WHERE u.pareja_id IS NOT NULL GROUP BY u.pareja_id')->fetchAll(PDO::FETCH_KEY_PAIR);
       // altas por día (últimos 30 días, hora de Argentina)
       $tzA = new DateTimeZone('America/Argentina/Buenos_Aires'); $dias = [];
