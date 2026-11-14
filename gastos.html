@@ -147,6 +147,13 @@
   /* tendencia */
   .filtros{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
   .filtros::-webkit-scrollbar{display:none}
+  /* flechitas para correr las categorías (en PC no se puede deslizar con el dedo) */
+  .filtros-w{position:relative;display:flex;align-items:center;gap:4px}
+  .filtros-w .filtros{flex:1;min-width:0;scroll-behavior:smooth}
+  .fl-b{flex-shrink:0;width:30px;height:30px;border-radius:4px 12px 4px 12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;padding:0;margin-bottom:4px;transition:opacity .15s}
+  .fl-b i{font-size:1rem}
+  .fl-b:disabled{opacity:.3;cursor:default}
+  .filtros-w.sin-scroll .fl-b{display:none}
   .chip{flex-shrink:0;border:1px solid var(--border2);background:var(--surface);color:var(--text);border-radius:999px;padding:7px 12px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .chart.tend{height:210px;margin-top:8px}
@@ -187,7 +194,7 @@
   <div class="periodo">
     <select id="mes" class="sel" aria-label="Mes"></select>
     <select id="anio" class="sel anio" aria-label="Año"></select>
-    <button class="icon-btn" onclick="dibujarCats();abrir('opts')" aria-label="Opciones"><i class="ti ti-dots-vertical"></i></button>
+    <button class="icon-btn" onclick="dibujarCats();document.getElementById('lmTxt').textContent='Limpiar '+selMes.value+' '+selAnio.value;abrir('opts')" aria-label="Opciones"><i class="ti ti-dots-vertical"></i></button>
   </div>
 
   <section class="acc open" id="accGas">
@@ -231,7 +238,7 @@
     <h3 class="sub-t" id="compT"></h3>
     <div id="compTabla"></div>
     <h3 class="sub-t">Tendencia del año</h3>
-    <div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
+    <div class="filtros-w" id="filtrosW"><button class="fl-b izq" type="button" aria-label="Ver categorías anteriores" onclick="moverFiltros(-1)"><i class="ti ti-chevron-left"></i></button><div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div><button class="fl-b der" type="button" aria-label="Ver más categorías" onclick="moverFiltros(1)"><i class="ti ti-chevron-right"></i></button></div>
     <div class="chart tend"><canvas id="tendencia"></canvas></div>
     </div>
   </section>
@@ -256,6 +263,7 @@
         <input type="file" id="fileIn" accept="application/json,.json" style="display:none">
       </div>
     </section>
+    <button class="btn danger" onclick="limpiarMes()"><i class="ti ti-calendar-x"></i> <span id="lmTxt">Limpiar mes</span></button>
     <button class="btn danger" onclick="limpiarTodo()"><i class="ti ti-trash"></i> Limpiar todo</button>
     <button class="btn ghost" onclick="cerrarOpts()">Cerrar</button>
   </div>
@@ -494,6 +502,7 @@ function tendencia(){
   if(tendCat!=='todas'&&!cats.includes(tendCat))tendCat='todas';
   document.getElementById('filtros').innerHTML=[['todas','Todas']].concat(cats.map(id=>[id,iconCat(id)+' '+nombreCat(id)]))
     .map(([id,t])=>`<button class="chip${id===tendCat?' on':''}" aria-pressed="${id===tendCat}" ${id!=='todas'&&id===tendCat?`style="background:${colorCat(id)};border-color:${colorCat(id)}"`:''} onclick="setTendCat('${id}')">${esc(t)}</button>`).join('');
+  requestAnimationFrame(()=>{verChipActivo();flechasFiltros();});
   const vals=MESES.map(m=>{const d=datos[`${m}-${y}`];if(!d||!(d.gastos||[]).length)return null;
     return (d.gastos||[]).reduce((a,g)=>a+((tendCat==='todas'||(g.categoria||'varios')===tendCat)?(+g.importe||0):0),0);});
   const con=vals.filter(v=>v!==null),prom=con.length?con.reduce((a,b)=>a+b,0)/con.length:null;
@@ -504,14 +513,25 @@ function tendencia(){
   const ds=[{label:tendCat==='todas'?'Total':nombreCat(tendCat),data:vals,borderColor:lc,backgroundColor:lf,fill:true,tension:.3,spanGaps:true,borderWidth:2.5,
       pointRadius:vals.map((_,i)=>i===sel?6:3),pointBackgroundColor:vals.map((_,i)=>i===sel?lc:'#fff'),pointBorderColor:lc,pointBorderWidth:2},
     {label:'Promedio',data:MESES.map(()=>prom),borderColor:txt2,borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false}];
-  if(tendChart){tendChart.data.datasets=ds;tendChart.update();return;}
+  const tope=con.length?Math.max(...con)*2:undefined;   // así la línea queda más o menos a la mitad del gráfico
+  if(tendChart){tendChart.data.datasets=ds;tendChart.options.scales.y.suggestedMax=tope;tendChart.update();return;}
   tendChart=new Chart(document.getElementById('tendencia'),{type:'line',data:{labels:MESES.map(m=>m.slice(0,3)),datasets:ds},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:700,easing:'easeOutQuart'},interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y==null?'':` ${c.dataset.label}: ${fmt(c.parsed.y)}`}}},
       scales:{x:{grid:{display:false},ticks:{color:txt2,font:{family:'Nunito',size:10,weight:'700'}}},
-        y:{beginAtZero:true,grid:{color:'rgba(128,128,128,.12)'},ticks:{color:txt2,font:{family:'Nunito',size:10},callback:v=>v>=1e6?(v/1e6).toLocaleString('es-AR')+' M':v>=1e3?Math.round(v/1e3)+' k':v}}}}});
+        y:{beginAtZero:true,suggestedMax:tope,grid:{color:'rgba(128,128,128,.12)'},ticks:{color:txt2,font:{family:'Nunito',size:10},callback:v=>v>=1e6?(v/1e6).toLocaleString('es-AR')+' M':v>=1e3?Math.round(v/1e3)+' k':v}}}}});
 }
 function setTendCat(id){tendCat=id;wr('tend-cat',id);tendencia();}
+/* flechitas de las categorías: corren de a "una pantalla" y se apagan en los extremos */
+function moverFiltros(dir){const f=document.getElementById('filtros');f.scrollBy({left:dir*f.clientWidth*.7,behavior:'smooth'});}
+function flechasFiltros(){const f=document.getElementById('filtros'),w=document.getElementById('filtrosW');if(!f||!w)return;
+  const max=f.scrollWidth-f.clientWidth;w.classList.toggle('sin-scroll',max<=2);
+  w.querySelector('.izq').disabled=f.scrollLeft<=2;w.querySelector('.der').disabled=f.scrollLeft>=max-2;}
+document.getElementById('filtros').addEventListener('scroll',flechasFiltros,{passive:true});
+addEventListener('resize',flechasFiltros);
+if(window.ResizeObserver)new ResizeObserver(flechasFiltros).observe(document.getElementById('filtros'));   // cuando aparece la sección de gráficos
+/* la categoría elegida siempre a la vista */
+function verChipActivo(){const c=document.querySelector('#filtros .chip.on');if(c)c.scrollIntoView({block:'nearest',inline:'nearest'});}
 
 /* ---------- gráfico ---------- */
 let chart=null;
@@ -604,6 +624,8 @@ function abrirEmo(id){emoPara=id;document.getElementById('emoGrid').innerHTML=EM
   document.getElementById('emoIn').value='';abrir('emo');}
 function elegirEmoji(e){e=(e||'').trim();if(!e)return;const c=catDe(emoPara);if(c){c.icon=[...e].slice(0,2).join('');guardarCats();dibujarCats();}cerrar('emo');}
 
+function limpiarMes(){const p=periodo(),n=`${selMes.value} ${selAnio.value}`;cerrar('opts');
+  confirmar(`¿Eliminar los gastos e ingresos de ${n}? No se pueden recuperar.`,()=>{delete datos[p];guardar();render();},'Limpiar mes',true);}
 function limpiarTodo(){cerrar('opts');confirmar('¿Eliminar TODOS los gastos? No se pueden recuperar (descargá un backup antes si querés).',()=>{datos={};guardar();render();},'Atención',true);}
 
 selMes.addEventListener('change',render);selAnio.addEventListener('change',render);
