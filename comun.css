@@ -105,3 +105,12 @@ input[type="search"]::placeholder,#searchInput::placeholder{color:#b8b8b0;opacit
 :where(.card,.acc,.mes,.car,.reg,.anio,.trip,.graf,.doc,.inv-item,.alerts-section){box-shadow:var(--sombra-caja)}
 /* los recuadros que van dentro de otro no llevan sombra (si no, se ve doble) */
 :where(.card,.acc,.mes,.car,.reg,.anio,.trip) :where(.card,.acc,.mes,.reg,.graf,.doc){box-shadow:none}
+
+/* Botones con el color elegido: degradé del color hacia uno más oscuro a la derecha.
+   Solo pone la "imagen" del fondo (el color base lo sigue poniendo cada página); :where() deja el mismo peso que la regla original. */
+:root{--grad-btn:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 68%,#000))}
+.btn:where(:not(.ghost,.danger,.sec,.rem,.add,.secundario)),.btn.pri,
+.seg:not(.desliz) button.on,.tabs:not(.desliz) button.on,.desliz>.sw-knob,.chip.on,.filtros button.on,.pts button.on,.dmon button.on,.mini,
+.confirm-ok.add,.yo-acc .perfil-b{background-image:var(--grad-btn)}
+/* los de las ventanas que arma la app (perfil, mensajes, suscripción) */
+#jxPerfil .ok,#jxMsg .ok,#jxSus .si{background-image:var(--grad-btn) !important}
