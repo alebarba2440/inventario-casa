@@ -31,6 +31,8 @@
 
   /* ---------- Bienvenida: "¿ella o él?" y nombre o apodo (solo en JuntOS) ----------
      Aparece sola la primera vez en el inicio; después se puede abrir con abrirPerfil(). */
+  // Términos y condiciones: en la web están en la raíz (juntosapp.com.ar/terminos.html); la app vive en /app/
+  const URL_TYC = /\/app\//.test(location.pathname) ? '../terminos.html' : 'juntos/terminos.html';
   window.abrirPerfil = function (sola) {   // sola = true cuando aparece automáticamente (perfil sin completar)
     const J = window.JUNTOS; if (!J || !window.guardarPerfilYo || document.getElementById('jxPerfil')) return;
     if (!document.getElementById('jxPerfilCss')) {
@@ -48,21 +50,26 @@
         + '#jxPerfil input[type=date]{min-height:48px;-webkit-appearance:none;appearance:none}'
         + '#jxPerfil .cs{display:grid;grid-template-columns:repeat(6,1fr);gap:9px}#jxPerfil .c{aspect-ratio:1;border-radius:50%;border:3px solid var(--surface,#fff);box-shadow:0 0 0 1px rgba(0,0,0,.12);cursor:pointer;padding:0;transition:transform .12s}'
         + '#jxPerfil .c.on{box-shadow:0 0 0 3px var(--text,#1a1a1a);transform:scale(1.08)}#jxPerfil .c:active{transform:scale(.9)}'
-        + '#jxPerfil .ok{font:inherit;font-weight:900;font-size:1.05rem;padding:14px;border:none;border-radius:14px;background:var(--accent,#1D9E75);color:#fff;cursor:pointer}#jxPerfil .ok:disabled{opacity:.4;cursor:default}';
+        + '#jxPerfil .ok{font:inherit;font-weight:900;font-size:1.05rem;padding:14px;border:none;border-radius:14px;background:var(--accent,#1D9E75);color:#fff;cursor:pointer}#jxPerfil .ok:disabled{opacity:.4;cursor:default}'
+        + '#jxPerfil .tyc{display:flex;flex-direction:row;align-items:flex-start;gap:10px;padding:12px;border-radius:6px 18px 6px 18px;background:var(--surface2,#f6f6f6);border:1px solid var(--border2,#ddd);cursor:pointer;font-size:.88rem;font-weight:700;line-height:1.35;color:inherit;letter-spacing:0}'
+        + '#jxPerfil .tyc input{appearance:none;-webkit-appearance:none;flex-shrink:0;width:24px;height:24px;margin:0;padding:0;border-radius:5px 10px 5px 10px;border:2px solid var(--border2,#bbb);background:var(--surface,#fff);display:grid;place-items:center;cursor:pointer;transition:background .15s,border-color .15s}'
+        + '#jxPerfil .tyc input:checked{background:var(--accent,#1D9E75);border-color:var(--accent,#1D9E75)}#jxPerfil .tyc input:checked::after{content:"";width:6px;height:11px;border:solid #fff;border-width:0 3px 3px 0;transform:translateY(-1px) rotate(45deg)}'
+        + '#jxPerfil .tyc a{color:var(--accent-dark,#0F6E56);font-weight:900}#jxPerfil .tyc small{display:block;margin-top:3px;font-size:.76rem;font-weight:600;color:var(--text2,#666)}';
       document.head.appendChild(st);
     }
     const yo = J.miSlot, nom = (J.apodos && yo && J.apodos[yo]) || (J.usuario && String(J.usuario.nombre || '').split(' ')[0]) || '';
     let gen = J.miGenero || null;
     const d = document.createElement('div'); d.id = 'jxPerfil';
-    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">' + (sola !== true ? 'Editar perfil' : J.miGenero ? 'Completá tu perfil 🎂' : '¡Bienvenido/a a JuntOS! 💞') + '</h2>' + (sola !== true ? '' : '<p>' + (J.miGenero ? 'Nos falta tu cumpleaños.' : 'Contanos cómo querés aparecer en la app.') + '</p>')
+    d.innerHTML = '<div class="bx" role="dialog" aria-modal="true" aria-labelledby="jxPT"><h2 id="jxPT">' + (sola !== true ? 'Editar perfil' : !J.miGenero ? '¡Bienvenido/a a JuntOS! 💞' : !J.miCumple ? 'Completá tu perfil 🎂' : 'Términos actualizados') + '</h2>' + (sola !== true ? '' : '<p>' + (!J.miGenero ? 'Contanos cómo querés aparecer en la app.' : !J.miCumple ? 'Nos falta tu cumpleaños.' : 'Antes de seguir, revisá y aceptá los términos.') + '</p>')
       + '<div class="gs"><button type="button" class="g" data-g="f"><img src="' + window.personaje('julieta').img + '" alt="">Ella</button>'
       + '<button type="button" class="g" data-g="m"><img src="' + window.personaje('alejandro').img + '" alt="">Él</button></div>'
       + '<label>TU NOMBRE O APODO<input id="jxPN" maxlength="30" autocomplete="nickname" placeholder="Ej: Juli"></label>'
       + '<label>TU CUMPLEAÑOS<input id="jxPC" type="date" autocomplete="bday"></label><small class="nt" id="jxPCn" hidden></small>'
       + '<div class="lb">ELEGÍ TU COLOR FAVORITO<span class="cs" id="jxPCol"></span></div><small class="nt">Es el color de la app en tu celu. Lo podés cambiar cuando quieras en Ajustes.</small>'
+      + (J.miTerminos ? '' : '<label class="tyc"><input type="checkbox" id="jxPT1"><span>Leí y acepto los <a href="' + URL_TYC + '" target="_blank" rel="noopener">Términos y condiciones y la Política de privacidad</a></span></label>')
       + '<button type="button" class="ok" id="jxPOk">Listo</button></div>';
     document.body.appendChild(d);
-    const inp = d.querySelector('#jxPN'), ok = d.querySelector('#jxPOk'), cum = d.querySelector('#jxPC'), nota = d.querySelector('#jxPCn');
+    const inp = d.querySelector('#jxPN'), ok = d.querySelector('#jxPOk'), cum = d.querySelector('#jxPC'), nota = d.querySelector('#jxPCn'), tyc = d.querySelector('#jxPT1');
     inp.value = nom; cum.value = J.miCumple || '';
     // Color favorito: se ve al instante y se guarda en los ajustes (cfg_v2, el mismo que usa Ajustes del inicio)
     const COLS = ['#65A30D','#16A34A','#1D9E75','#0D9488','#0891B2','#0EA5E9','#2563EB','#6366F1','#7C3AED','#9333EA','#EC4899','#E11D48','#DC2626','#EA580C','#F59E0B','#CA8A04','#64748B','#78716C'];
@@ -78,12 +85,13 @@
     const hoy = new Date().toISOString().slice(0, 10); cum.max = hoy; cum.min = '1900-01-01';
     const cumOk = () => /^\d{4}-\d{2}-\d{2}$/.test(cum.value) && cum.value <= hoy && cum.value >= '1900-01-01';
     // Sin "ella/él", nombre y cumpleaños no deja avanzar
-    const pintar = () => { d.querySelectorAll('.g').forEach(b => b.classList.toggle('on', b.dataset.g === gen)); ok.disabled = !gen || !inp.value.trim() || !cumOk();
+    const pintar = () => { d.querySelectorAll('.g').forEach(b => b.classList.toggle('on', b.dataset.g === gen)); ok.disabled = !gen || !inp.value.trim() || !cumOk() || (tyc && !tyc.checked);
       nota.classList.toggle('err', !!cum.value && !cumOk()); nota.textContent = cum.value && !cumOk() ? 'Revisá la fecha de tu cumpleaños' : ''; nota.hidden = !nota.textContent; };
     d.querySelectorAll('.g').forEach(b => b.onclick = () => { gen = b.dataset.g; pintar(); try { window.sonido && sonido('aceptar'); } catch (e) {} });
+    if (tyc) tyc.onchange = () => { pintar(); try { window.sonido && sonido('tick'); } catch (e) {} };
     inp.oninput = pintar; cum.oninput = pintar; cum.onchange = pintar; inp.onkeydown = e => { if (e.key === 'Enter' && !ok.disabled) ok.click(); };
     ok.onclick = () => {
-      window.guardarPerfilYo({ genero: gen, apodo: inp.value.trim(), cumple: cum.value });
+      window.guardarPerfilYo({ genero: gen, apodo: inp.value.trim(), cumple: cum.value, terminos: !!(tyc && tyc.checked) });
       // guardar el color (si está la página de inicio, por su propio cfg para que Ajustes no lo pise)
       try {
         const o = (typeof cfg === 'object' && cfg) ? cfg : JSON.parse(localStorage.getItem('cfg_v2') || '{}');
@@ -100,7 +108,7 @@
   function revisarBienvenida() {
     const J = window.JUNTOS;
     if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', revisarBienvenida, { once: true }); return; }
-    if (!(J && J.perfilListo && J.miSlot && (!J.miGenero || !J.miCumple) && document.getElementById('grid'))) return;
+    if (!(J && J.perfilListo && J.miSlot && (!J.miGenero || !J.miCumple || !J.miTerminos) && document.getElementById('grid'))) return;
     if (document.getElementById('intro')) { setTimeout(revisarBienvenida, 700); return; }   // después de la animación de inicio
     window.abrirPerfil(true);
   }

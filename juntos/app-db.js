@@ -60,6 +60,7 @@
   }
   var servidorOk = false;
   // Mi nombre/apodo y si soy "él" o "ella" (se guardan en el perfil compartido de la pareja, por mail)
+  var TERMINOS_VERSION = 1;   // subirla si cambian los términos de forma importante: se vuelven a pedir
   function guardarPerfilYo(o) {
     var mail = YO && YO.usuario && YO.usuario.email; if (!mail) return;
     var c = {};
@@ -67,6 +68,8 @@
     if (o.genero === 'f' || o.genero === 'm') { c.generos = {}; c.generos[mail] = o.genero; }
     var cumple = /^\d{4}-\d{2}-\d{2}$/.test(o.cumple || '') ? o.cumple : (perfil().cumples || {})[mail];
     if (o.cumple && cumple === o.cumple) { c.cumples = {}; c.cumples[mail] = cumple; }
+    // aceptación de Términos y condiciones: quién, qué versión y cuándo (queda guardado como constancia)
+    if (o.terminos) { c.terminos = {}; c.terminos[mail] = { v: TERMINOS_VERSION, fecha: new Date().toISOString() }; }
     if (Object.keys(c).length) db.collection('juntos').doc('pareja').set(c, { merge: true });
     // El cumple queda agendado en el Calendario, todos los años (un solo evento por persona: si cambia la fecha o el apodo, se actualiza)
     if (cumple && (o.cumple || o.apodo !== undefined)) {
@@ -105,7 +108,8 @@
       apodos: apodos,   // nombre o apodo elegido en la app (manda sobre cualquier otro nombre)
       generos: { j: (ms[0] && gn[ms[0].email]) || null, a: (ms[1] && gn[ms[1].email]) || null },
       miGenero: (mail && gn[mail]) || null,
-      miCumple: (mail && (pf.cumples || {})[mail]) || null,   // fecha de cumpleaños (AAAA-MM-DD)
+      miCumple: (mail && (pf.cumples || {})[mail]) || null,
+      miTerminos: !!(mail && (pf.terminos || {})[mail] && (pf.terminos || {})[mail].v >= TERMINOS_VERSION),   // ya aceptó los términos vigentes   // fecha de cumpleaños (AAAA-MM-DD)
       miEdad: edad(mail && (pf.cumples || {})[mail]),
       perfilListo: !!servidorOk,   // ya llegó lo del servidor (para no preguntar de más con datos viejos)
       fotos: (ms[0] || ms[1]) ? { j: (ms[0] && ms[0].foto) || '', a: (ms[1] && ms[1].foto) || '' } : null,
@@ -678,7 +682,7 @@
     var esperar = function () {
       var intro = document.getElementById('intro'), J = window.JUNTOS || {};
       // en el inicio, si a la persona le falta completar el perfil, primero sale esa ventana y después el mensaje
-      var faltaPerfil = document.getElementById('grid') && (!J.perfilListo || (J.miSlot && (!J.miGenero || !J.miCumple))) && Date.now() - t0 < 20000;
+      var faltaPerfil = document.getElementById('grid') && (!J.perfilListo || (J.miSlot && (!J.miGenero || !J.miCumple || !J.miTerminos))) && Date.now() - t0 < 20000;
       var ocupado = !document.body || document.getElementById('jxSus') || document.getElementById('jxPerfil') || faltaPerfil ||   // primero que completen su perfil
         (intro && document.body.contains(intro) && getComputedStyle(intro).display !== 'none' && getComputedStyle(intro).visibility !== 'hidden');
       if (ocupado) return setTimeout(esperar, 400);
