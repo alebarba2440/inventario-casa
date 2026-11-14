@@ -415,6 +415,7 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     <div class="block"><h3><i class="ti ti-heart"></i> <span id="ctaParNom">Pareja</span></h3><div id="ctaPar"></div></div>
     <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div></div>
     <a class="cta-b" id="ctaAdmin" href="../admin/" hidden><i class="ti ti-chart-bar"></i> Panel de administración</a>
+    <a class="cta-b" id="ctaTyc" href="../terminos.html"><i class="ti ti-file-text"></i> Términos y privacidad</a>
     <button class="cta-b salir" onclick="salirCuenta()"><i class="ti ti-logout"></i> Cerrar sesión</button>
   </div>
 </div>
@@ -768,5 +769,6 @@ addEventListener('resize',llenarPantalla);addEventListener('load',llenarPantalla
 if(document.fonts)document.fonts.ready.then(llenarPantalla);
 document.querySelectorAll('#grid img').forEach(im=>{if(!im.complete)im.addEventListener('load',llenarPantalla,{once:true});});
 </script>
+<script>/* en la versión de GitHub Pages los términos están en juntos/ */(function(){var a=document.getElementById('ctaTyc');if(a&&!/\/app\//.test(location.pathname))a.href='juntos/terminos.html';})();</script>
 </body>
 </html>
