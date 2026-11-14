@@ -64,6 +64,17 @@
   .cta-cod{font-size:1.7rem;font-weight:900;letter-spacing:.3em;text-align:center;background:var(--accent-light);color:var(--accent);border-radius:12px;padding:10px;margin:8px 0}
   .cta-plan{border-radius:12px;padding:12px;text-align:center;background:var(--surface2);line-height:1.4}
   /* Administrar mi suscripción (botón de baja y de arrepentimiento) */
+  .sus-comprar{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px;padding:13px;font-weight:900;font-size:1rem;border-radius:6px 20px 6px 20px}
+  .sus-comprar[hidden]{display:none}
+  /* franja del inicio: solo en los últimos 7 días de prueba o con el período vencido */
+  .franja-sus{display:flex;align-items:center;gap:10px;width:100%;margin:0 0 14px;padding:11px 14px;border:0;border-radius:6px 20px 6px 20px;cursor:pointer;
+    font:inherit;font-weight:800;font-size:.92rem;color:#fff;text-align:left;background:var(--accent) var(--grad-btn,linear-gradient(90deg,var(--accent),var(--accent-dark)));box-shadow:0 8px 18px -10px var(--accent)}
+  .franja-sus[hidden]{display:none}
+  .franja-sus .ic{font-size:1.25rem}
+  .franja-sus .tx{flex:1;min-width:0;line-height:1.25}
+  .franja-sus .tx small{display:block;font-weight:700;opacity:.9;font-size:.78rem}
+  .franja-sus .fs-go{flex-shrink:0;background:rgba(255,255,255,.22);padding:6px 11px;border-radius:4px 12px 4px 12px;font-weight:900;font-size:.85rem}
+  .franja-sus:active{transform:scale(.98)}
   .sus-acc{margin-top:10px;border:1px solid var(--border2);border-radius:6px 20px 6px 20px;background:var(--surface);overflow:hidden}
   .sus-h{display:flex;align-items:center;gap:8px;width:100%;padding:12px 14px;border:0;background:none;font:inherit;font-weight:800;color:var(--text);cursor:pointer;text-align:left}
   .sus-h .chev{margin-left:auto;transition:transform .2s}.sus-acc.open .chev{transform:rotate(180deg)}
@@ -356,6 +367,7 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
       if(a&&b)t.style.fontSize=(parseFloat(getComputedStyle(t).fontSize)*b/a)+'px';}
     window.igualarMarca=function(){};/* desactivado: logo y frase con alto fijo = alto de los botones (44px) */})();
   </script>
+  <button class="franja-sus" id="franjaSus" onclick="if(window.jxSuscripcion)jxSuscripcion('comprar')" hidden></button>
   <nav class="grid antes" id="grid">
     <a class="card" href="inventario.html" data-k="inventario">
       <div class="pic"><img src="img/inventario.webp?v=2" alt="" width="520" height="513"></div>
@@ -423,6 +435,7 @@ mariposas(){for(let i=0;i<7;i++){const c=P(['#DB2777','#7C3AED','#F59E0B','#0284
     <div class="cta-yo" id="ctaYo"></div>
     <div class="block"><h3><i class="ti ti-heart"></i> <span id="ctaParNom">Pareja</span></h3><div id="ctaPar"></div></div>
     <div class="block"><h3><i class="ti ti-calendar"></i> Plan</h3><div class="cta-plan" id="ctaPlan"></div>
+      <button class="btn pri sus-comprar" id="susComprar" onclick="comprarSus()" hidden></button>
       <div class="sus-acc" id="susAcc"><button class="sus-h" onclick="this.parentElement.classList.toggle('open')" aria-expanded="false"><i class="ti ti-receipt"></i> Administrar mi suscripción<i class="ti ti-chevron-down chev"></i></button>
         <div class="sus-b" id="susB"></div></div></div>
     <a class="cta-b" id="ctaAdmin" href="../admin/" hidden><i class="ti ti-chart-bar"></i> Panel de administración</a>
@@ -605,7 +618,15 @@ function openCuenta(){const J=window.JUNTOS||{},u=J.usuario||{},p=J.pareja;
   pintarSuscripcion();
   document.getElementById('cuentaOverlay').classList.add('open');}
 /* ---------- Administrar mi suscripción: botón de baja (Res. 316/2018) y de arrepentimiento (Ley 24.240 / Res. 424/2020) ---------- */
-function pintarSuscripcion(){const p=(window.JUNTOS||{}).pareja,b=document.getElementById('susB'),acc=document.getElementById('susAcc');
+function pintarFranjaSus(){const p=(window.JUNTOS||{}).pareja,f=document.getElementById('franjaSus');if(!f)return;
+  const ver=!!p&&p.plan!=='pago'&&(p.solo_lectura||p.dias_restantes<=7);f.hidden=!ver;if(!ver)return;
+  const d=p.dias_restantes;
+  f.innerHTML=p.solo_lectura?`<span class="ic">🔒</span><span class="tx">Terminó tu prueba gratis<small>Activá la suscripción para seguir usando JuntOS</small></span><span class="fs-go">Activar</span>`
+    :`<span class="ic">🎁</span><span class="tx">${d<=1?'¡Hoy es tu último día de prueba!':`Te quedan ${d} días de prueba`}<small>Suscribite y seguí sin cortes</small></span><span class="fs-go">Suscribirme</span>`;}
+addEventListener('juntos',pintarFranjaSus);document.addEventListener('DOMContentLoaded',pintarFranjaSus);setTimeout(pintarFranjaSus,1500);
+function comprarSus(){closeCuenta();if(window.jxSuscripcion)jxSuscripcion('comprar');}
+function pintarSuscripcion(){const p=(window.JUNTOS||{}).pareja,b=document.getElementById('susB'),acc=document.getElementById('susAcc'),cb=document.getElementById('susComprar');
+  if(cb){cb.hidden=!p;if(p)cb.innerHTML=p.solo_lectura?'<i class="ti ti-lock-open"></i> Activar mi suscripción':p.plan==='pago'?'<i class="ti ti-refresh"></i> Renovar o pasar a anual':'<i class="ti ti-heart-plus"></i> Suscribirme';}
   if(!p){acc.hidden=true;return;}acc.hidden=false;
   const f=d=>new Date(d).toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}),hasta=f(p.activo_hasta);
   let h='';

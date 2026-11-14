@@ -452,6 +452,9 @@
   function modalSuscripcion(dias) {
     if (document.getElementById('jxSus') || !document.body) return;
     var p = (window.JUNTOS && window.JUNTOS.pareja) || {}, pago = !!p.tuvo_pago;
+    // 'comprar' = la abrió la persona (botón "Suscribirme" de Mi cuenta o de la franja del inicio)
+    var renovar = dias === 'comprar' && p.plan === 'pago' && !p.solo_lectura;
+    if (dias === 'comprar' && !renovar) dias = p.solo_lectura ? undefined : Math.max(1, +p.dias_restantes || 1);
     var porVencer = typeof dias === 'number';   // aviso de los últimos días de prueba (todavía puede usar todo)
     if (!document.getElementById('jxSusCss')) {
       var st = document.createElement('style'); st.id = 'jxSusCss';
@@ -504,7 +507,12 @@
     if (PR.alias || PR.cbu) precio += '<div class="trf"><button type="button" class="ab">🏦 Pagar por transferencia</button><div class="dt" hidden>' +
       tr.map(function (x) { return '<div class="f"><div><span>' + x[0] + '</span><b>' + escH(x[1]) + '</b></div>' + (x[0] === 'Alias' || x[0] === 'CBU / CVU' ? '<button type="button" class="cp" data-c="' + escH(x[1]) + '">Copiar</button>' : '') + '</div>'; }).join('') +
       '<p class="cmp">Transferí <b class="mt">' + pesos(mm) + '</b> y mandanos el comprobante' + (PR.contacto ? ' a <b>' + escH(PR.contacto) + '</b>' : '') + '. Activamos tu suscripción apenas lo recibimos.</p></div></div>';
-    if (porVencer) {
+    if (renovar) {
+      var hastaTxt = p.activo_hasta ? new Date(p.activo_hasta).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' }) : '';
+      m.innerHTML = '<div class="c">' + X + '<div class="ic">💞</div><h3>Renovar o pasar a anual</h3>' +
+        '<p>Tu suscripción está activa' + (hastaTxt ? ' hasta el <b>' + hastaTxt + '</b>' : '') + '. Si pagás ahora, <b>se suma a lo que te queda</b>: no perdés ningún día.</p>' +
+        precio + boton + '<div class="fila uno"><button type="button" class="no">Ahora no</button></div></div>';
+    } else if (porVencer) {
       var barras = ''; if (dias <= 7) for (var k = 7; k >= 1; k--) barras += '<i class="' + (k <= dias ? 'on' : '') + '"></i>';
       m.innerHTML = '<div class="c">' + X + '<div class="ic">⏳</div>' +
         '<h3>' + (dias <= 1 ? '¡Hoy es tu último día de prueba!' : 'Te quedan <span class="dias">' + dias + '</span> días de prueba') + '</h3>' +
