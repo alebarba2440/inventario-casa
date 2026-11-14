@@ -179,7 +179,7 @@
   /* con mouse: al pasar por arriba, la tarjeta se levanta */
   @media (hover:hover){a.card:hover{transform:rotate(var(--rot,0deg)) translateY(-8px) scale(1.02);box-shadow:0 4px 8px rgba(0,0,0,.06),0 26px 30px -10px rgba(0,0,0,.34)}}
   a.card:active{transform:rotate(0deg) scale(.97)}
-  .pic{width:100% !important;height:var(--picH,150px) !important;background:color-mix(in srgb,var(--t,var(--accent)) 16%,#fff);align-items:flex-end}
+  .pic{width:100% !important;height:var(--picH,150px) !important;background:linear-gradient(90deg,color-mix(in srgb,var(--t,var(--accent)) 16%,#fff),color-mix(in srgb,color-mix(in srgb,var(--t,var(--accent)) 34%,#fff) 90%,#000));align-items:flex-end}   /* el tinte de cada sección, más oscuro hacia la derecha */
   .pic img{max-height:94%;padding-top:0}
   /* efecto reflejo: brillo de foto satinada + un destello de luz que cruza cada polaroid */
   .pic{position:relative;overflow:hidden}
